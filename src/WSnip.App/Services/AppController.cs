@@ -33,6 +33,7 @@ public sealed class AppController : IDisposable
     private EditorWindow? editor;
     private SettingsWindow? settingsWindow;
     private TrayIcon? tray;
+    private IDisposable? windowClosedSubscription;
     private Bitmap? clipboardBitmap;
     private bool capturing;
     private bool exiting;
@@ -67,14 +68,17 @@ public sealed class AppController : IDisposable
         RegisterHotkey();
         platform.SingleInstance.ArgumentsReceived += (_, forwarded) => Dispatcher.UIThread.Post(() => HandleArguments(forwarded, firstLaunch: false));
         platform.SingleInstance.StartListening();
-        CreateTray();
+        if (OperatingSystem.IsWindows())
+            CreateTray();
+        else
+            windowClosedSubscription = Window.WindowClosedEvent.AddClassHandler<Window>((_, _) => Dispatcher.UIThread.Post(ExitIfIdle));
         _ = SyncLaunchAtStartupAsync();
         HandleArguments(arguments, firstLaunch: true);
     }
 
     /// <summary>
-    /// Handles a launch: <c>--snip [rectangle|window|fullscreen|freeform]</c> starts a snip,
-    /// <c>--background</c> starts in the notification area, anything else shows the editor.
+    /// Handles a launch: <c>--snip [rectangle|window|fullscreen|freeform|wholewindow]</c> starts a snip,
+    /// <c>--background</c> starts in the notification area on Windows, anything else shows the editor.
     /// </summary>
     public void HandleArguments(IReadOnlyList<string> arguments, bool firstLaunch)
     {
@@ -86,7 +90,7 @@ public sealed class AppController : IDisposable
                 : null;
             _ = StartSnipAsync(mode);
         }
-        else if (!(firstLaunch && arguments.Contains("--background", StringComparer.OrdinalIgnoreCase)))
+        else if (!(OperatingSystem.IsWindows() && firstLaunch && arguments.Contains("--background", StringComparer.OrdinalIgnoreCase)))
         {
             ShowEditor();
         }
@@ -173,6 +177,7 @@ public sealed class AppController : IDisposable
             if (hidden is not null)
                 RestoreWindows(hidden);
             capturing = false;
+            ExitIfIdle();
         }
     }
 
@@ -279,11 +284,21 @@ public sealed class AppController : IDisposable
 
     public void Dispose()
     {
+        windowClosedSubscription?.Dispose();
+        windowClosedSubscription = null;
         tray?.Dispose();
         tray = null;
+        clipboardBitmap?.Dispose();
+        clipboardBitmap = null;
         platform.Hotkeys.Dispose();
         platform.SingleInstance.Dispose();
         (platform.Capture as IDisposable)?.Dispose();
+    }
+
+    private void ExitIfIdle()
+    {
+        if (!OperatingSystem.IsWindows() && !exiting && !capturing && !lifetime.Windows.Any(window => window.IsVisible))
+            Exit();
     }
 
     /// <summary>
@@ -402,7 +417,7 @@ public sealed class AppController : IDisposable
         {
             // The app lives on in the tray; closing the window hides it and lets go of the snip,
             // which was already copied or saved as the settings ask.
-            if (!exiting)
+            if (OperatingSystem.IsWindows() && !exiting)
             {
                 e.Cancel = true;
                 editor.Hide();
@@ -410,6 +425,7 @@ public sealed class AppController : IDisposable
                 ReleaseMemory();
             }
         };
+        editor.Closed += (_, _) => editor = null;
         return editor;
     }
 
@@ -433,6 +449,8 @@ public sealed class AppController : IDisposable
 
     private async Task SyncLaunchAtStartupAsync()
     {
+        if (!OperatingSystem.IsWindows())
+            return;
         try
         {
             bool wanted = Settings.LaunchAtStartup;

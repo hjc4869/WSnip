@@ -139,11 +139,11 @@
                 </Grid>
             </Border>
 
-            <TextBlock Classes="sectionTitle" Text="Startup" />
-            <Border Classes="settingRow">
+            <TextBlock x:Name="StartupSectionTitle" Classes="sectionTitle" Text="Startup" />
+            <Border x:Name="StartupRow" Classes="settingRow">
                 <Grid ColumnDefinitions="*,Auto">
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock x:Name="StartupTitle" Text="Start with Windows" />
+                        <TextBlock Text="Start with Windows" />
                         <TextBlock Classes="caption" Text="Runs in the notification area so the shortcut always works." />
                     </StackPanel>
                     <ToggleSwitch x:Name="StartupSwitch" Grid.Column="1" OnContent="" OffContent="" />

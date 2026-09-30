@@ -19,11 +19,11 @@ only supported on Windows.
   other windows and its own per-pixel transparency, so the snip has no desktop behind it. Esc or
   right-click cancels, and WSnip's windows come back either way.
 - **Entry points:**
-  - A global hotkey, **Win+Shift+H** by default. It can be changed, set to Print Screen or turned
-    off.
-  - A notification-area icon.
+  - On Windows, a global hotkey, **Win+Shift+H** by default. It can be changed, set to Print Screen
+    or turned off.
+  - On Windows, a notification-area icon.
   - `WSnip.exe --snip [rectangle|window|fullscreen|freeform|wholewindow]`.
-  - `--background` starts the app in the tray.
+  - On Windows, `--background` starts the app in the tray.
   - Later launches forward their command line to the running instance.
 - **Capture:** On Windows, Windows.Graphics.Capture delivers `R16G16B16A16Float` scRGB frames at
   each display's SDR white level and peak brightness. Nothing is clipped to SDR or sRGB. WSnip's
@@ -41,8 +41,8 @@ only supported on Windows.
     SDR sRGB; otherwise the narrowest of sRGB, Display P3 and BT.2020 with its brightness factor,
     plus linear scRGB), and luminance in multiples of SDR white and in nits at the capturing
     display's SDR white. It can be turned off in settings.
-  - Closing the window returns WSnip to the tray and discards the snip, which was already copied
-    or saved as the settings ask.
+  - On Windows, closing the window returns WSnip to the tray and discards the snip, which was
+    already copied or saved as the settings ask.
 - **Delivery:**
   - Snips are copied to the clipboard and saved to `Pictures\Screenshots` automatically, using
     Snipping Tool file names ("Screenshot 2026-09-30 101530.png").
@@ -117,11 +117,12 @@ differs from Windows:
   KWin's screencast; otherwise the window is picked in the system's sharing dialog instead of with a
   click on the live screen.
 - **Hotkey:** Wayland gives apps no global hotkeys. Bind a shortcut to the desktop entry's
-  **New snip** action (KDE: System Settings > Keyboard > Shortcuts), or to `wsnip --snip`.
-- **Clipboard:** the SDR rendition as PNG. Wayland apps serve what they copy, so it can be pasted
-  while WSnip runs in the tray.
-- **Start when you sign in** writes an XDG autostart entry, or asks the Background portal in the
-  Flatpak.
+  **New snip**, **Rectangle snip**, **Window snip**, **Full screen snip**, **Freeform snip**, or
+  **Whole window snip** action (KDE: System Settings > Keyboard > Shortcuts), or to
+  `wsnip --snip [rectangle|window|fullscreen|freeform|wholewindow]`.
+- **Clipboard:** the SDR rendition as PNG. It can be pasted while WSnip is open; preserving it
+  after exit depends on the desktop's clipboard manager.
+- **Lifetime:** WSnip exits when its windows are closed and any active capture has finished.
 
 ### KWin screencast access
 
