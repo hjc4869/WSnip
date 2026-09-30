@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
+using LightStudio.LightPlayer.Controls;
 using WSnip.App.Rendering;
 using WSnip.Core.Editing;
 using WSnip.Core.Imaging;
@@ -54,14 +55,30 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
 
     private const double ViewMargin = 24;
     private const double HandleSize = 8;
+    private const double WheelZoomStep = 1.25;
+    private const double DipsPerWheelDelta = 50;
+    private const double ZoomAnimationMs = 160;
     private static readonly IBrush CropDim = new SolidColorBrush(Color.FromArgb(0x80, 0, 0, 0));
     private static readonly IPen CropPen = new Pen(Brushes.White, 1.5);
+    private static readonly Cursor GrabCursor = new(StandardCursorType.SizeAll);
+    private static readonly Cursor CrossCursor = new(StandardCursorType.Cross);
+    private static readonly Cursor EraserCursor = new(StandardCursorType.Hand);
 
+    private readonly Glide zoomGlide;
+    private double? zoomTarget;
+    private Vector2 zoomAnchor;
+    private Point zoomFocus;
     private double zoom = 1;
     private bool fit = true;
     private Vector offset;
+    private IPointer? panPointer;
     private Point? panStart;
     private Vector panOrigin;
+    private IPointer? tapPointer;
+    private Rect tapBounds;
+    private bool previousWasTap;
+    private bool doubleTapPending;
+    private Point? pointerPosition;
     private List<Vector2>? activePoints;
     private HashSet<AnnotationStroke>? erased;
     private PixelRect? crop;
@@ -78,6 +95,20 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
         AffectsRender<SnipCanvas>(ToolProperty, ShowHdrProperty, SdrMappingProperty);
         FocusableProperty.OverrideDefaultValue<SnipCanvas>(true);
         ClipToBoundsProperty.OverrideDefaultValue<SnipCanvas>(true);
+    }
+
+    public SnipCanvas()
+    {
+        zoomGlide = new Glide(this, ApplyAnimatedZoom) { Completed = () => zoomTarget = null };
+        DoubleTapped += OnDoubleTapped;
+        PointerTouchPadGestureMagnify += OnTouchpadMagnify;
+        DetachedFromVisualTree += (_, _) => StopZoomAnimation();
+        EffectiveViewportChanged += (_, e) =>
+        {
+            Rect visible = e.EffectiveViewport.Intersect(new Rect(Bounds.Size));
+            if (!IsEffectivelyVisible || visible.Width <= 0 || visible.Height <= 0)
+                StopZoomAnimation();
+        };
     }
 
     public event EventHandler? ViewChanged;
@@ -148,16 +179,11 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
     /// <summary>The pending crop rectangle in image pixels, while the crop tool is active.</summary>
     public PixelRect? CropRegion => crop;
 
-    public void ZoomBy(double factor) => SetZoom(Zoom * factor, new Point(Bounds.Width / 2, Bounds.Height / 2));
+    public void ZoomBy(double factor) => AnimateZoom((zoomTarget ?? Zoom) * factor, Center);
 
-    public void ZoomToFit()
-    {
-        fit = true;
-        offset = default;
-        OnViewChanged();
-    }
+    public void ZoomToFit() => AnimateZoom(FitZoom(), Center);
 
-    public void ZoomToActualSize() => SetZoom(1, new Point(Bounds.Width / 2, Bounds.Height / 2));
+    public void ZoomToActualSize() => AnimateZoom(1, Center);
 
     public void ResetCrop()
     {
@@ -174,6 +200,11 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
         base.OnPropertyChanged(change);
         if (change.Property == DocumentProperty)
         {
+            StopZoomAnimation();
+            CancelTap();
+            panPointer?.Capture(null);
+            panPointer = null;
+            panStart = null;
             if (change.OldValue is EditorDocument old)
                 old.Changed -= OnDocumentChanged;
             if (change.NewValue is EditorDocument document)
@@ -186,6 +217,7 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
         }
         else if (change.Property == ToolProperty || change.Property == IsPickingColorProperty)
         {
+            CancelTap();
             if (change.Property == ToolProperty && Tool == EditorTool.Crop)
                 ResetCrop();
             else if (change.Property == ToolProperty && crop is not null)
@@ -194,13 +226,7 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
                 CropChanged?.Invoke(this, EventArgs.Empty);
             }
 
-            Cursor = Tool switch
-            {
-                _ when IsPickingColor => new Cursor(StandardCursorType.Cross),
-                EditorTool.Pen or EditorTool.Highlighter or EditorTool.Crop => new Cursor(StandardCursorType.Cross),
-                EditorTool.Eraser => new Cursor(StandardCursorType.Hand),
-                _ => Cursor.Default,
-            };
+            UpdateCursor();
         }
     }
 
@@ -242,9 +268,25 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
         base.OnPointerPressed(e);
         if (Document is not { } document)
             return;
+        if (panPointer is not null)
+            return;
+        StopZoomAnimation();
         Focus();
         PointerPoint point = e.GetCurrentPoint(this);
+        pointerPosition = point.Position;
         bool left = point.Properties.IsLeftButtonPressed;
+        doubleTapPending = false;
+        if (left && Tool == EditorTool.Select && !IsPickingColor)
+        {
+            tapPointer = e.Pointer;
+            Size tapSize = Application.Current?.PlatformSettings?.GetTapSize(e.Pointer.Type) ?? new Size(4, 4);
+            tapBounds = new Rect(point.Position, default(Size)).Inflate(new Thickness(tapSize.Width, tapSize.Height));
+        }
+        else
+        {
+            CancelTap();
+        }
+
         if (left && IsPickingColor)
         {
             if (PixelAt(point.Position) is { } picked)
@@ -255,10 +297,13 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
 
         if (point.Properties.IsMiddleButtonPressed || (left && Tool == EditorTool.Select))
         {
+            if (!CanPan)
+                return;
+            panPointer = e.Pointer;
             panStart = point.Position;
             panOrigin = offset;
             SetHover(null);
-            Cursor = new Cursor(StandardCursorType.SizeAll);
+            UpdateCursor();
         }
         else if (left && Tool is EditorTool.Pen or EditorTool.Highlighter)
         {
@@ -287,7 +332,7 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
         }
 
         e.Pointer.Capture(this);
-        e.Handled = true;
+        e.Handled = Tool != EditorTool.Select || point.Properties.IsMiddleButtonPressed;
         InvalidateVisual();
     }
 
@@ -295,15 +340,19 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
     {
         base.OnPointerMoved(e);
         Point position = e.GetPosition(this);
+        pointerPosition = position;
+        if (ReferenceEquals(tapPointer, e.Pointer) && !tapBounds.ContainsExclusive(position))
+            CancelTap();
         if (panStart is null)
             SetHover(PixelAt(position));
         if (panStart is { } start)
         {
+            if (!ReferenceEquals(panPointer, e.Pointer))
+                return;
             offset = panOrigin + (position - start);
-            fit = false;
-            zoom = Zoom;
             ClampOffset();
             OnViewChanged();
+            e.Handled = true;
         }
         else if (activePoints is not null)
         {
@@ -324,7 +373,7 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
             CropChanged?.Invoke(this, EventArgs.Empty);
             InvalidateVisual();
         }
-        else if (Tool == EditorTool.Crop && crop is { } region)
+        else if (!IsPickingColor && Tool == EditorTool.Crop && crop is { } region)
         {
             Cursor = HitCrop(region, position) switch
             {
@@ -341,11 +390,19 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
+        if (panPointer is not null && !ReferenceEquals(panPointer, e.Pointer))
+            return;
+        bool tapped = ReferenceEquals(tapPointer, e.Pointer) &&
+            tapBounds.ContainsExclusive(e.GetPosition(this)) && Tool == EditorTool.Select && !IsPickingColor;
+        bool toggleZoom = tapped && doubleTapPending;
+        CancelTap();
         EditorDocument? document = Document;
         if (panStart is not null)
         {
+            panPointer = null;
             panStart = null;
-            Cursor = Tool == EditorTool.Select ? Cursor.Default : Cursor;
+            UpdateCursor();
+            SetHover(PixelAt(e.GetPosition(this)));
         }
         else if (activePoints is { } points && document is not null)
         {
@@ -365,35 +422,85 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
         }
 
         e.Pointer.Capture(null);
+        previousWasTap = tapped && !toggleZoom;
+        if (toggleZoom)
+        {
+            AnimateZoom(IsFit ? 1 : FitZoom(), e.GetPosition(this));
+            e.Handled = true;
+        }
         InvalidateVisual();
+    }
+
+    protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
+    {
+        base.OnPointerCaptureLost(e);
+        if (ReferenceEquals(tapPointer, e.Pointer))
+            CancelTap();
+        if (ReferenceEquals(panPointer, e.Pointer))
+        {
+            panPointer = null;
+            panStart = null;
+            UpdateCursor();
+            SetHover(null);
+        }
     }
 
     protected override void OnPointerExited(PointerEventArgs e)
     {
         base.OnPointerExited(e);
+        pointerPosition = null;
         SetHover(null);
     }
 
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
     {
         base.OnPointerWheelChanged(e);
-        if (Document is null)
+        if (Document is null || e.Delta == default)
             return;
-        if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        pointerPosition = e.GetPosition(this);
+        if (e.IsTouchpad && !e.KeyModifiers.HasFlag(KeyModifiers.Control))
         {
-            SetZoom(Zoom * Math.Pow(1.2, e.Delta.Y), e.GetPosition(this));
-        }
-        else
-        {
-            Vector delta = e.KeyModifiers.HasFlag(KeyModifiers.Shift) ? new Vector(e.Delta.Y, 0) : new Vector(e.Delta.X, e.Delta.Y);
-            fit = false;
-            zoom = Zoom;
-            offset += delta * 60;
+            StopZoomAnimation();
+            offset += e.Delta * DipsPerWheelDelta;
             ClampOffset();
             OnViewChanged();
         }
+        else if (e.Delta.Y != 0)
+        {
+            if (e.IsTouchpad)
+                SetZoom(Zoom * Math.Pow(WheelZoomStep, e.Delta.Y), e.GetPosition(this));
+            else
+                AnimateZoom((zoomTarget ?? Zoom) * Math.Pow(WheelZoomStep, e.Delta.Y), e.GetPosition(this));
+        }
+        else
+            return;
 
         SetHover(PixelAt(e.GetPosition(this)));
+        e.Handled = true;
+    }
+
+    private void OnDoubleTapped(object? sender, TappedEventArgs e)
+    {
+        if (Document is null || Tool != EditorTool.Select || IsPickingColor)
+            return;
+
+        doubleTapPending = previousWasTap && tapPointer is not null;
+        e.Handled = true;
+    }
+
+    private void CancelTap()
+    {
+        tapPointer = null;
+        previousWasTap = false;
+        doubleTapPending = false;
+    }
+
+    private void OnTouchpadMagnify(object? sender, PointerDeltaEventArgs e)
+    {
+        if (Document is null || !double.IsFinite(e.Delta.Y) || e.Delta.Y <= -1)
+            return;
+
+        SetZoom(Zoom * (1 + e.Delta.Y), e.GetPosition(this));
         e.Handled = true;
     }
 
@@ -407,8 +514,24 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
 
     private void OnViewChanged()
     {
+        UpdateCursor();
+        if (panStart is null && pointerPosition is { } position)
+            SetHover(PixelAt(position));
         InvalidateVisual();
         ViewChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void UpdateCursor()
+    {
+        Cursor = Tool switch
+        {
+            _ when panStart is not null => GrabCursor,
+            _ when IsPickingColor => CrossCursor,
+            EditorTool.Pen or EditorTool.Highlighter or EditorTool.Crop => CrossCursor,
+            EditorTool.Eraser => EraserCursor,
+            _ when CanPan => GrabCursor,
+            _ => Cursor.Default,
+        };
     }
 
     /// <summary>The image pixel at a canvas position, or null outside the image.</summary>
@@ -471,6 +594,11 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
     /// <summary>Device-independent pixels per image pixel.</summary>
     private double ImageScale() => Zoom / Math.Max(0.1, TopLevel.GetTopLevel(this)?.RenderScaling ?? 1);
 
+    private Point Center => new(Bounds.Width / 2, Bounds.Height / 2);
+
+    private bool CanPan => Document is { } document &&
+        (document.Width * ImageScale() - Bounds.Width > 1 || document.Height * ImageScale() - Bounds.Height > 1);
+
     private double FitZoom()
     {
         if (Document is not { } document || Bounds.Width <= 0 || Bounds.Height <= 0)
@@ -508,12 +636,60 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
 
     private void SetZoom(double value, Point anchor)
     {
+        StopZoomAnimation();
+        if (Document is not null)
+            ApplyZoom(value, ToImage(anchor), anchor);
+    }
+
+    private void AnimateZoom(double value, Point anchor)
+    {
         if (Document is null)
             return;
-        value = Math.Clamp(value, 0.05, 32);
-        Vector2 imagePoint = ToImage(anchor);
-        fit = false;
-        zoom = value;
+        value = Math.Clamp(value, FitZoom(), 32);
+        if (zoomTarget is { } target && Math.Abs(value - target) < 1e-6)
+            return;
+
+        StopZoomAnimation();
+        if (TopLevel.GetTopLevel(this) is null || !IsEffectivelyVisible || Opacity <= 0)
+        {
+            SetZoom(value, anchor);
+            return;
+        }
+        if (Math.Abs(value - Zoom) < 1e-6)
+            return;
+
+        zoomTarget = value;
+        zoomAnchor = ToImage(anchor);
+        zoomFocus = anchor;
+        zoomGlide.Start(Zoom, value, ZoomAnimationMs);
+        OnViewChanged();
+    }
+
+    private void ApplyAnimatedZoom(double value)
+    {
+        if (Document is null || !IsEffectivelyVisible || Opacity <= 0)
+        {
+            StopZoomAnimation();
+            return;
+        }
+
+        ApplyZoom(value, zoomAnchor, zoomFocus);
+    }
+
+    private void StopZoomAnimation()
+    {
+        zoomGlide.Stop();
+        zoomTarget = null;
+    }
+
+    private void ApplyZoom(double value, Vector2 imagePoint, Point anchor)
+    {
+        if (Document is null)
+            return;
+        double minimum = FitZoom();
+        value = Math.Clamp(value, minimum, 32);
+        fit = Math.Abs(value - minimum) < 1e-6;
+        zoom = fit ? minimum : value;
         double scale = ImageScale();
         var size = new Size(Document.Width * scale, Document.Height * scale);
         var topLeft = new Point(anchor.X - imagePoint.X * scale, anchor.Y - imagePoint.Y * scale);
@@ -528,11 +704,11 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
             return;
         double scale = ImageScale();
         double width = document.Width * scale, height = document.Height * scale;
-        double limitX = Math.Max(0, (width - Bounds.Width) / 2 + ViewMargin);
-        double limitY = Math.Max(0, (height - Bounds.Height) / 2 + ViewMargin);
+        double limitX = Math.Max(0, (width - Bounds.Width) / 2);
+        double limitY = Math.Max(0, (height - Bounds.Height) / 2);
         offset = new Vector(
-            width + 2 * ViewMargin <= Bounds.Width ? 0 : Math.Clamp(offset.X, -limitX, limitX),
-            height + 2 * ViewMargin <= Bounds.Height ? 0 : Math.Clamp(offset.Y, -limitY, limitY));
+            Math.Clamp(offset.X, -limitX, limitX),
+            Math.Clamp(offset.Y, -limitY, limitY));
     }
 
     private enum CropDrag

@@ -23,5 +23,6 @@
 
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
+    <Compile Include="$(LightPlayerRoot)src\LightStudio.LightPlayer\Controls\Glide.cs" Link="Shared\Glide.cs" />
   </ItemGroup>
 </Project>
