@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="PixelInfoCaption" xml:space="preserve"><value>Position, colour and luminance of the pixel under the pointer, including HDR and wide colours.</value></data>
+  <data name="AddColor" xml:space="preserve"><value>Add a colour</value></data>
+  <data name="PickColorTip" xml:space="preserve"><value>Pick a colour from the snip, including HDR and wide colours (Esc to stop)</value></data>
+  <data name="PickColor" xml:space="preserve"><value>Pick a colour from the snip</value></data>
+  <data name="ColorSpace" xml:space="preserve"><value>Colour space</value></data>
+  <data name="BrightnessTip" xml:space="preserve"><value>Multiples of SDR white. Above 1&#xD7; the colour is HDR: brighter than white on an HDR display, and kept in HDR files.</value></data>
+  <data name="AdaptiveDescription" xml:space="preserve"><value>Highlights roll off smoothly around HDR content while the rest of the screen keeps its exact colours.</value></data>
+  <data name="About" xml:space="preserve"><value>WSnip {0}. HDR snips keep their highlights and wide colours; the SDR version is what apps without HDR support show.</value></data>
+  <data name="EditColor" xml:space="preserve"><value>Edit colour</value></data>
+  <data name="RemoveColor" xml:space="preserve"><value>Remove colour</value></data>
+  <data name="NewColor" xml:space="preserve"><value>New colour</value></data>
+  <data name="WideP3" xml:space="preserve"><value>Wide colour (Display P3)</value></data>
+  <data name="WideBt2020" xml:space="preserve"><value>Wide colour (BT.2020)</value></data>
+  <data name="HotkeyHint" xml:space="preserve"><value>Press {0} anywhere, or select New, to capture the screen. HDR and wide-colour content is kept.</value></data>
+  <data name="WideBeyondP3" xml:space="preserve"><value>wide colour beyond Display P3</value></data>
+  <data name="WideP3Status" xml:space="preserve"><value>wide colour (Display P3)</value></data>
+  <data name="WideDisplay" xml:space="preserve"><value>Wide colour display</value></data>
+</root>

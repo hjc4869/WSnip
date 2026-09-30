@@ -6,6 +6,7 @@ using NWayland.Protocols.Plasma.ZkdeScreencastUnstableV1;
 using NWayland.Protocols.Wayland;
 using NWayland.Protocols.XdgOutputUnstableV1;
 using WSnip.Linux.Capture;
+using WSnip.Core.Strings;
 
 namespace WSnip.Linux.KWin;
 
@@ -74,13 +75,13 @@ internal sealed partial class KWinScreencast : IDisposable
     {
         List<Output> outputs = BindOutputs();
         if (outputs.Count == 0)
-            throw new InvalidOperationException("KWin has no display to share.");
+            throw new InvalidOperationException(AppStrings.KWinNoDisplay);
 
         ZkdeScreencastUnstableV1 screencast = BindScreencast();
         PendingStream[] pending = outputs.Select(_ => new PendingStream()).ToArray();
         for (int i = 0; i < outputs.Count; i++)
             screencast.StreamOutput(outputs[i].Proxy!, Pointer(includeCursor), pending[i].Listener);
-        DispatchUntil(() => pending.All(stream => stream.IsSettled), timeout, "KWin did not start sharing the displays in time.");
+        DispatchUntil(() => pending.All(stream => stream.IsSettled), timeout, AppStrings.KWinDisplaysTimeout);
 
         var streams = new List<(SharedDisplay, uint)>(outputs.Count);
         for (int i = 0; i < outputs.Count; i++)
@@ -88,7 +89,7 @@ internal sealed partial class KWinScreencast : IDisposable
             Output output = outputs[i];
             string device = output.Name ?? $"output {i}";
             if (pending[i].Node is not { } node)
-                throw new InvalidOperationException($"KWin could not share the display {device}: {pending[i].Error}.");
+                throw new InvalidOperationException(string.Format(AppStrings.KWinDisplayFailed, device, pending[i].Error));
             streams.Add((new SharedDisplay(device, output.Description, output.Position, output.Size), node));
         }
 
@@ -103,8 +104,8 @@ internal sealed partial class KWinScreencast : IDisposable
     {
         var pending = new PendingStream();
         BindScreencast().StreamWindow(uuid, Pointer(includeCursor), pending.Listener);
-        DispatchUntil(() => pending.IsSettled, timeout, "KWin did not start sharing the window in time.");
-        return pending.Node ?? throw new InvalidOperationException($"KWin could not share the window: {pending.Error}.");
+        DispatchUntil(() => pending.IsSettled, timeout, AppStrings.KWinWindowTimeout);
+        return pending.Node ?? throw new InvalidOperationException(string.Format(AppStrings.KWinWindowFailed, pending.Error));
     }
 
     /// <summary>Disconnects, which ends the streams.</summary>
@@ -181,7 +182,8 @@ internal sealed partial class KWinScreencast : IDisposable
     private void Check(int result)
     {
         if (result < 0)
-            throw new InvalidOperationException($"The connection to KWin failed: {display.GetProtocolError()?.Message ?? $"error {display.GetError()}"}.");
+            throw new InvalidOperationException(string.Format(AppStrings.KWinConnectionFailed,
+                display.GetProtocolError()?.Message ?? string.Format(AppStrings.ErrorCode, display.GetError())));
     }
 
     private static unsafe bool WaitReadable(int fd, TimeSpan timeout)
@@ -195,7 +197,7 @@ internal sealed partial class KWinScreencast : IDisposable
                 return result > 0;
             int error = Marshal.GetLastPInvokeError();
             if (error != Interrupted)
-                throw new IOException($"Waiting for KWin failed (error {error}).");
+                throw new IOException(string.Format(AppStrings.KWinWaitFailed, error));
         }
     }
 

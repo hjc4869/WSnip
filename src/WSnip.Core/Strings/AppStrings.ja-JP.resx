@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="SettingsTitle" xml:space="preserve"><value>WSnip の設定</value></data>
+  <data name="Settings" xml:space="preserve"><value>設定</value></data>
+  <data name="TakingSnips" xml:space="preserve"><value>キャプチャ</value></data>
+  <data name="Shortcut" xml:space="preserve"><value>ショートカット</value></data>
+  <data name="DefaultShortcutCaption" xml:space="preserve"><value>下で設定した既定のモードでキャプチャします。入力欄をクリックしてキーの組み合わせを押してください。</value></data>
+  <data name="SnippingMode" xml:space="preserve"><value>キャプチャモード</value></data>
+  <data name="Delay" xml:space="preserve"><value>遅延</value></data>
+  <data name="IncludeCursor" xml:space="preserve"><value>マウスポインターを含める</value></data>
+  <data name="ModeShortcuts" xml:space="preserve"><value>モード別のショートカット</value></data>
+  <data name="AfterSnip" xml:space="preserve"><value>キャプチャ後</value></data>
+  <data name="CopyClipboard" xml:space="preserve"><value>クリップボードにコピー</value></data>
+  <data name="OpenEditor" xml:space="preserve"><value>エディターを開く</value></data>
+  <data name="ShowPixelInfo" xml:space="preserve"><value>ピクセル情報を表示</value></data>
+  <data name="PixelInfoCaption" xml:space="preserve"><value>ポインターの下にあるピクセルの位置、色、輝度を表示します。HDR と広色域にも対応します。</value></data>
+  <data name="AutoSave" xml:space="preserve"><value>自動保存</value></data>
+  <data name="ChangeFolder" xml:space="preserve"><value>フォルダーを変更</value></data>
+  <data name="Files" xml:space="preserve"><value>ファイル</value></data>
+  <data name="SdrFormat" xml:space="preserve"><value>SDR キャプチャの形式</value></data>
+  <data name="SdrFormatCaption" xml:space="preserve"><value>PNG は画面の内容をピクセル単位で正確に保持します。</value></data>
+  <data name="HdrFormat" xml:space="preserve"><value>HDR キャプチャの形式</value></data>
+  <data name="HdrFormatCaption" xml:space="preserve"><value>ゲインマップ形式は通常 SDR 画像を表示し、対応環境では HDR 画像を表示します。</value></data>
+  <data name="Quality" xml:space="preserve"><value>品質</value></data>
+  <data name="QualityCaption" xml:space="preserve"><value>JPEG、HEIC、AVIF、JPEG XL に適用します。JPEG XL は 100 で可逆圧縮になります。</value></data>
+  <data name="SdrVersion" xml:space="preserve"><value>HDR キャプチャの SDR 表示</value></data>
+  <data name="Appearance" xml:space="preserve"><value>外観</value></data>
+  <data name="Theme" xml:space="preserve"><value>テーマ</value></data>
+  <data name="Mica" xml:space="preserve"><value>Mica 背景</value></data>
+  <data name="MicaCaption" xml:space="preserve"><value>Windows 11 アプリのように、デスクトップの壁紙の色をウィンドウに反映します。</value></data>
+  <data name="Startup" xml:space="preserve"><value>起動</value></data>
+  <data name="StartWindows" xml:space="preserve"><value>Windows と同時に起動</value></data>
+  <data name="StartupCaption" xml:space="preserve"><value>通知領域で動作し、いつでもショートカットを使えるようにします。</value></data>
+  <data name="NewSnip" xml:space="preserve"><value>新しいキャプチャ</value></data>
+  <data name="NewSnipTip" xml:space="preserve"><value>新しいキャプチャ (Ctrl+N)</value></data>
+  <data name="New" xml:space="preserve"><value>新規</value></data>
+  <data name="DelayTip" xml:space="preserve"><value>キャプチャ開始までの遅延</value></data>
+  <data name="Pen" xml:space="preserve"><value>ペン</value></data>
+  <data name="Highlighter" xml:space="preserve"><value>蛍光ペン</value></data>
+  <data name="Eraser" xml:space="preserve"><value>消しゴム</value></data>
+  <data name="Crop" xml:space="preserve"><value>トリミング</value></data>
+  <data name="Undo" xml:space="preserve"><value>元に戻す</value></data>
+  <data name="UndoTip" xml:space="preserve"><value>元に戻す (Ctrl+Z)</value></data>
+  <data name="Redo" xml:space="preserve"><value>やり直し</value></data>
+  <data name="RedoTip" xml:space="preserve"><value>やり直し (Ctrl+Y)</value></data>
+  <data name="ShowHdr" xml:space="preserve"><value>HDR を表示</value></data>
+  <data name="ZoomOut" xml:space="preserve"><value>縮小</value></data>
+  <data name="ZoomOutTip" xml:space="preserve"><value>縮小 (Ctrl+-)</value></data>
+  <data name="ZoomFitTip" xml:space="preserve"><value>ウィンドウに合わせる／実際のサイズで表示 (Ctrl+0)</value></data>
+  <data name="ZoomIn" xml:space="preserve"><value>拡大</value></data>
+  <data name="ZoomInTip" xml:space="preserve"><value>拡大 (Ctrl++)</value></data>
+  <data name="Copy" xml:space="preserve"><value>コピー</value></data>
+  <data name="CopyTip" xml:space="preserve"><value>コピー (Ctrl+C)</value></data>
+  <data name="SaveAs" xml:space="preserve"><value>名前を付けて保存</value></data>
+  <data name="SaveAsTip" xml:space="preserve"><value>名前を付けて保存 (Ctrl+S)</value></data>
+  <data name="More" xml:space="preserve"><value>その他</value></data>
+  <data name="OpenFolder" xml:space="preserve"><value>スクリーンショットフォルダーを開く</value></data>
+  <data name="ExitWSnip" xml:space="preserve"><value>WSnip を終了</value></data>
+  <data name="AddColor" xml:space="preserve"><value>色を追加</value></data>
+  <data name="PickColorTip" xml:space="preserve"><value>キャプチャから色を選択します。HDR と広色域にも対応します (Esc で終了)</value></data>
+  <data name="PickColor" xml:space="preserve"><value>キャプチャから色を選択</value></data>
+  <data name="Size" xml:space="preserve"><value>太さ</value></data>
+  <data name="TakeSnip" xml:space="preserve"><value>キャプチャする</value></data>
+  <data name="Apply" xml:space="preserve"><value>適用</value></data>
+  <data name="Cancel" xml:space="preserve"><value>キャンセル</value></data>
+  <data name="ShowInFolder" xml:space="preserve"><value>フォルダー内で表示</value></data>
+  <data name="ColorSpace" xml:space="preserve"><value>色空間</value></data>
+  <data name="Hex" xml:space="preserve"><value>16 進数</value></data>
+  <data name="Red" xml:space="preserve"><value>赤</value></data>
+  <data name="Green" xml:space="preserve"><value>緑</value></data>
+  <data name="Blue" xml:space="preserve"><value>青</value></data>
+  <data name="Brightness" xml:space="preserve"><value>明るさ</value></data>
+  <data name="BrightnessTip" xml:space="preserve"><value>SDR 白の倍数です。1× を超えると HDR の色になり、HDR ディスプレイでは白より明るく表示され、HDR ファイルにも保持されます。</value></data>
+  <data name="Add" xml:space="preserve"><value>追加</value></data>
+  <data name="PrintScreen" xml:space="preserve"><value>Print Screen</value></data>
+  <data name="PrintScreenTip" xml:space="preserve"><value>Print Screen キーを使用</value></data>
+  <data name="None" xml:space="preserve"><value>なし</value></data>
+  <data name="NoShortcut" xml:space="preserve"><value>ショートカットなし</value></data>
+  <data name="Adaptive" xml:space="preserve"><value>適応型 (推奨)</value></data>
+  <data name="AdaptiveDescription" xml:space="preserve"><value>HDR コンテンツの周囲でハイライトを滑らかに圧縮し、それ以外の画面の色は正確に保持します。</value></data>
+  <data name="GlobalToneMapping" xml:space="preserve"><value>全体をトーンマッピング</value></data>
+  <data name="GlobalToneMappingDescription" xml:space="preserve"><value>キャプチャ全体に同じハイライト圧縮を適用します。</value></data>
+  <data name="ClipHighlights" xml:space="preserve"><value>ハイライトをクリップ</value></data>
+  <data name="ClipHighlightsDescription" xml:space="preserve"><value>色相を保持したまま、ハイライトを SDR 白で制限します。</value></data>
+  <data name="ThemeSystem" xml:space="preserve"><value>システム設定に従う</value></data>
+  <data name="ThemeLight" xml:space="preserve"><value>ライト</value></data>
+  <data name="ThemeDark" xml:space="preserve"><value>ダーク</value></data>
+  <data name="SystemShortcutsCaption" xml:space="preserve"><value>システム設定で WSnip のキャプチャ操作にショートカットを割り当ててください。</value></data>
+  <data name="About" xml:space="preserve"><value>WSnip {0}。HDR キャプチャはハイライトと広色域を保持します。HDR 非対応アプリでは SDR 版が表示されます。</value></data>
+  <data name="UnavailableFormats" xml:space="preserve"><value>利用できない形式: {0}。</value></data>
+  <data name="HotkeyRefusal" xml:space="preserve"><value>{0} 別のキーの組み合わせを選んでください。</value></data>
+  <data name="SaveFolderTitle" xml:space="preserve"><value>キャプチャの保存先フォルダー</value></data>
+  <data name="Black" xml:space="preserve"><value>黒</value></data>
+  <data name="White" xml:space="preserve"><value>白</value></data>
+  <data name="Yellow" xml:space="preserve"><value>黄</value></data>
+  <data name="Purple" xml:space="preserve"><value>紫</value></data>
+  <data name="Cyan" xml:space="preserve"><value>シアン</value></data>
+  <data name="Pink" xml:space="preserve"><value>ピンク</value></data>
+  <data name="Orange" xml:space="preserve"><value>オレンジ</value></data>
+  <data name="EditColor" xml:space="preserve"><value>色を編集</value></data>
+  <data name="RemoveColor" xml:space="preserve"><value>色を削除</value></data>
+  <data name="NewColor" xml:space="preserve"><value>新しい色</value></data>
+  <data name="Save" xml:space="preserve"><value>保存</value></data>
+  <data name="WithinSrgb" xml:space="preserve"><value>sRGB 内</value></data>
+  <data name="WideP3" xml:space="preserve"><value>広色域 (Display P3)</value></data>
+  <data name="WideBt2020" xml:space="preserve"><value>広色域 (BT.2020)</value></data>
+  <data name="ColorDescription" xml:space="preserve"><value>{0}、{1}。輝度は SDR 白の {2:0.00} 倍、{3:0} nit。</value></data>
+  <data name="LinearColor" xml:space="preserve"><value>リニア scRGB {0:0.000}, {1:0.000}, {2:0.000}</value></data>
+  <data name="PixelLuminance" xml:space="preserve"><value>輝度は SDR 白の {0:0.000} 倍、{1:0.#} nit</value></data>
+  <data name="AlphaSuffix" xml:space="preserve"><value>  ·  アルファ {0:0.00}</value></data>
+  <data name="Copied" xml:space="preserve"><value>クリップボードにコピーしました。</value></data>
+  <data name="CopyFailed" xml:space="preserve"><value>キャプチャをクリップボードにコピーできませんでした。&#xA;&#xA;{0}</value></data>
+  <data name="SaveSnip" xml:space="preserve"><value>キャプチャを保存</value></data>
+  <data name="Saving" xml:space="preserve"><value>保存中…</value></data>
+  <data name="SaveFailed" xml:space="preserve"><value>キャプチャを保存できませんでした。&#xA;&#xA;{0}</value></data>
+  <data name="EditorTitle" xml:space="preserve"><value>WSnip — {0}</value></data>
+  <data name="NoSystemHotkeyHint" xml:space="preserve"><value>「新規」を選んで画面をキャプチャするか、システム設定で WSnip の「新しいキャプチャ」にショートカットを割り当ててください。</value></data>
+  <data name="NoHotkey" xml:space="preserve"><value>ショートカット (未設定)</value></data>
+  <data name="HotkeyErrorHint" xml:space="preserve"><value>「新規」を選んで画面をキャプチャしてください。{0} 設定で別のショートカットを選んでください。</value></data>
+  <data name="HotkeyHint" xml:space="preserve"><value>どこからでも {0} を押すか、「新規」を選んで画面をキャプチャできます。HDR と広色域の内容も保持されます。</value></data>
+  <data name="ShowingHdr" xml:space="preserve"><value>HDR を表示中。選択すると SDR 版をプレビューします</value></data>
+  <data name="ShowingSdr" xml:space="preserve"><value>SDR 版を表示中。選択すると HDR を表示します</value></data>
+  <data name="SdrOnly" xml:space="preserve"><value>このディスプレイは SDR のみ表示します</value></data>
+  <data name="HdrPeak" xml:space="preserve"><value>HDR、ピークは SDR 白の {0:0.0} 倍 ({1:0} nit)</value></data>
+  <data name="WideBeyondP3" xml:space="preserve"><value>Display P3 を超える広色域</value></data>
+  <data name="WideP3Status" xml:space="preserve"><value>広色域 (Display P3)</value></data>
+  <data name="StrokeCountOne" xml:space="preserve"><value>{0} ストローク</value></data>
+  <data name="StrokeCountMany" xml:space="preserve"><value>{0} ストローク</value></data>
+  <data name="HdrDisplay" xml:space="preserve"><value>HDR ディスプレイ、輝度余裕 {0:0.0} 倍</value></data>
+  <data name="WideDisplay" xml:space="preserve"><value>広色域ディスプレイ</value></data>
+  <data name="SdrDisplay" xml:space="preserve"><value>SDR ディスプレイ</value></data>
+  <data name="CaptureFailed" xml:space="preserve"><value>画面をキャプチャできませんでした。&#xA;&#xA;{0}</value></data>
+  <data name="HotkeyConflict" xml:space="preserve"><value>{0} は既に {1} のショートカットです。</value></data>
+  <data name="ClipboardUnavailable" xml:space="preserve"><value>クリップボードを利用できません。</value></data>
+  <data name="WindowPickingUnsupported" xml:space="preserve"><value>このシステムはウィンドウの選択に対応していません。</value></data>
+  <data name="AutoSaveFailed" xml:space="preserve"><value>キャプチャを {0} に保存できませんでした。&#xA;&#xA;{1}</value></data>
+  <data name="DefaultModePurpose" xml:space="preserve"><value>既定モードのキャプチャ</value></data>
+  <data name="RectanglePurpose" xml:space="preserve"><value>四角形のキャプチャ</value></data>
+  <data name="WindowPurpose" xml:space="preserve"><value>ウィンドウのキャプチャ</value></data>
+  <data name="FullscreenPurpose" xml:space="preserve"><value>全画面のキャプチャ</value></data>
+  <data name="FreeformPurpose" xml:space="preserve"><value>自由形のキャプチャ</value></data>
+  <data name="WholeWindowPurpose" xml:space="preserve"><value>ウィンドウ全体のキャプチャ</value></data>
+  <data name="OpenWSnip" xml:space="preserve"><value>WSnip を開く</value></data>
+  <data name="Exit" xml:space="preserve"><value>終了</value></data>
+  <data name="OverlayTitle" xml:space="preserve"><value>WSnip オーバーレイ</value></data>
+  <data name="ModeDescription" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="CancelTip" xml:space="preserve"><value>キャンセル (Esc)</value></data>
+  <data name="OK" xml:space="preserve"><value>OK</value></data>
+  <data name="Rectangle" xml:space="preserve"><value>四角形</value></data>
+  <data name="RectangleDescription" xml:space="preserve"><value>静止した画面上で四角形をドラッグします</value></data>
+  <data name="Window" xml:space="preserve"><value>ウィンドウ</value></data>
+  <data name="WindowDescription" xml:space="preserve"><value>静止した画面上でウィンドウを選び、見えている部分をキャプチャします</value></data>
+  <data name="Fullscreen" xml:space="preserve"><value>全画面</value></data>
+  <data name="FullscreenDescription" xml:space="preserve"><value>静止した画面上でディスプレイを選びます</value></data>
+  <data name="Freeform" xml:space="preserve"><value>自由形</value></data>
+  <data name="FreeformDescription" xml:space="preserve"><value>静止した画面上に自由な形を描きます</value></data>
+  <data name="WholeWindow" xml:space="preserve"><value>ウィンドウ全体</value></data>
+  <data name="WholeWindowDescription" xml:space="preserve"><value>動いている画面上でウィンドウをクリックします。隠れた部分や透明度を含め、ウィンドウ全体をキャプチャします</value></data>
+  <data name="NoDelay" xml:space="preserve"><value>遅延なし</value></data>
+  <data name="Seconds" xml:space="preserve"><value>{0} 秒</value></data>
+  <data name="PngHdrFormat" xml:space="preserve"><value>PNG HDR (16 ビット PQ)</value></data>
+  <data name="HeicFormat" xml:space="preserve"><value>HEIC (ゲインマップ)</value></data>
+  <data name="AvifFormat" xml:space="preserve"><value>AVIF (ゲインマップ)</value></data>
+  <data name="ScreenshotName" xml:space="preserve"><value>スクリーンショット {0}</value></data>
+  <data name="InvalidPath" xml:space="preserve"><value>無効なパスです。</value></data>
+  <data name="MissingPipeWire" xml:space="preserve"><value>WSnip は PipeWire を使って画面をキャプチャしますが、このシステムにはインストールされていません。PipeWire と、お使いのデスクトップの画面共有ポータル (xdg-desktop-portal-kde や xdg-desktop-portal-gnome など) をインストールしてから、再度ログインしてください。</value></data>
+  <data name="MissingPortal" xml:space="preserve"><value>WSnip はデスクトップの画面共有ポータルを使って画面をキャプチャしますが、このセッションでは利用できません。xdg-desktop-portal、お使いのデスクトップのポータル (xdg-desktop-portal-kde や xdg-desktop-portal-gnome など)、PipeWire をインストールしてから、再度ログインしてください。</value></data>
+  <data name="UnsupportedKey" xml:space="preserve"><value>キー '{0}' は対応していません。</value></data>
+  <data name="HotkeyUsed" xml:space="preserve"><value>{0} は他のアプリケーションまたは Windows で既に使用されています。</value></data>
+  <data name="HotkeyRegistrationFailed" xml:space="preserve"><value>{0} を登録できませんでした (エラー {1})。</value></data>
+  <data name="ShortcutsInSystem" xml:space="preserve"><value>ショートカットはシステム設定で割り当てます。</value></data>
+  <data name="SharedWindow" xml:space="preserve"><value>共有ウィンドウ</value></data>
+  <data name="NoDisplays" xml:space="preserve"><value>キャプチャできるディスプレイがありません。</value></data>
+  <data name="NoWindowContent" xml:space="preserve"><value>ウィンドウ '{0}' にキャプチャできる内容がありません。</value></data>
+  <data name="WindowNoFrame" xml:space="preserve"><value>ウィンドウ '{0}' からフレームを取得できませんでした。</value></data>
+  <data name="DisplayNoFrame" xml:space="preserve"><value>ディスプレイ {0} からフレームを取得できませんでした。</value></data>
+  <data name="PointerWatchFailed" xml:space="preserve"><value>ポインターを監視できませんでした (エラー {0})。</value></data>
+  <data name="ClipboardBusy" xml:space="preserve"><value>クリップボードは他のアプリで使用されています。</value></data>
+  <data name="CannotShareWindows" xml:space="preserve"><value>このデスクトップは個別のウィンドウを共有できません。</value></data>
+  <data name="CannotShareScreens" xml:space="preserve"><value>このデスクトップは画面を共有できません。</value></data>
+  <data name="NothingShared" xml:space="preserve"><value>システムからキャプチャ対象が共有されませんでした。</value></data>
+  <data name="SharingDeclined" xml:space="preserve"><value>画面共有が拒否されました。</value></data>
+  <data name="SharingFailed" xml:space="preserve"><value>画面共有を開始できませんでした。KDE Plasma や GNOME など、PipeWire 経由で画面を共有するデスクトップの Wayland セッションが必要です。</value></data>
+  <data name="KWinNoDisplay" xml:space="preserve"><value>KWin に共有できるディスプレイがありません。</value></data>
+  <data name="KWinDisplayFailed" xml:space="preserve"><value>KWin がディスプレイ {0} を共有できませんでした: {1}。</value></data>
+  <data name="KWinWindowFailed" xml:space="preserve"><value>KWin がウィンドウを共有できませんでした: {0}。</value></data>
+  <data name="KWinDisplaysTimeout" xml:space="preserve"><value>KWin が制限時間内にディスプレイの共有を開始しませんでした。</value></data>
+  <data name="KWinWindowTimeout" xml:space="preserve"><value>KWin が制限時間内にウィンドウの共有を開始しませんでした。</value></data>
+  <data name="KWinConnectionFailed" xml:space="preserve"><value>KWin への接続に失敗しました: {0}。</value></data>
+  <data name="ErrorCode" xml:space="preserve"><value>エラー {0}</value></data>
+  <data name="KWinWaitFailed" xml:space="preserve"><value>KWin の待機に失敗しました (エラー {0})。</value></data>
+  <data name="KWinUnavailable" xml:space="preserve"><value>KWin は WSnip に {0} を提供しなくなりました。</value></data>
+  <data name="PipeWireConnectFailed" xml:space="preserve"><value>PipeWire が共有画面に接続できませんでした (エラー {0})。</value></data>
+  <data name="PipeWireNoFrame" xml:space="preserve"><value>共有画面からフレームを取得できませんでした (PipeWire ノード {0})。</value></data>
+  <data name="PipeWireLoopFailed" xml:space="preserve"><value>PipeWire がスレッドループを作成できませんでした。</value></data>
+  <data name="PipeWireStartFailed" xml:space="preserve"><value>PipeWire を起動できませんでした。</value></data>
+  <data name="PipeWireStreamFailed" xml:space="preserve"><value>ノード {0} の PipeWire ストリームが失敗しました: {1}。</value></data>
+  <data name="PipeWireStreamEnded" xml:space="preserve"><value>ノード {0} の PipeWire ストリームが終了しました。</value></data>
+  <data name="PipeWireFormatUnsupported" xml:space="preserve"><value>ノード {0} の PipeWire ストリームが WSnip で読み取れない形式を選択しました。</value></data>
+  <data name="PipeWireCreateStreamFailed" xml:space="preserve"><value>PipeWire がノード {0} のストリームを作成できませんでした。</value></data>
+  <data name="PipeWireConnectNodeFailed" xml:space="preserve"><value>PipeWire がノード {0} に接続できませんでした (エラー {1})。</value></data>
+  <data name="PixelFormatUnsupported" xml:space="preserve"><value>ピクセル形式 {0} は対応していません。</value></data>
+  <data name="EncoderUnavailable" xml:space="preserve"><value>エンコーダー '{0}' を利用できません。</value></data>
+  <data name="EncoderNoData" xml:space="preserve"><value>{0} がデータを生成しませんでした。</value></data>
+  <data name="PngEncodingFailed" xml:space="preserve"><value>画像を PNG にエンコードできませんでした。</value></data>
+  <data name="PngImageTooLarge" xml:space="preserve"><value>画像が大きすぎるため PNG にエンコードできません。</value></data>
+  <data name="GainMapEncodingFailed" xml:space="preserve"><value>ゲインマップを JPEG にエンコードできませんでした。</value></data>
+  <data name="SdrJpegEncodingFailed" xml:space="preserve"><value>SDR 画像を JPEG にエンコードできませんでした。</value></data>
+  <data name="NoSessionBus" xml:space="preserve"><value>D-Bus セッションバスを利用できません。</value></data>
+</root>

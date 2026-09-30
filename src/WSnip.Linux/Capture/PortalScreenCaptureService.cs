@@ -5,6 +5,7 @@ using Tmds.DBus.Protocol;
 using WSnip.Core.Capture;
 using WSnip.Core.Imaging;
 using WSnip.Core.Platform;
+using WSnip.Core.Strings;
 using WSnip.Linux.Interop;
 using WSnip.Linux.Portal;
 
@@ -18,15 +19,6 @@ namespace WSnip.Linux.Capture;
 /// <remarks>Compositors share 8-bit SDR frames, which become scRGB with SDR white at one.</remarks>
 public sealed class PortalScreenCaptureService : IScreenCaptureService, IDisposable
 {
-    private const string MissingPipeWire =
-        "WSnip captures the screen through PipeWire, which this system does not have. Install PipeWire and the screen sharing " +
-        "portal of your desktop, such as xdg-desktop-portal-kde or xdg-desktop-portal-gnome, then sign in again.";
-
-    private const string MissingPortal =
-        "WSnip captures the screen through the desktop's screen sharing portal, which this session does not offer. Install " +
-        "xdg-desktop-portal with the portal of your desktop, such as xdg-desktop-portal-kde or xdg-desktop-portal-gnome, and " +
-        "PipeWire, then sign in again.";
-
     private static readonly TimeSpan FrameTimeout = TimeSpan.FromSeconds(5);
 
     private readonly SessionBus bus;
@@ -107,7 +99,7 @@ public sealed class PortalScreenCaptureService : IScreenCaptureService, IDisposa
     private async Task<ScreenCastSession> StartAsync(ScreenCastRequest request, CancellationToken cancellationToken)
     {
         if (!PipeWire.IsAvailable)
-            throw new PlatformNotSupportedException(MissingPipeWire);
+            throw new PlatformNotSupportedException(AppStrings.MissingPipeWire);
 
         DBusConnection connection;
         ScreenCastCapabilities capabilities;
@@ -119,7 +111,7 @@ public sealed class PortalScreenCaptureService : IScreenCaptureService, IDisposa
         catch (Exception exception) when (exception is DBusConnectionException or InvalidOperationException ||
                                           exception is DBusErrorReplyException reply && DesktopPortal.IsMissing(reply))
         {
-            throw new PlatformNotSupportedException(MissingPortal, exception);
+            throw new PlatformNotSupportedException(AppStrings.MissingPortal, exception);
         }
 
         return await ScreenCastSession.StartAsync(connection, capabilities, request, cancellationToken).ConfigureAwait(false);

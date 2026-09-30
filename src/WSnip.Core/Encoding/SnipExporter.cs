@@ -1,6 +1,7 @@
 using System.Globalization;
 using WSnip.Core.Capture;
 using WSnip.Core.Imaging;
+using WSnip.Core.Strings;
 
 namespace WSnip.Core.Encoding;
 
@@ -57,10 +58,10 @@ public static class SnipExporter
     public static string DisplayName(SnipFormat format) => format switch
     {
         SnipFormat.Png => "PNG",
-        SnipFormat.PngHdr => "PNG HDR (16-bit PQ)",
+        SnipFormat.PngHdr => AppStrings.PngHdrFormat,
         SnipFormat.Jpeg => "JPEG (Ultra HDR)",
-        SnipFormat.Heic => "HEIC (gain map)",
-        SnipFormat.Avif => "AVIF (gain map)",
+        SnipFormat.Heic => AppStrings.HeicFormat,
+        SnipFormat.Avif => AppStrings.AvifFormat,
         SnipFormat.JpegXl => "JPEG XL",
         _ => format.ToString(),
     };
@@ -94,7 +95,7 @@ public static class SnipExporter
 
     /// <summary>A file name in the style of the Windows Snipping Tool.</summary>
     public static string DefaultFileName(DateTimeOffset capturedAt, SnipFormat format) =>
-        "Screenshot " + capturedAt.ToLocalTime().ToString("yyyy-MM-dd HHmmss", CultureInfo.InvariantCulture) + Extension(format);
+        string.Format(AppStrings.ScreenshotName, capturedAt.ToLocalTime().ToString("yyyy-MM-dd HHmmss", CultureInfo.InvariantCulture)) + Extension(format);
 
     /// <summary>The SDR rendition used for display in SDR, the clipboard and SDR-only formats.</summary>
     public static Rendition BuildSdr(Snip snip, SdrToneMapping toneMapping, bool flattenAlpha) =>
@@ -139,7 +140,7 @@ public static class SnipExporter
 
     public static async Task ExportFileAsync(string path, Snip snip, SnipFormat format, ExportOptions options, CancellationToken cancellationToken = default)
     {
-        string directory = Path.GetDirectoryName(Path.GetFullPath(path)) ?? throw new ArgumentException("Invalid path.", nameof(path));
+        string directory = Path.GetDirectoryName(Path.GetFullPath(path)) ?? throw new ArgumentException(AppStrings.InvalidPath, nameof(path));
         Directory.CreateDirectory(directory);
         string temporary = Path.Combine(directory, "." + Path.GetFileName(path) + "." + Guid.NewGuid().ToString("N")[..8] + ".tmp");
         try

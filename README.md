@@ -51,6 +51,19 @@ only supported on Windows.
 - **Look:** Modern Windows styles and controls; light and dark themes; the system accent color;
   and an optional Mica backdrop on Windows 11.
 
+## Localization
+
+WSnip follows the system UI language at startup: en-US (the default and fallback), en-GB,
+es-ES, fr-FR, de-DE, ja-JP, zh-CN and zh-TW. There is no in-app language setting.
+
+UI text uses standard .NET RESX resources in `src/WSnip.Core/Strings`, accessed from Avalonia
+XAML with `x:Static` and from C# through `AppStrings`. MSBuild generates the strongly typed
+accessor and satellite resource assemblies; no custom localization generator is required.
+British English overrides spelling differences and inherits unchanged strings from the neutral
+en-US catalog. Other translations contain every resource key. Keep composite-format placeholders
+such as `{0}` and `{1:0.00}` intact when editing translations. Linux launcher actions use the
+standard localized entries in the desktop file.
+
 ## Output formats
 
 The settings pick one format for SDR snips (PNG by default) and one for snips with HDR content (AVIF

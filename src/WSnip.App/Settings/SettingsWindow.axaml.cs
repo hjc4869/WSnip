@@ -8,6 +8,7 @@ using WSnip.Core.Capture;
 using WSnip.Core.Encoding;
 using WSnip.Core.Imaging;
 using WSnip.Core.Settings;
+using WSnip.Core.Strings;
 
 namespace WSnip.App.Settings;
 
@@ -16,9 +17,9 @@ public partial class SettingsWindow : Window
 {
     private static readonly (SdrToneMapping Mode, string Label, string Description)[] ToneMappings =
     [
-        (SdrToneMapping.Adaptive, "Adaptive (recommended)", "Highlights roll off smoothly around HDR content while the rest of the screen keeps its exact colors."),
-        (SdrToneMapping.Global, "Tone map everything", "The same highlight roll-off applies to the whole snip."),
-        (SdrToneMapping.Clip, "Clip highlights", "Highlights are cut at SDR white, keeping their hue."),
+        (SdrToneMapping.Adaptive, AppStrings.Adaptive, AppStrings.AdaptiveDescription),
+        (SdrToneMapping.Global, AppStrings.GlobalToneMapping, AppStrings.GlobalToneMappingDescription),
+        (SdrToneMapping.Clip, AppStrings.ClipHighlights, AppStrings.ClipHighlightsDescription),
     ];
 
     private readonly AppController controller;
@@ -51,7 +52,16 @@ public partial class SettingsWindow : Window
         foreach ((SdrToneMapping mode, string label, _) in ToneMappings)
             ToneMappingBox.Items.Add(new ComboBoxItem { Content = label, Tag = mode });
         foreach (ThemePreference theme in Enum.GetValues<ThemePreference>())
-            ThemeBox.Items.Add(new ComboBoxItem { Content = theme == ThemePreference.System ? "Use system setting" : theme.ToString(), Tag = theme });
+            ThemeBox.Items.Add(new ComboBoxItem
+            {
+                Content = theme switch
+                {
+                    ThemePreference.Light => AppStrings.ThemeLight,
+                    ThemePreference.Dark => AppStrings.ThemeDark,
+                    _ => AppStrings.ThemeSystem,
+                },
+                Tag = theme,
+            });
         MicaRow.IsVisible = controller.Theme.IsMicaSupported;
         if (controller.Platform.Hotkeys.IsSupported)
         {
@@ -66,7 +76,7 @@ public partial class SettingsWindow : Window
         else
         {
             DefaultHotkeyRow.IsEditorVisible = false;
-            DefaultHotkeyRow.Caption = "Give WSnip's snip actions shortcuts in the system settings.";
+            DefaultHotkeyRow.Caption = AppStrings.SystemShortcutsCaption;
             ModeHotkeySection.IsVisible = false;
         }
 
@@ -132,8 +142,8 @@ public partial class SettingsWindow : Window
 
         string version = typeof(SettingsWindow).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "";
         string missing = string.Join(", ", SnipExporter.AllFormats.Where(f => !SnipExporter.IsAvailable(f)).Select(SnipExporter.DisplayName));
-        AboutText.Text = $"WSnip {version.Split('+')[0]}. HDR snips keep their highlights and wide colors; the SDR version is what " +
-            "apps without HDR support show." + (missing.Length > 0 ? $" Unavailable formats: {missing}." : string.Empty);
+        AboutText.Text = string.Format(AppStrings.About, version.Split('+')[0]) +
+            (missing.Length > 0 ? " " + string.Format(AppStrings.UnavailableFormats, missing) : string.Empty);
         loading = false;
     }
 
@@ -153,7 +163,7 @@ public partial class SettingsWindow : Window
         row.GestureChosen += (_, gesture) =>
         {
             string? refused = controller.ChangeHotkey(mode, gesture);
-            hotkeyRefusal = refused is null ? null : (row, $"{refused} Choose another combination.");
+            hotkeyRefusal = refused is null ? null : (row, string.Format(AppStrings.HotkeyRefusal, refused));
             Load();
         };
     }
@@ -170,7 +180,7 @@ public partial class SettingsWindow : Window
         IStorageFolder? start = await StorageProvider.TryGetFolderFromPathAsync(controller.SaveFolder);
         IReadOnlyList<IStorageFolder> folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
-            Title = "Folder for saved snips",
+            Title = AppStrings.SaveFolderTitle,
             SuggestedStartLocation = start,
         });
         if (folders.Count > 0 && folders[0].TryGetLocalPath() is { } path)

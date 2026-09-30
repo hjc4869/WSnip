@@ -4,6 +4,8 @@ using System.Runtime.Versioning;
 using WSnip.Core.Platform;
 using WSnip.Windows.Interop;
 
+using WSnip.Core.Strings;
+
 namespace WSnip.Windows;
 
 /// <summary>
@@ -54,7 +56,7 @@ public sealed unsafe class WindowsClipboardService : IClipboardService
         for (int attempt = 1; !Native.OpenClipboard(owner); attempt++)
         {
             if (attempt == 10)
-                throw new Win32Exception(Marshal.GetLastPInvokeError(), "The clipboard is in use by another app.");
+                throw new Win32Exception(Marshal.GetLastPInvokeError(), AppStrings.ClipboardBusy);
             Thread.Sleep(20);
         }
     }

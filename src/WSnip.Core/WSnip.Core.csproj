@@ -7,7 +7,18 @@
   <PropertyGroup>
     <RootNamespace>WSnip.Core</RootNamespace>
     <IsAotCompatible>true</IsAotCompatible>
+    <NeutralLanguage>en-US</NeutralLanguage>
   </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Strings\AppStrings.resx">
+      <StronglyTypedLanguage>C#</StronglyTypedLanguage>
+      <StronglyTypedNamespace>WSnip.Core.Strings</StronglyTypedNamespace>
+      <StronglyTypedClassName>AppStrings</StronglyTypedClassName>
+      <StronglyTypedFileName>$(IntermediateOutputPath)AppStrings.g.cs</StronglyTypedFileName>
+      <PublicClass>true</PublicClass>
+    </EmbeddedResource>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="SkiaSharp" />

@@ -1,6 +1,8 @@
 using SkiaSharp;
 using WSnip.Core.Imaging;
 
+using WSnip.Core.Strings;
+
 namespace WSnip.Core.Encoding;
 
 internal static class SkiaImages
@@ -52,7 +54,7 @@ internal static class SkiaImages
             using var pixmap = new SKPixmap(info, (IntPtr)data, rowBytes);
             using SKData? encoded = pixmap.Encode(new SKJpegEncoderOptions(
                 quality, SKJpegEncoderDownsample.Downsample444, SKJpegEncoderAlphaOption.Ignore));
-            return encoded?.ToArray() ?? throw new InvalidOperationException("The gain map could not be encoded as JPEG.");
+            return encoded?.ToArray() ?? throw new InvalidOperationException(AppStrings.GainMapEncodingFailed);
         }
     }
 }

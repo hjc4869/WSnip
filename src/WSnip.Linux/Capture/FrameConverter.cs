@@ -1,4 +1,5 @@
 using WSnip.Core.Imaging;
+using WSnip.Core.Strings;
 using WSnip.Linux.Interop;
 
 namespace WSnip.Linux.Capture;
@@ -65,6 +66,6 @@ internal static class FrameConverter
         SpaVideoFormat.ARGB => (1, 2, 3, 0),
         SpaVideoFormat.xBGR => (3, 2, 1, -1),
         SpaVideoFormat.ABGR => (3, 2, 1, 0),
-        _ => throw new NotSupportedException($"The pixel format {format} is not supported."),
+        _ => throw new NotSupportedException(string.Format(AppStrings.PixelFormatUnsupported, format)),
     };
 }

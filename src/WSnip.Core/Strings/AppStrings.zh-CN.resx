@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="SettingsTitle" xml:space="preserve"><value>WSnip 设置</value></data>
+  <data name="Settings" xml:space="preserve"><value>设置</value></data>
+  <data name="TakingSnips" xml:space="preserve"><value>截图</value></data>
+  <data name="Shortcut" xml:space="preserve"><value>快捷键</value></data>
+  <data name="DefaultShortcutCaption" xml:space="preserve"><value>使用下方设置的默认模式截图。点击输入框，然后按下组合键。</value></data>
+  <data name="SnippingMode" xml:space="preserve"><value>截图模式</value></data>
+  <data name="Delay" xml:space="preserve"><value>延迟</value></data>
+  <data name="IncludeCursor" xml:space="preserve"><value>包含鼠标指针</value></data>
+  <data name="ModeShortcuts" xml:space="preserve"><value>各模式的快捷键</value></data>
+  <data name="AfterSnip" xml:space="preserve"><value>截图后</value></data>
+  <data name="CopyClipboard" xml:space="preserve"><value>复制到剪贴板</value></data>
+  <data name="OpenEditor" xml:space="preserve"><value>打开编辑器</value></data>
+  <data name="ShowPixelInfo" xml:space="preserve"><value>显示像素信息</value></data>
+  <data name="PixelInfoCaption" xml:space="preserve"><value>显示指针下像素的位置、颜色和亮度，包括 HDR 和广色域。</value></data>
+  <data name="AutoSave" xml:space="preserve"><value>自动保存</value></data>
+  <data name="ChangeFolder" xml:space="preserve"><value>更改文件夹</value></data>
+  <data name="Files" xml:space="preserve"><value>文件</value></data>
+  <data name="SdrFormat" xml:space="preserve"><value>SDR 截图格式</value></data>
+  <data name="SdrFormatCaption" xml:space="preserve"><value>PNG 可逐像素精确保留屏幕内容。</value></data>
+  <data name="HdrFormat" xml:space="preserve"><value>HDR 截图格式</value></data>
+  <data name="HdrFormatCaption" xml:space="preserve"><value>增益图格式在普通环境中显示 SDR 图像，在支持的环境中显示 HDR 图像。</value></data>
+  <data name="Quality" xml:space="preserve"><value>质量</value></data>
+  <data name="QualityCaption" xml:space="preserve"><value>适用于 JPEG、HEIC、AVIF 和 JPEG XL。JPEG XL 在 100 时为无损压缩。</value></data>
+  <data name="SdrVersion" xml:space="preserve"><value>HDR 截图的 SDR 版本</value></data>
+  <data name="Appearance" xml:space="preserve"><value>外观</value></data>
+  <data name="Theme" xml:space="preserve"><value>主题</value></data>
+  <data name="Mica" xml:space="preserve"><value>云母背景</value></data>
+  <data name="MicaCaption" xml:space="preserve"><value>让窗口呈现桌面壁纸的色调，如同 Windows 11 应用。</value></data>
+  <data name="Startup" xml:space="preserve"><value>启动</value></data>
+  <data name="StartWindows" xml:space="preserve"><value>随 Windows 启动</value></data>
+  <data name="StartupCaption" xml:space="preserve"><value>在通知区域运行，让快捷键始终可用。</value></data>
+  <data name="NewSnip" xml:space="preserve"><value>新建截图</value></data>
+  <data name="NewSnipTip" xml:space="preserve"><value>新建截图 (Ctrl+N)</value></data>
+  <data name="New" xml:space="preserve"><value>新建</value></data>
+  <data name="DelayTip" xml:space="preserve"><value>开始截图前的延迟</value></data>
+  <data name="Pen" xml:space="preserve"><value>画笔</value></data>
+  <data name="Highlighter" xml:space="preserve"><value>荧光笔</value></data>
+  <data name="Eraser" xml:space="preserve"><value>橡皮擦</value></data>
+  <data name="Crop" xml:space="preserve"><value>裁剪</value></data>
+  <data name="Undo" xml:space="preserve"><value>撤销</value></data>
+  <data name="UndoTip" xml:space="preserve"><value>撤销 (Ctrl+Z)</value></data>
+  <data name="Redo" xml:space="preserve"><value>重做</value></data>
+  <data name="RedoTip" xml:space="preserve"><value>重做 (Ctrl+Y)</value></data>
+  <data name="ShowHdr" xml:space="preserve"><value>显示 HDR</value></data>
+  <data name="ZoomOut" xml:space="preserve"><value>缩小</value></data>
+  <data name="ZoomOutTip" xml:space="preserve"><value>缩小 (Ctrl+-)</value></data>
+  <data name="ZoomFitTip" xml:space="preserve"><value>适应窗口或显示实际大小 (Ctrl+0)</value></data>
+  <data name="ZoomIn" xml:space="preserve"><value>放大</value></data>
+  <data name="ZoomInTip" xml:space="preserve"><value>放大 (Ctrl++)</value></data>
+  <data name="Copy" xml:space="preserve"><value>复制</value></data>
+  <data name="CopyTip" xml:space="preserve"><value>复制 (Ctrl+C)</value></data>
+  <data name="SaveAs" xml:space="preserve"><value>另存为</value></data>
+  <data name="SaveAsTip" xml:space="preserve"><value>另存为 (Ctrl+S)</value></data>
+  <data name="More" xml:space="preserve"><value>更多</value></data>
+  <data name="OpenFolder" xml:space="preserve"><value>打开截图文件夹</value></data>
+  <data name="ExitWSnip" xml:space="preserve"><value>退出 WSnip</value></data>
+  <data name="AddColor" xml:space="preserve"><value>添加颜色</value></data>
+  <data name="PickColorTip" xml:space="preserve"><value>从截图中拾取颜色，包括 HDR 和广色域 (按 Esc 停止)</value></data>
+  <data name="PickColor" xml:space="preserve"><value>从截图中拾取颜色</value></data>
+  <data name="Size" xml:space="preserve"><value>粗细</value></data>
+  <data name="TakeSnip" xml:space="preserve"><value>截取屏幕</value></data>
+  <data name="Apply" xml:space="preserve"><value>应用</value></data>
+  <data name="Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="ShowInFolder" xml:space="preserve"><value>在文件夹中显示</value></data>
+  <data name="ColorSpace" xml:space="preserve"><value>色彩空间</value></data>
+  <data name="Hex" xml:space="preserve"><value>十六进制</value></data>
+  <data name="Red" xml:space="preserve"><value>红色</value></data>
+  <data name="Green" xml:space="preserve"><value>绿色</value></data>
+  <data name="Blue" xml:space="preserve"><value>蓝色</value></data>
+  <data name="Brightness" xml:space="preserve"><value>亮度</value></data>
+  <data name="BrightnessTip" xml:space="preserve"><value>以 SDR 白色亮度的倍数表示。超过 1 倍时为 HDR 颜色，在 HDR 显示器上比白色更亮，并保留在 HDR 文件中。</value></data>
+  <data name="Add" xml:space="preserve"><value>添加</value></data>
+  <data name="PrintScreen" xml:space="preserve"><value>Print Screen</value></data>
+  <data name="PrintScreenTip" xml:space="preserve"><value>使用 Print Screen 键</value></data>
+  <data name="None" xml:space="preserve"><value>无</value></data>
+  <data name="NoShortcut" xml:space="preserve"><value>无快捷键</value></data>
+  <data name="Adaptive" xml:space="preserve"><value>自适应（推荐）</value></data>
+  <data name="AdaptiveDescription" xml:space="preserve"><value>在 HDR 内容周围平滑压缩高光，同时让屏幕其余部分精确保留原有颜色。</value></data>
+  <data name="GlobalToneMapping" xml:space="preserve"><value>整体色调映射</value></data>
+  <data name="GlobalToneMappingDescription" xml:space="preserve"><value>对整张截图应用相同的高光压缩。</value></data>
+  <data name="ClipHighlights" xml:space="preserve"><value>截断高光</value></data>
+  <data name="ClipHighlightsDescription" xml:space="preserve"><value>将高光限制在 SDR 白色亮度，保留其色相。</value></data>
+  <data name="ThemeSystem" xml:space="preserve"><value>跟随系统</value></data>
+  <data name="ThemeLight" xml:space="preserve"><value>浅色</value></data>
+  <data name="ThemeDark" xml:space="preserve"><value>深色</value></data>
+  <data name="SystemShortcutsCaption" xml:space="preserve"><value>在系统设置中为 WSnip 的截图操作分配快捷键。</value></data>
+  <data name="About" xml:space="preserve"><value>WSnip {0}。HDR 截图保留高光和广色域；不支持 HDR 的应用会显示 SDR 版本。</value></data>
+  <data name="UnavailableFormats" xml:space="preserve"><value>不可用的格式：{0}。</value></data>
+  <data name="HotkeyRefusal" xml:space="preserve"><value>{0} 请选择其他组合键。</value></data>
+  <data name="SaveFolderTitle" xml:space="preserve"><value>截图保存文件夹</value></data>
+  <data name="Black" xml:space="preserve"><value>黑色</value></data>
+  <data name="White" xml:space="preserve"><value>白色</value></data>
+  <data name="Yellow" xml:space="preserve"><value>黄色</value></data>
+  <data name="Purple" xml:space="preserve"><value>紫色</value></data>
+  <data name="Cyan" xml:space="preserve"><value>青色</value></data>
+  <data name="Pink" xml:space="preserve"><value>粉色</value></data>
+  <data name="Orange" xml:space="preserve"><value>橙色</value></data>
+  <data name="EditColor" xml:space="preserve"><value>编辑颜色</value></data>
+  <data name="RemoveColor" xml:space="preserve"><value>移除颜色</value></data>
+  <data name="NewColor" xml:space="preserve"><value>新建颜色</value></data>
+  <data name="Save" xml:space="preserve"><value>保存</value></data>
+  <data name="WithinSrgb" xml:space="preserve"><value>sRGB 色域内</value></data>
+  <data name="WideP3" xml:space="preserve"><value>广色域 (Display P3)</value></data>
+  <data name="WideBt2020" xml:space="preserve"><value>广色域 (BT.2020)</value></data>
+  <data name="ColorDescription" xml:space="preserve"><value>{0}，{1}。亮度为 SDR 白色的 {2:0.00} 倍，{3:0} 尼特。</value></data>
+  <data name="LinearColor" xml:space="preserve"><value>线性 scRGB {0:0.000}, {1:0.000}, {2:0.000}</value></data>
+  <data name="PixelLuminance" xml:space="preserve"><value>亮度为 SDR 白色的 {0:0.000} 倍，{1:0.#} 尼特</value></data>
+  <data name="AlphaSuffix" xml:space="preserve"><value>  ·  不透明度 {0:0.00}</value></data>
+  <data name="Copied" xml:space="preserve"><value>已复制到剪贴板。</value></data>
+  <data name="CopyFailed" xml:space="preserve"><value>无法将截图复制到剪贴板。&#xA;&#xA;{0}</value></data>
+  <data name="SaveSnip" xml:space="preserve"><value>保存截图</value></data>
+  <data name="Saving" xml:space="preserve"><value>正在保存…</value></data>
+  <data name="SaveFailed" xml:space="preserve"><value>无法保存截图。&#xA;&#xA;{0}</value></data>
+  <data name="EditorTitle" xml:space="preserve"><value>WSnip — {0}</value></data>
+  <data name="NoSystemHotkeyHint" xml:space="preserve"><value>选择“新建”来截取屏幕，或在系统设置中为 WSnip 的“新建截图”操作分配快捷键。</value></data>
+  <data name="NoHotkey" xml:space="preserve"><value>快捷键（未设置）</value></data>
+  <data name="HotkeyErrorHint" xml:space="preserve"><value>选择“新建”来截取屏幕。{0} 请在设置中选择其他快捷键。</value></data>
+  <data name="HotkeyHint" xml:space="preserve"><value>在任意位置按下 {0}，或选择“新建”来截取屏幕。HDR 和广色域内容会被保留。</value></data>
+  <data name="ShowingHdr" xml:space="preserve"><value>正在显示 HDR；选择以预览 SDR 版本</value></data>
+  <data name="ShowingSdr" xml:space="preserve"><value>正在显示 SDR 版本；选择以显示 HDR</value></data>
+  <data name="SdrOnly" xml:space="preserve"><value>此显示器仅支持 SDR 显示</value></data>
+  <data name="HdrPeak" xml:space="preserve"><value>HDR，峰值为 SDR 白色的 {0:0.0} 倍（{1:0} 尼特）</value></data>
+  <data name="WideBeyondP3" xml:space="preserve"><value>超出 Display P3 的广色域</value></data>
+  <data name="WideP3Status" xml:space="preserve"><value>广色域 (Display P3)</value></data>
+  <data name="StrokeCountOne" xml:space="preserve"><value>{0} 条笔画</value></data>
+  <data name="StrokeCountMany" xml:space="preserve"><value>{0} 条笔画</value></data>
+  <data name="HdrDisplay" xml:space="preserve"><value>HDR 显示器，亮度余量 {0:0.0} 倍</value></data>
+  <data name="WideDisplay" xml:space="preserve"><value>广色域显示器</value></data>
+  <data name="SdrDisplay" xml:space="preserve"><value>SDR 显示器</value></data>
+  <data name="CaptureFailed" xml:space="preserve"><value>无法截取屏幕。&#xA;&#xA;{0}</value></data>
+  <data name="HotkeyConflict" xml:space="preserve"><value>{0} 已是{1}的快捷键。</value></data>
+  <data name="ClipboardUnavailable" xml:space="preserve"><value>剪贴板不可用。</value></data>
+  <data name="WindowPickingUnsupported" xml:space="preserve"><value>此系统不支持选择窗口。</value></data>
+  <data name="AutoSaveFailed" xml:space="preserve"><value>无法将截图保存到 {0}。&#xA;&#xA;{1}</value></data>
+  <data name="DefaultModePurpose" xml:space="preserve"><value>默认模式截图</value></data>
+  <data name="RectanglePurpose" xml:space="preserve"><value>矩形截图</value></data>
+  <data name="WindowPurpose" xml:space="preserve"><value>窗口截图</value></data>
+  <data name="FullscreenPurpose" xml:space="preserve"><value>全屏截图</value></data>
+  <data name="FreeformPurpose" xml:space="preserve"><value>自由形状截图</value></data>
+  <data name="WholeWindowPurpose" xml:space="preserve"><value>完整窗口截图</value></data>
+  <data name="OpenWSnip" xml:space="preserve"><value>打开 WSnip</value></data>
+  <data name="Exit" xml:space="preserve"><value>退出</value></data>
+  <data name="OverlayTitle" xml:space="preserve"><value>WSnip 截图浮层</value></data>
+  <data name="ModeDescription" xml:space="preserve"><value>{0}：{1}</value></data>
+  <data name="CancelTip" xml:space="preserve"><value>取消 (Esc)</value></data>
+  <data name="OK" xml:space="preserve"><value>确定</value></data>
+  <data name="Rectangle" xml:space="preserve"><value>矩形</value></data>
+  <data name="RectangleDescription" xml:space="preserve"><value>在冻结的屏幕上拖出一个矩形</value></data>
+  <data name="Window" xml:space="preserve"><value>窗口</value></data>
+  <data name="WindowDescription" xml:space="preserve"><value>在冻结的屏幕上选择窗口，截取其可见部分</value></data>
+  <data name="Fullscreen" xml:space="preserve"><value>全屏</value></data>
+  <data name="FullscreenDescription" xml:space="preserve"><value>在冻结的屏幕上选择一个显示器</value></data>
+  <data name="Freeform" xml:space="preserve"><value>自由形状</value></data>
+  <data name="FreeformDescription" xml:space="preserve"><value>在冻结的屏幕上绘制任意形状</value></data>
+  <data name="WholeWindow" xml:space="preserve"><value>完整窗口</value></data>
+  <data name="WholeWindowDescription" xml:space="preserve"><value>在实时屏幕上点击窗口；截取整个窗口，包括被遮挡的部分，并保留透明度</value></data>
+  <data name="NoDelay" xml:space="preserve"><value>无延迟</value></data>
+  <data name="Seconds" xml:space="preserve"><value>{0} 秒</value></data>
+  <data name="PngHdrFormat" xml:space="preserve"><value>PNG HDR（16 位 PQ）</value></data>
+  <data name="HeicFormat" xml:space="preserve"><value>HEIC（增益图）</value></data>
+  <data name="AvifFormat" xml:space="preserve"><value>AVIF（增益图）</value></data>
+  <data name="ScreenshotName" xml:space="preserve"><value>屏幕截图 {0}</value></data>
+  <data name="InvalidPath" xml:space="preserve"><value>路径无效。</value></data>
+  <data name="MissingPipeWire" xml:space="preserve"><value>WSnip 通过 PipeWire 截取屏幕，但此系统未安装 PipeWire。请安装 PipeWire 和桌面环境的屏幕共享门户，例如 xdg-desktop-portal-kde 或 xdg-desktop-portal-gnome，然后重新登录。</value></data>
+  <data name="MissingPortal" xml:space="preserve"><value>WSnip 通过桌面环境的屏幕共享门户截取屏幕，但当前会话未提供此功能。请安装 xdg-desktop-portal、桌面环境的门户（例如 xdg-desktop-portal-kde 或 xdg-desktop-portal-gnome）以及 PipeWire，然后重新登录。</value></data>
+  <data name="UnsupportedKey" xml:space="preserve"><value>不支持按键“{0}”。</value></data>
+  <data name="HotkeyUsed" xml:space="preserve"><value>{0} 已被其他应用或 Windows 使用。</value></data>
+  <data name="HotkeyRegistrationFailed" xml:space="preserve"><value>无法注册 {0}（错误 {1}）。</value></data>
+  <data name="ShortcutsInSystem" xml:space="preserve"><value>快捷键在系统设置中分配。</value></data>
+  <data name="SharedWindow" xml:space="preserve"><value>共享窗口</value></data>
+  <data name="NoDisplays" xml:space="preserve"><value>没有可截取的显示器。</value></data>
+  <data name="NoWindowContent" xml:space="preserve"><value>窗口“{0}”没有可截取的内容。</value></data>
+  <data name="WindowNoFrame" xml:space="preserve"><value>窗口“{0}”未提供任何帧。</value></data>
+  <data name="DisplayNoFrame" xml:space="preserve"><value>显示器 {0} 未提供任何帧。</value></data>
+  <data name="PointerWatchFailed" xml:space="preserve"><value>无法监视指针（错误 {0}）。</value></data>
+  <data name="ClipboardBusy" xml:space="preserve"><value>剪贴板正被其他应用使用。</value></data>
+  <data name="CannotShareWindows" xml:space="preserve"><value>此桌面环境无法共享单个窗口。</value></data>
+  <data name="CannotShareScreens" xml:space="preserve"><value>此桌面环境无法共享屏幕。</value></data>
+  <data name="NothingShared" xml:space="preserve"><value>系统未共享任何可截取的内容。</value></data>
+  <data name="SharingDeclined" xml:space="preserve"><value>屏幕共享被拒绝。</value></data>
+  <data name="SharingFailed" xml:space="preserve"><value>系统无法启动屏幕共享。需要使用通过 PipeWire 共享屏幕的 Wayland 桌面会话，例如 KDE Plasma 或 GNOME。</value></data>
+  <data name="KWinNoDisplay" xml:space="preserve"><value>KWin 没有可共享的显示器。</value></data>
+  <data name="KWinDisplayFailed" xml:space="preserve"><value>KWin 无法共享显示器 {0}：{1}。</value></data>
+  <data name="KWinWindowFailed" xml:space="preserve"><value>KWin 无法共享窗口：{0}。</value></data>
+  <data name="KWinDisplaysTimeout" xml:space="preserve"><value>KWin 未在规定时间内开始共享显示器。</value></data>
+  <data name="KWinWindowTimeout" xml:space="preserve"><value>KWin 未在规定时间内开始共享窗口。</value></data>
+  <data name="KWinConnectionFailed" xml:space="preserve"><value>连接 KWin 失败：{0}。</value></data>
+  <data name="ErrorCode" xml:space="preserve"><value>错误 {0}</value></data>
+  <data name="KWinWaitFailed" xml:space="preserve"><value>等待 KWin 失败（错误 {0}）。</value></data>
+  <data name="KWinUnavailable" xml:space="preserve"><value>KWin 不再向 WSnip 提供 {0}。</value></data>
+  <data name="PipeWireConnectFailed" xml:space="preserve"><value>PipeWire 无法连接到共享屏幕（错误 {0}）。</value></data>
+  <data name="PipeWireNoFrame" xml:space="preserve"><value>共享屏幕未提供任何帧（PipeWire 节点 {0}）。</value></data>
+  <data name="PipeWireLoopFailed" xml:space="preserve"><value>PipeWire 无法创建线程循环。</value></data>
+  <data name="PipeWireStartFailed" xml:space="preserve"><value>PipeWire 无法启动。</value></data>
+  <data name="PipeWireStreamFailed" xml:space="preserve"><value>节点 {0} 的 PipeWire 流失败：{1}。</value></data>
+  <data name="PipeWireStreamEnded" xml:space="preserve"><value>节点 {0} 的 PipeWire 流已结束。</value></data>
+  <data name="PipeWireFormatUnsupported" xml:space="preserve"><value>节点 {0} 的 PipeWire 流选择了 WSnip 无法读取的格式。</value></data>
+  <data name="PipeWireCreateStreamFailed" xml:space="preserve"><value>PipeWire 无法为节点 {0} 创建流。</value></data>
+  <data name="PipeWireConnectNodeFailed" xml:space="preserve"><value>PipeWire 无法连接到节点 {0}（错误 {1}）。</value></data>
+  <data name="PixelFormatUnsupported" xml:space="preserve"><value>不支持像素格式 {0}。</value></data>
+  <data name="EncoderUnavailable" xml:space="preserve"><value>编码器“{0}”不可用。</value></data>
+  <data name="EncoderNoData" xml:space="preserve"><value>{0} 未生成任何数据。</value></data>
+  <data name="PngEncodingFailed" xml:space="preserve"><value>无法将图像编码为 PNG。</value></data>
+  <data name="PngImageTooLarge" xml:space="preserve"><value>图像过大，无法编码为 PNG。</value></data>
+  <data name="GainMapEncodingFailed" xml:space="preserve"><value>无法将增益图编码为 JPEG。</value></data>
+  <data name="SdrJpegEncodingFailed" xml:space="preserve"><value>无法将 SDR 图像编码为 JPEG。</value></data>
+  <data name="NoSessionBus" xml:space="preserve"><value>没有可用的 D-Bus 会话总线。</value></data>
+</root>

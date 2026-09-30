@@ -2,6 +2,7 @@ using System.Globalization;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using WSnip.Core.Imaging;
+using WSnip.Core.Strings;
 
 namespace WSnip.App.Editor;
 
@@ -89,8 +90,8 @@ public partial class ColorEditor : UserControl
 
         GamutLabel.IsVisible = GamutBox.IsVisible = extended;
         BrightnessLabel.IsVisible = BrightnessSlider.IsVisible = BrightnessText.IsVisible = extended;
-        TitleText.Text = existing ? "Edit color" : "New color";
-        ApplyButton.Content = existing ? "Save" : "Add";
+        TitleText.Text = existing ? AppStrings.EditColor : AppStrings.NewColor;
+        ApplyButton.Content = existing ? AppStrings.Save : AppStrings.Add;
         Refresh(updateHex: true);
     }
 
@@ -119,14 +120,13 @@ public partial class ColorEditor : UserControl
     {
         string gamut = color.Gamut switch
         {
-            ColorPrimaries.Bt709 => "Within sRGB",
-            ColorPrimaries.DisplayP3 => "Wide color (Display P3)",
-            _ => "Wide color (BT.2020)",
+            ColorPrimaries.Bt709 => AppStrings.WithinSrgb,
+            ColorPrimaries.DisplayP3 => AppStrings.WideP3,
+            _ => AppStrings.WideBt2020,
         };
         float luminance = color.Luminance;
         string range = color.IsHdr ? "HDR" : "SDR";
-        return string.Create(CultureInfo.CurrentCulture,
-            $"{gamut}, {range}. Luminance {luminance:0.00}\u00D7 SDR white, {luminance * whiteNits:0} nits.");
+        return string.Format(CultureInfo.CurrentCulture, AppStrings.ColorDescription, gamut, range, luminance, luminance * whiteNits);
     }
 
     private static string Format(double value) => Round(value).ToString(CultureInfo.CurrentCulture);

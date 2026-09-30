@@ -1,6 +1,8 @@
 using FFmpeg.AutoGen.Abstractions;
 using WSnip.Core.Imaging;
 
+using WSnip.Core.Strings;
+
 namespace WSnip.Core.Encoding;
 
 public enum HeifCodec
@@ -33,7 +35,7 @@ public static class HeifEncoder
     public static void Write(Stream output, Rendition rendition, HeifCodec codec, int quality, int gainMapQuality)
     {
         string encoder = FindEncoder(codec)
-            ?? throw new NotSupportedException($"No {(codec == HeifCodec.Hevc ? "HEVC" : "AV1")} encoder is available.");
+            ?? throw new NotSupportedException(string.Format(AppStrings.EncoderUnavailable, codec == HeifCodec.Hevc ? "HEVC" : "AV1"));
         var coder = new ItemCoder(codec, encoder);
         int primariesCode = ColorMath.CicpPrimaries(rendition.Primaries);
 

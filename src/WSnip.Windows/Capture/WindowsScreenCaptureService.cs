@@ -7,6 +7,7 @@ using Windows.Graphics.DirectX;
 using WSnip.Core.Capture;
 using WSnip.Core.Imaging;
 using WSnip.Core.Platform;
+using WSnip.Core.Strings;
 using WSnip.Windows.Interop;
 
 namespace WSnip.Windows.Capture;
@@ -37,7 +38,7 @@ public sealed class WindowsScreenCaptureService : IScreenCaptureService, IDispos
             var watch = Stopwatch.StartNew();
             List<DisplayInfo> displays = DisplayEnumerator.Enumerate();
             if (displays.Count == 0)
-                throw new InvalidOperationException("No display is available to capture.");
+                throw new InvalidOperationException(AppStrings.NoDisplays);
 
             PixelRect virtualBounds = displays.Aggregate(default(PixelRect), (bounds, display) => bounds.Union(display.Bounds));
             List<CapturedWindow> windows = WindowEnumerator.Enumerate(virtualBounds);
@@ -119,7 +120,7 @@ public sealed class WindowsScreenCaptureService : IScreenCaptureService, IDispos
         GraphicsCaptureItem item = CreateItem(window.Handle, CreateForWindow);
         SizeInt32 size = item.Size;
         if (size.Width <= 0 || size.Height <= 0)
-            throw new InvalidOperationException($"The window '{window.Title}' has no content to capture.");
+            throw new InvalidOperationException(string.Format(AppStrings.NoWindowContent, window.Title));
 
         using Direct3D11CaptureFramePool pool = Direct3D11CaptureFramePool.CreateFreeThreaded(
             device.WinRTDevice, DirectXPixelFormat.R16G16B16A16Float, 1, size);
@@ -151,7 +152,7 @@ public sealed class WindowsScreenCaptureService : IScreenCaptureService, IDispos
             }
 
             if (watch.Elapsed > FrameTimeout)
-                throw new TimeoutException($"The window '{window.Title}' delivered no frame.");
+                throw new TimeoutException(string.Format(AppStrings.WindowNoFrame, window.Title));
             Thread.Sleep(2);
         }
     }
@@ -189,7 +190,7 @@ public sealed class WindowsScreenCaptureService : IScreenCaptureService, IDispos
             }
 
             if (watch.Elapsed > FrameTimeout)
-                throw new TimeoutException($"The display {display.DeviceName} delivered no frame.");
+                throw new TimeoutException(string.Format(AppStrings.DisplayNoFrame, display.DeviceName));
             Thread.Sleep(2);
         }
     }

@@ -7,6 +7,8 @@ using WSnip.Core.Platform;
 using WSnip.Linux.Interop;
 using WSnip.Linux.KWin;
 
+using WSnip.Core.Strings;
+
 namespace WSnip.Linux.Capture;
 
 /// <summary>
@@ -73,7 +75,7 @@ public sealed class KWinScreenCaptureService : IScreenCaptureService, IDisposabl
 
         var watch = Stopwatch.StartNew();
         using KWinScreencast kwin = await Task.Run(Connect, cancellationToken).ConfigureAwait(false)
-            ?? throw new InvalidOperationException($"KWin no longer offers {KWinScreencast.Interface} to WSnip.");
+            ?? throw new InvalidOperationException(string.Format(AppStrings.KWinUnavailable, KWinScreencast.Interface));
         uint node = await Task.Run(() => kwin.StreamWindow(uuid, options.IncludeCursor, Timeout), cancellationToken).ConfigureAwait(false);
         DateTimeOffset capturedAt = DateTimeOffset.Now;
         PipeWireFrame frame = (await PipeWireFrameReader.ReadAsync(null, [node], alpha: true, Timeout, cancellationToken).ConfigureAwait(false))[0];

@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="SettingsTitle" xml:space="preserve"><value>Configuración de WSnip</value></data>
+  <data name="Settings" xml:space="preserve"><value>Configuración</value></data>
+  <data name="TakingSnips" xml:space="preserve"><value>Capturas</value></data>
+  <data name="Shortcut" xml:space="preserve"><value>Atajo de teclado</value></data>
+  <data name="DefaultShortcutCaption" xml:space="preserve"><value>Captura en el modo predeterminado que se indica abajo. Haz clic en el cuadro y pulsa una combinación de teclas.</value></data>
+  <data name="SnippingMode" xml:space="preserve"><value>Modo de captura</value></data>
+  <data name="Delay" xml:space="preserve"><value>Retardo</value></data>
+  <data name="IncludeCursor" xml:space="preserve"><value>Incluir el puntero del ratón</value></data>
+  <data name="ModeShortcuts" xml:space="preserve"><value>Atajos para cada modo</value></data>
+  <data name="AfterSnip" xml:space="preserve"><value>Después de una captura</value></data>
+  <data name="CopyClipboard" xml:space="preserve"><value>Copiar al portapapeles</value></data>
+  <data name="OpenEditor" xml:space="preserve"><value>Abrir el editor</value></data>
+  <data name="ShowPixelInfo" xml:space="preserve"><value>Mostrar información del píxel</value></data>
+  <data name="PixelInfoCaption" xml:space="preserve"><value>Posición, color y luminancia del píxel bajo el puntero, incluidos HDR y la gama amplia de colores.</value></data>
+  <data name="AutoSave" xml:space="preserve"><value>Guardar automáticamente</value></data>
+  <data name="ChangeFolder" xml:space="preserve"><value>Cambiar carpeta</value></data>
+  <data name="Files" xml:space="preserve"><value>Archivos</value></data>
+  <data name="SdrFormat" xml:space="preserve"><value>Formato de las capturas SDR</value></data>
+  <data name="SdrFormatCaption" xml:space="preserve"><value>PNG conserva el contenido de la pantalla píxel a píxel.</value></data>
+  <data name="HdrFormat" xml:space="preserve"><value>Formato de las capturas HDR</value></data>
+  <data name="HdrFormatCaption" xml:space="preserve"><value>Los formatos con mapa de ganancia muestran una imagen SDR en cualquier visor y la imagen HDR donde se admite.</value></data>
+  <data name="Quality" xml:space="preserve"><value>Calidad</value></data>
+  <data name="QualityCaption" xml:space="preserve"><value>Para JPEG, HEIC, AVIF y JPEG XL. 100 es sin pérdidas para JPEG XL.</value></data>
+  <data name="SdrVersion" xml:space="preserve"><value>Versión SDR de las capturas HDR</value></data>
+  <data name="Appearance" xml:space="preserve"><value>Apariencia</value></data>
+  <data name="Theme" xml:space="preserve"><value>Tema</value></data>
+  <data name="Mica" xml:space="preserve"><value>Fondo Mica</value></data>
+  <data name="MicaCaption" xml:space="preserve"><value>Teñir la ventana con el fondo de escritorio, como las aplicaciones de Windows 11.</value></data>
+  <data name="Startup" xml:space="preserve"><value>Inicio</value></data>
+  <data name="StartWindows" xml:space="preserve"><value>Iniciar con Windows</value></data>
+  <data name="StartupCaption" xml:space="preserve"><value>Se ejecuta en el área de notificación para que el atajo funcione siempre.</value></data>
+  <data name="NewSnip" xml:space="preserve"><value>Nueva captura</value></data>
+  <data name="NewSnipTip" xml:space="preserve"><value>Nueva captura (Ctrl+N)</value></data>
+  <data name="New" xml:space="preserve"><value>Nuevo</value></data>
+  <data name="DelayTip" xml:space="preserve"><value>Retardo antes de iniciar la captura</value></data>
+  <data name="Pen" xml:space="preserve"><value>Lápiz</value></data>
+  <data name="Highlighter" xml:space="preserve"><value>Resaltador</value></data>
+  <data name="Eraser" xml:space="preserve"><value>Borrador</value></data>
+  <data name="Crop" xml:space="preserve"><value>Recortar</value></data>
+  <data name="Undo" xml:space="preserve"><value>Deshacer</value></data>
+  <data name="UndoTip" xml:space="preserve"><value>Deshacer (Ctrl+Z)</value></data>
+  <data name="Redo" xml:space="preserve"><value>Rehacer</value></data>
+  <data name="RedoTip" xml:space="preserve"><value>Rehacer (Ctrl+Y)</value></data>
+  <data name="ShowHdr" xml:space="preserve"><value>Mostrar HDR</value></data>
+  <data name="ZoomOut" xml:space="preserve"><value>Alejar</value></data>
+  <data name="ZoomOutTip" xml:space="preserve"><value>Alejar (Ctrl+-)</value></data>
+  <data name="ZoomFitTip" xml:space="preserve"><value>Ajustar a la ventana o mostrar el tamaño real (Ctrl+0)</value></data>
+  <data name="ZoomIn" xml:space="preserve"><value>Acercar</value></data>
+  <data name="ZoomInTip" xml:space="preserve"><value>Acercar (Ctrl++)</value></data>
+  <data name="Copy" xml:space="preserve"><value>Copiar</value></data>
+  <data name="CopyTip" xml:space="preserve"><value>Copiar (Ctrl+C)</value></data>
+  <data name="SaveAs" xml:space="preserve"><value>Guardar como</value></data>
+  <data name="SaveAsTip" xml:space="preserve"><value>Guardar como (Ctrl+S)</value></data>
+  <data name="More" xml:space="preserve"><value>Más</value></data>
+  <data name="OpenFolder" xml:space="preserve"><value>Abrir carpeta de capturas</value></data>
+  <data name="ExitWSnip" xml:space="preserve"><value>Salir de WSnip</value></data>
+  <data name="AddColor" xml:space="preserve"><value>Añadir un color</value></data>
+  <data name="PickColorTip" xml:space="preserve"><value>Elegir un color de la captura, incluidos HDR y la gama amplia de colores (Esc para detener)</value></data>
+  <data name="PickColor" xml:space="preserve"><value>Elegir un color de la captura</value></data>
+  <data name="Size" xml:space="preserve"><value>Tamaño</value></data>
+  <data name="TakeSnip" xml:space="preserve"><value>Hacer una captura</value></data>
+  <data name="Apply" xml:space="preserve"><value>Aplicar</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="ShowInFolder" xml:space="preserve"><value>Mostrar en carpeta</value></data>
+  <data name="ColorSpace" xml:space="preserve"><value>Espacio de color</value></data>
+  <data name="Hex" xml:space="preserve"><value>Hexadecimal</value></data>
+  <data name="Red" xml:space="preserve"><value>Rojo</value></data>
+  <data name="Green" xml:space="preserve"><value>Verde</value></data>
+  <data name="Blue" xml:space="preserve"><value>Azul</value></data>
+  <data name="Brightness" xml:space="preserve"><value>Brillo</value></data>
+  <data name="BrightnessTip" xml:space="preserve"><value>Múltiplos del blanco SDR. Por encima de 1×, el color es HDR: más brillante que el blanco en una pantalla HDR y se conserva en archivos HDR.</value></data>
+  <data name="Add" xml:space="preserve"><value>Añadir</value></data>
+  <data name="PrintScreen" xml:space="preserve"><value>Impr Pant</value></data>
+  <data name="PrintScreenTip" xml:space="preserve"><value>Usar la tecla Impr Pant</value></data>
+  <data name="None" xml:space="preserve"><value>Ninguno</value></data>
+  <data name="NoShortcut" xml:space="preserve"><value>Sin atajo</value></data>
+  <data name="Adaptive" xml:space="preserve"><value>Adaptativo (recomendado)</value></data>
+  <data name="AdaptiveDescription" xml:space="preserve"><value>Las altas luces se comprimen suavemente alrededor del contenido HDR, mientras el resto de la pantalla conserva sus colores exactos.</value></data>
+  <data name="GlobalToneMapping" xml:space="preserve"><value>Mapear todos los tonos</value></data>
+  <data name="GlobalToneMappingDescription" xml:space="preserve"><value>La misma compresión de altas luces se aplica a toda la captura.</value></data>
+  <data name="ClipHighlights" xml:space="preserve"><value>Recortar altas luces</value></data>
+  <data name="ClipHighlightsDescription" xml:space="preserve"><value>Las altas luces se limitan al blanco SDR conservando su matiz.</value></data>
+  <data name="ThemeSystem" xml:space="preserve"><value>Usar ajuste del sistema</value></data>
+  <data name="ThemeLight" xml:space="preserve"><value>Claro</value></data>
+  <data name="ThemeDark" xml:space="preserve"><value>Oscuro</value></data>
+  <data name="SystemShortcutsCaption" xml:space="preserve"><value>Asigna atajos a las acciones de captura de WSnip en la configuración del sistema.</value></data>
+  <data name="About" xml:space="preserve"><value>WSnip {0}. Las capturas HDR conservan sus altas luces y su gama amplia de colores; las aplicaciones sin compatibilidad HDR muestran la versión SDR.</value></data>
+  <data name="UnavailableFormats" xml:space="preserve"><value>Formatos no disponibles: {0}.</value></data>
+  <data name="HotkeyRefusal" xml:space="preserve"><value>{0} Elige otra combinación.</value></data>
+  <data name="SaveFolderTitle" xml:space="preserve"><value>Carpeta para guardar capturas</value></data>
+  <data name="Black" xml:space="preserve"><value>Negro</value></data>
+  <data name="White" xml:space="preserve"><value>Blanco</value></data>
+  <data name="Yellow" xml:space="preserve"><value>Amarillo</value></data>
+  <data name="Purple" xml:space="preserve"><value>Morado</value></data>
+  <data name="Cyan" xml:space="preserve"><value>Cian</value></data>
+  <data name="Pink" xml:space="preserve"><value>Rosa</value></data>
+  <data name="Orange" xml:space="preserve"><value>Naranja</value></data>
+  <data name="EditColor" xml:space="preserve"><value>Editar color</value></data>
+  <data name="RemoveColor" xml:space="preserve"><value>Eliminar color</value></data>
+  <data name="NewColor" xml:space="preserve"><value>Nuevo color</value></data>
+  <data name="Save" xml:space="preserve"><value>Guardar</value></data>
+  <data name="WithinSrgb" xml:space="preserve"><value>Dentro de sRGB</value></data>
+  <data name="WideP3" xml:space="preserve"><value>Gama amplia de colores (Display P3)</value></data>
+  <data name="WideBt2020" xml:space="preserve"><value>Gama amplia de colores (BT.2020)</value></data>
+  <data name="ColorDescription" xml:space="preserve"><value>{0}, {1}. Luminancia {2:0.00}× blanco SDR, {3:0} nits.</value></data>
+  <data name="LinearColor" xml:space="preserve"><value>scRGB lineal {0:0.000}, {1:0.000}, {2:0.000}</value></data>
+  <data name="PixelLuminance" xml:space="preserve"><value>Luminancia {0:0.000}× blanco SDR, {1:0.#} nits</value></data>
+  <data name="AlphaSuffix" xml:space="preserve"><value>  ·  alfa {0:0.00}</value></data>
+  <data name="Copied" xml:space="preserve"><value>Copiado al portapapeles.</value></data>
+  <data name="CopyFailed" xml:space="preserve"><value>No se pudo copiar la captura al portapapeles.&#xA;&#xA;{0}</value></data>
+  <data name="SaveSnip" xml:space="preserve"><value>Guardar captura</value></data>
+  <data name="Saving" xml:space="preserve"><value>Guardando…</value></data>
+  <data name="SaveFailed" xml:space="preserve"><value>No se pudo guardar la captura.&#xA;&#xA;{0}</value></data>
+  <data name="EditorTitle" xml:space="preserve"><value>WSnip — {0}</value></data>
+  <data name="NoSystemHotkeyHint" xml:space="preserve"><value>Selecciona Nuevo para capturar la pantalla o asigna un atajo a la acción Nueva captura de WSnip en la configuración del sistema.</value></data>
+  <data name="NoHotkey" xml:space="preserve"><value>un atajo (ninguno configurado)</value></data>
+  <data name="HotkeyErrorHint" xml:space="preserve"><value>Selecciona Nuevo para capturar la pantalla. {0} Elige otro atajo en Configuración.</value></data>
+  <data name="HotkeyHint" xml:space="preserve"><value>Pulsa {0} en cualquier lugar o selecciona Nuevo para capturar la pantalla. Se conserva el contenido HDR y de gama amplia de colores.</value></data>
+  <data name="ShowingHdr" xml:space="preserve"><value>Mostrando HDR; selecciona para ver la versión SDR</value></data>
+  <data name="ShowingSdr" xml:space="preserve"><value>Mostrando la versión SDR; selecciona para ver HDR</value></data>
+  <data name="SdrOnly" xml:space="preserve"><value>Esta pantalla solo muestra SDR</value></data>
+  <data name="HdrPeak" xml:space="preserve"><value>HDR, pico {0:0.0}× blanco SDR ({1:0} nits)</value></data>
+  <data name="WideBeyondP3" xml:space="preserve"><value>gama de colores más amplia que Display P3</value></data>
+  <data name="WideP3Status" xml:space="preserve"><value>gama amplia de colores (Display P3)</value></data>
+  <data name="StrokeCountOne" xml:space="preserve"><value>{0} trazo</value></data>
+  <data name="StrokeCountMany" xml:space="preserve"><value>{0} trazos</value></data>
+  <data name="HdrDisplay" xml:space="preserve"><value>Pantalla HDR, margen {0:0.0}×</value></data>
+  <data name="WideDisplay" xml:space="preserve"><value>Pantalla de gama amplia de colores</value></data>
+  <data name="SdrDisplay" xml:space="preserve"><value>Pantalla SDR</value></data>
+  <data name="CaptureFailed" xml:space="preserve"><value>No se pudo capturar la pantalla.&#xA;&#xA;{0}</value></data>
+  <data name="HotkeyConflict" xml:space="preserve"><value>{0} ya es el atajo para {1}.</value></data>
+  <data name="ClipboardUnavailable" xml:space="preserve"><value>El portapapeles no está disponible.</value></data>
+  <data name="WindowPickingUnsupported" xml:space="preserve"><value>Este sistema no permite seleccionar una ventana.</value></data>
+  <data name="AutoSaveFailed" xml:space="preserve"><value>No se pudo guardar la captura en {0}.&#xA;&#xA;{1}</value></data>
+  <data name="DefaultModePurpose" xml:space="preserve"><value>capturas en el modo predeterminado</value></data>
+  <data name="RectanglePurpose" xml:space="preserve"><value>capturas rectangulares</value></data>
+  <data name="WindowPurpose" xml:space="preserve"><value>capturas de ventana</value></data>
+  <data name="FullscreenPurpose" xml:space="preserve"><value>capturas de pantalla completa</value></data>
+  <data name="FreeformPurpose" xml:space="preserve"><value>capturas de forma libre</value></data>
+  <data name="WholeWindowPurpose" xml:space="preserve"><value>capturas de ventana completa</value></data>
+  <data name="OpenWSnip" xml:space="preserve"><value>Abrir WSnip</value></data>
+  <data name="Exit" xml:space="preserve"><value>Salir</value></data>
+  <data name="OverlayTitle" xml:space="preserve"><value>Superposición de WSnip</value></data>
+  <data name="ModeDescription" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="CancelTip" xml:space="preserve"><value>Cancelar (Esc)</value></data>
+  <data name="OK" xml:space="preserve"><value>Aceptar</value></data>
+  <data name="Rectangle" xml:space="preserve"><value>Rectángulo</value></data>
+  <data name="RectangleDescription" xml:space="preserve"><value>Arrastra un rectángulo sobre la pantalla congelada</value></data>
+  <data name="Window" xml:space="preserve"><value>Ventana</value></data>
+  <data name="WindowDescription" xml:space="preserve"><value>Elige una ventana en la pantalla congelada, tal como se ve</value></data>
+  <data name="Fullscreen" xml:space="preserve"><value>Pantalla completa</value></data>
+  <data name="FullscreenDescription" xml:space="preserve"><value>Elige una pantalla en la imagen congelada</value></data>
+  <data name="Freeform" xml:space="preserve"><value>Forma libre</value></data>
+  <data name="FreeformDescription" xml:space="preserve"><value>Dibuja cualquier forma sobre la pantalla congelada</value></data>
+  <data name="WholeWindow" xml:space="preserve"><value>Ventana completa</value></data>
+  <data name="WholeWindowDescription" xml:space="preserve"><value>Haz clic en una ventana con la pantalla en vivo; se captura entera, incluso las partes tapadas, con su transparencia</value></data>
+  <data name="NoDelay" xml:space="preserve"><value>Sin retardo</value></data>
+  <data name="Seconds" xml:space="preserve"><value>{0} segundos</value></data>
+  <data name="PngHdrFormat" xml:space="preserve"><value>PNG HDR (PQ de 16 bits)</value></data>
+  <data name="HeicFormat" xml:space="preserve"><value>HEIC (mapa de ganancia)</value></data>
+  <data name="AvifFormat" xml:space="preserve"><value>AVIF (mapa de ganancia)</value></data>
+  <data name="ScreenshotName" xml:space="preserve"><value>Captura de pantalla {0}</value></data>
+  <data name="InvalidPath" xml:space="preserve"><value>Ruta no válida.</value></data>
+  <data name="MissingPipeWire" xml:space="preserve"><value>WSnip captura la pantalla mediante PipeWire, que no está instalado en este sistema. Instala PipeWire y el portal de uso compartido de pantalla de tu escritorio, como xdg-desktop-portal-kde o xdg-desktop-portal-gnome, y vuelve a iniciar sesión.</value></data>
+  <data name="MissingPortal" xml:space="preserve"><value>WSnip captura la pantalla mediante el portal de uso compartido de pantalla del escritorio, que no está disponible en esta sesión. Instala xdg-desktop-portal junto con el portal de tu escritorio, como xdg-desktop-portal-kde o xdg-desktop-portal-gnome, y PipeWire, y vuelve a iniciar sesión.</value></data>
+  <data name="UnsupportedKey" xml:space="preserve"><value>La tecla '{0}' no es compatible.</value></data>
+  <data name="HotkeyUsed" xml:space="preserve"><value>{0} ya lo utiliza otra aplicación o Windows.</value></data>
+  <data name="HotkeyRegistrationFailed" xml:space="preserve"><value>No se pudo registrar {0} (error {1}).</value></data>
+  <data name="ShortcutsInSystem" xml:space="preserve"><value>Los atajos se asignan en la configuración del sistema.</value></data>
+  <data name="SharedWindow" xml:space="preserve"><value>Ventana compartida</value></data>
+  <data name="NoDisplays" xml:space="preserve"><value>No hay ninguna pantalla disponible para capturar.</value></data>
+  <data name="NoWindowContent" xml:space="preserve"><value>La ventana '{0}' no tiene contenido que capturar.</value></data>
+  <data name="WindowNoFrame" xml:space="preserve"><value>La ventana '{0}' no entregó ningún fotograma.</value></data>
+  <data name="DisplayNoFrame" xml:space="preserve"><value>La pantalla {0} no entregó ningún fotograma.</value></data>
+  <data name="PointerWatchFailed" xml:space="preserve"><value>No se pudo supervisar el puntero (error {0}).</value></data>
+  <data name="ClipboardBusy" xml:space="preserve"><value>Otra aplicación está utilizando el portapapeles.</value></data>
+  <data name="CannotShareWindows" xml:space="preserve"><value>El escritorio no permite compartir ventanas individuales.</value></data>
+  <data name="CannotShareScreens" xml:space="preserve"><value>El escritorio no permite compartir pantallas.</value></data>
+  <data name="NothingShared" xml:space="preserve"><value>El sistema no compartió nada que capturar.</value></data>
+  <data name="SharingDeclined" xml:space="preserve"><value>Se rechazó compartir la pantalla.</value></data>
+  <data name="SharingFailed" xml:space="preserve"><value>El sistema no pudo iniciar el uso compartido de pantalla. Se necesita una sesión Wayland cuyo escritorio comparta pantallas mediante PipeWire, como KDE Plasma o GNOME.</value></data>
+  <data name="KWinNoDisplay" xml:space="preserve"><value>KWin no tiene ninguna pantalla que compartir.</value></data>
+  <data name="KWinDisplayFailed" xml:space="preserve"><value>KWin no pudo compartir la pantalla {0}: {1}.</value></data>
+  <data name="KWinWindowFailed" xml:space="preserve"><value>KWin no pudo compartir la ventana: {0}.</value></data>
+  <data name="KWinDisplaysTimeout" xml:space="preserve"><value>KWin no empezó a compartir las pantallas a tiempo.</value></data>
+  <data name="KWinWindowTimeout" xml:space="preserve"><value>KWin no empezó a compartir la ventana a tiempo.</value></data>
+  <data name="KWinConnectionFailed" xml:space="preserve"><value>Falló la conexión con KWin: {0}.</value></data>
+  <data name="ErrorCode" xml:space="preserve"><value>error {0}</value></data>
+  <data name="KWinWaitFailed" xml:space="preserve"><value>Falló la espera de KWin (error {0}).</value></data>
+  <data name="KWinUnavailable" xml:space="preserve"><value>KWin ya no ofrece {0} a WSnip.</value></data>
+  <data name="PipeWireConnectFailed" xml:space="preserve"><value>PipeWire no pudo conectarse a la pantalla compartida (error {0}).</value></data>
+  <data name="PipeWireNoFrame" xml:space="preserve"><value>La pantalla compartida no entregó ningún fotograma (nodo PipeWire {0}).</value></data>
+  <data name="PipeWireLoopFailed" xml:space="preserve"><value>PipeWire no pudo crear un bucle de hilo.</value></data>
+  <data name="PipeWireStartFailed" xml:space="preserve"><value>PipeWire no pudo iniciarse.</value></data>
+  <data name="PipeWireStreamFailed" xml:space="preserve"><value>Falló el flujo de PipeWire del nodo {0}: {1}.</value></data>
+  <data name="PipeWireStreamEnded" xml:space="preserve"><value>Terminó el flujo de PipeWire del nodo {0}.</value></data>
+  <data name="PipeWireFormatUnsupported" xml:space="preserve"><value>El flujo de PipeWire del nodo {0} eligió un formato que WSnip no puede leer.</value></data>
+  <data name="PipeWireCreateStreamFailed" xml:space="preserve"><value>PipeWire no pudo crear un flujo para el nodo {0}.</value></data>
+  <data name="PipeWireConnectNodeFailed" xml:space="preserve"><value>PipeWire no pudo conectarse al nodo {0} (error {1}).</value></data>
+  <data name="PixelFormatUnsupported" xml:space="preserve"><value>El formato de píxel {0} no es compatible.</value></data>
+  <data name="EncoderUnavailable" xml:space="preserve"><value>El codificador '{0}' no está disponible.</value></data>
+  <data name="EncoderNoData" xml:space="preserve"><value>{0} no produjo datos.</value></data>
+  <data name="PngEncodingFailed" xml:space="preserve"><value>No se pudo codificar la imagen como PNG.</value></data>
+  <data name="PngImageTooLarge" xml:space="preserve"><value>La imagen es demasiado grande para codificarla como PNG.</value></data>
+  <data name="GainMapEncodingFailed" xml:space="preserve"><value>No se pudo codificar el mapa de ganancia como JPEG.</value></data>
+  <data name="SdrJpegEncodingFailed" xml:space="preserve"><value>No se pudo codificar la imagen SDR como JPEG.</value></data>
+  <data name="NoSessionBus" xml:space="preserve"><value>No hay ningún bus de sesión D-Bus disponible.</value></data>
+</root>

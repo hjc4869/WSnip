@@ -4,6 +4,8 @@ using SkiaSharp;
 using WSnip.Core.Imaging;
 using TextEncoding = System.Text.Encoding;
 
+using WSnip.Core.Strings;
+
 namespace WSnip.Core.Encoding;
 
 /// <summary>
@@ -28,7 +30,7 @@ public static class UltraHdrJpegWriter
         {
             using SKData? data = pixmap.Encode(new SKJpegEncoderOptions(
                 Math.Clamp(quality, 1, 100), SKJpegEncoderDownsample.Downsample444, SKJpegEncoderAlphaOption.Ignore));
-            return data?.ToArray() ?? throw new InvalidOperationException("The SDR image could not be encoded as JPEG.");
+            return data?.ToArray() ?? throw new InvalidOperationException(AppStrings.SdrJpegEncodingFailed);
         });
 
         if (rendition.GainMap is not { } gainMap)

@@ -1,5 +1,6 @@
 using WSnip.Core.Capture;
 using WSnip.Core.Platform;
+using WSnip.Core.Strings;
 
 namespace WSnip.Linux.Capture;
 
@@ -12,5 +13,5 @@ public sealed class PortalWindowPicker(PortalScreenCaptureService capture) : IWi
     public bool IsSupported => capture.IsSupported;
 
     public Task<CapturedWindow?> PickAsync(CancellationToken cancellationToken = default) =>
-        Task.FromResult<CapturedWindow?>(new CapturedWindow(0, "Shared window", null, default));
+        Task.FromResult<CapturedWindow?>(new CapturedWindow(0, AppStrings.SharedWindow, null, default));
 }

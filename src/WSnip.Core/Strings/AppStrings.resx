@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="SettingsTitle" xml:space="preserve"><value>WSnip settings</value></data>
+  <data name="Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="TakingSnips" xml:space="preserve"><value>Taking snips</value></data>
+  <data name="Shortcut" xml:space="preserve"><value>Shortcut</value></data>
+  <data name="DefaultShortcutCaption" xml:space="preserve"><value>Snips in the default mode, set below. Click the box and press a key combination.</value></data>
+  <data name="SnippingMode" xml:space="preserve"><value>Snipping mode</value></data>
+  <data name="Delay" xml:space="preserve"><value>Delay</value></data>
+  <data name="IncludeCursor" xml:space="preserve"><value>Include the mouse pointer</value></data>
+  <data name="ModeShortcuts" xml:space="preserve"><value>Shortcuts for each mode</value></data>
+  <data name="AfterSnip" xml:space="preserve"><value>After a snip</value></data>
+  <data name="CopyClipboard" xml:space="preserve"><value>Copy to the clipboard</value></data>
+  <data name="OpenEditor" xml:space="preserve"><value>Open the editor</value></data>
+  <data name="ShowPixelInfo" xml:space="preserve"><value>Show pixel information</value></data>
+  <data name="PixelInfoCaption" xml:space="preserve"><value>Position, color and luminance of the pixel under the pointer, including HDR and wide colors.</value></data>
+  <data name="AutoSave" xml:space="preserve"><value>Save automatically</value></data>
+  <data name="ChangeFolder" xml:space="preserve"><value>Change folder</value></data>
+  <data name="Files" xml:space="preserve"><value>Files</value></data>
+  <data name="SdrFormat" xml:space="preserve"><value>Format for SDR snips</value></data>
+  <data name="SdrFormatCaption" xml:space="preserve"><value>PNG keeps screen content pixel-exact.</value></data>
+  <data name="HdrFormat" xml:space="preserve"><value>Format for HDR snips</value></data>
+  <data name="HdrFormatCaption" xml:space="preserve"><value>Gain map formats show an SDR image everywhere and the HDR one where supported.</value></data>
+  <data name="Quality" xml:space="preserve"><value>Quality</value></data>
+  <data name="QualityCaption" xml:space="preserve"><value>For JPEG, HEIC, AVIF and JPEG XL. 100 is lossless for JPEG XL.</value></data>
+  <data name="SdrVersion" xml:space="preserve"><value>SDR version of HDR snips</value></data>
+  <data name="Appearance" xml:space="preserve"><value>Appearance</value></data>
+  <data name="Theme" xml:space="preserve"><value>Theme</value></data>
+  <data name="Mica" xml:space="preserve"><value>Mica backdrop</value></data>
+  <data name="MicaCaption" xml:space="preserve"><value>Let the desktop wallpaper tint the window, as Windows 11 apps do.</value></data>
+  <data name="Startup" xml:space="preserve"><value>Startup</value></data>
+  <data name="StartWindows" xml:space="preserve"><value>Start with Windows</value></data>
+  <data name="StartupCaption" xml:space="preserve"><value>Runs in the notification area so the shortcut always works.</value></data>
+  <data name="NewSnip" xml:space="preserve"><value>New snip</value></data>
+  <data name="NewSnipTip" xml:space="preserve"><value>New snip (Ctrl+N)</value></data>
+  <data name="New" xml:space="preserve"><value>New</value></data>
+  <data name="DelayTip" xml:space="preserve"><value>Delay before the snip starts</value></data>
+  <data name="Pen" xml:space="preserve"><value>Pen</value></data>
+  <data name="Highlighter" xml:space="preserve"><value>Highlighter</value></data>
+  <data name="Eraser" xml:space="preserve"><value>Eraser</value></data>
+  <data name="Crop" xml:space="preserve"><value>Crop</value></data>
+  <data name="Undo" xml:space="preserve"><value>Undo</value></data>
+  <data name="UndoTip" xml:space="preserve"><value>Undo (Ctrl+Z)</value></data>
+  <data name="Redo" xml:space="preserve"><value>Redo</value></data>
+  <data name="RedoTip" xml:space="preserve"><value>Redo (Ctrl+Y)</value></data>
+  <data name="ShowHdr" xml:space="preserve"><value>Show HDR</value></data>
+  <data name="ZoomOut" xml:space="preserve"><value>Zoom out</value></data>
+  <data name="ZoomOutTip" xml:space="preserve"><value>Zoom out (Ctrl+-)</value></data>
+  <data name="ZoomFitTip" xml:space="preserve"><value>Fit to window or show actual size (Ctrl+0)</value></data>
+  <data name="ZoomIn" xml:space="preserve"><value>Zoom in</value></data>
+  <data name="ZoomInTip" xml:space="preserve"><value>Zoom in (Ctrl++)</value></data>
+  <data name="Copy" xml:space="preserve"><value>Copy</value></data>
+  <data name="CopyTip" xml:space="preserve"><value>Copy (Ctrl+C)</value></data>
+  <data name="SaveAs" xml:space="preserve"><value>Save as</value></data>
+  <data name="SaveAsTip" xml:space="preserve"><value>Save as (Ctrl+S)</value></data>
+  <data name="More" xml:space="preserve"><value>More</value></data>
+  <data name="OpenFolder" xml:space="preserve"><value>Open screenshots folder</value></data>
+  <data name="ExitWSnip" xml:space="preserve"><value>Exit WSnip</value></data>
+  <data name="AddColor" xml:space="preserve"><value>Add a color</value></data>
+  <data name="PickColorTip" xml:space="preserve"><value>Pick a color from the snip, including HDR and wide colors (Esc to stop)</value></data>
+  <data name="PickColor" xml:space="preserve"><value>Pick a color from the snip</value></data>
+  <data name="Size" xml:space="preserve"><value>Size</value></data>
+  <data name="TakeSnip" xml:space="preserve"><value>Take a snip</value></data>
+  <data name="Apply" xml:space="preserve"><value>Apply</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="ShowInFolder" xml:space="preserve"><value>Show in folder</value></data>
+  <data name="ColorSpace" xml:space="preserve"><value>Color space</value></data>
+  <data name="Hex" xml:space="preserve"><value>Hex</value></data>
+  <data name="Red" xml:space="preserve"><value>Red</value></data>
+  <data name="Green" xml:space="preserve"><value>Green</value></data>
+  <data name="Blue" xml:space="preserve"><value>Blue</value></data>
+  <data name="Brightness" xml:space="preserve"><value>Brightness</value></data>
+  <data name="BrightnessTip" xml:space="preserve"><value>Multiples of SDR white. Above 1&#xD7; the color is HDR: brighter than white on an HDR display, and kept in HDR files.</value></data>
+  <data name="Add" xml:space="preserve"><value>Add</value></data>
+  <data name="PrintScreen" xml:space="preserve"><value>Print Screen</value></data>
+  <data name="PrintScreenTip" xml:space="preserve"><value>Use the Print Screen key</value></data>
+  <data name="None" xml:space="preserve"><value>None</value></data>
+  <data name="NoShortcut" xml:space="preserve"><value>No shortcut</value></data>
+  <data name="Adaptive" xml:space="preserve"><value>Adaptive (recommended)</value></data>
+  <data name="AdaptiveDescription" xml:space="preserve"><value>Highlights roll off smoothly around HDR content while the rest of the screen keeps its exact colors.</value></data>
+  <data name="GlobalToneMapping" xml:space="preserve"><value>Tone map everything</value></data>
+  <data name="GlobalToneMappingDescription" xml:space="preserve"><value>The same highlight roll-off applies to the whole snip.</value></data>
+  <data name="ClipHighlights" xml:space="preserve"><value>Clip highlights</value></data>
+  <data name="ClipHighlightsDescription" xml:space="preserve"><value>Highlights are cut at SDR white, keeping their hue.</value></data>
+  <data name="ThemeSystem" xml:space="preserve"><value>Use system setting</value></data>
+  <data name="ThemeLight" xml:space="preserve"><value>Light</value></data>
+  <data name="ThemeDark" xml:space="preserve"><value>Dark</value></data>
+  <data name="SystemShortcutsCaption" xml:space="preserve"><value>Give WSnip's snip actions shortcuts in the system settings.</value></data>
+  <data name="About" xml:space="preserve"><value>WSnip {0}. HDR snips keep their highlights and wide colors; the SDR version is what apps without HDR support show.</value></data>
+  <data name="UnavailableFormats" xml:space="preserve"><value>Unavailable formats: {0}.</value></data>
+  <data name="HotkeyRefusal" xml:space="preserve"><value>{0} Choose another combination.</value></data>
+  <data name="SaveFolderTitle" xml:space="preserve"><value>Folder for saved snips</value></data>
+  <data name="Black" xml:space="preserve"><value>Black</value></data>
+  <data name="White" xml:space="preserve"><value>White</value></data>
+  <data name="Yellow" xml:space="preserve"><value>Yellow</value></data>
+  <data name="Purple" xml:space="preserve"><value>Purple</value></data>
+  <data name="Cyan" xml:space="preserve"><value>Cyan</value></data>
+  <data name="Pink" xml:space="preserve"><value>Pink</value></data>
+  <data name="Orange" xml:space="preserve"><value>Orange</value></data>
+  <data name="EditColor" xml:space="preserve"><value>Edit color</value></data>
+  <data name="RemoveColor" xml:space="preserve"><value>Remove color</value></data>
+  <data name="NewColor" xml:space="preserve"><value>New color</value></data>
+  <data name="Save" xml:space="preserve"><value>Save</value></data>
+  <data name="WithinSrgb" xml:space="preserve"><value>Within sRGB</value></data>
+  <data name="WideP3" xml:space="preserve"><value>Wide color (Display P3)</value></data>
+  <data name="WideBt2020" xml:space="preserve"><value>Wide color (BT.2020)</value></data>
+  <data name="ColorDescription" xml:space="preserve"><value>{0}, {1}. Luminance {2:0.00}&#xD7; SDR white, {3:0} nits.</value></data>
+  <data name="LinearColor" xml:space="preserve"><value>Linear scRGB {0:0.000}, {1:0.000}, {2:0.000}</value></data>
+  <data name="PixelLuminance" xml:space="preserve"><value>Luminance {0:0.000}&#xD7; SDR white, {1:0.#} nits</value></data>
+  <data name="AlphaSuffix" xml:space="preserve"><value>  &#xB7;  alpha {0:0.00}</value></data>
+  <data name="Copied" xml:space="preserve"><value>Copied to the clipboard.</value></data>
+  <data name="CopyFailed" xml:space="preserve"><value>The snip could not be copied to the clipboard.&#xA;&#xA;{0}</value></data>
+  <data name="SaveSnip" xml:space="preserve"><value>Save snip</value></data>
+  <data name="Saving" xml:space="preserve"><value>Saving&#x2026;</value></data>
+  <data name="SaveFailed" xml:space="preserve"><value>The snip could not be saved.&#xA;&#xA;{0}</value></data>
+  <data name="EditorTitle" xml:space="preserve"><value>WSnip &#x2014; {0}</value></data>
+  <data name="NoSystemHotkeyHint" xml:space="preserve"><value>Select New to capture the screen, or give WSnip's New snip action a shortcut in the system settings.</value></data>
+  <data name="NoHotkey" xml:space="preserve"><value>a hotkey (none set)</value></data>
+  <data name="HotkeyErrorHint" xml:space="preserve"><value>Select New to capture the screen. {0} Choose another shortcut in Settings.</value></data>
+  <data name="HotkeyHint" xml:space="preserve"><value>Press {0} anywhere, or select New, to capture the screen. HDR and wide-color content is kept.</value></data>
+  <data name="ShowingHdr" xml:space="preserve"><value>Showing HDR; select to preview the SDR version</value></data>
+  <data name="ShowingSdr" xml:space="preserve"><value>Showing the SDR version; select to show HDR</value></data>
+  <data name="SdrOnly" xml:space="preserve"><value>This display shows SDR only</value></data>
+  <data name="HdrPeak" xml:space="preserve"><value>HDR, peak {0:0.0}&#xD7; SDR white ({1:0} nits)</value></data>
+  <data name="WideBeyondP3" xml:space="preserve"><value>wide color beyond Display P3</value></data>
+  <data name="WideP3Status" xml:space="preserve"><value>wide color (Display P3)</value></data>
+  <data name="StrokeCountOne" xml:space="preserve"><value>{0} stroke</value></data>
+  <data name="StrokeCountMany" xml:space="preserve"><value>{0} strokes</value></data>
+  <data name="HdrDisplay" xml:space="preserve"><value>HDR display, {0:0.0}&#xD7; headroom</value></data>
+  <data name="WideDisplay" xml:space="preserve"><value>Wide color display</value></data>
+  <data name="SdrDisplay" xml:space="preserve"><value>SDR display</value></data>
+  <data name="CaptureFailed" xml:space="preserve"><value>The screen could not be captured.&#xA;&#xA;{0}</value></data>
+  <data name="HotkeyConflict" xml:space="preserve"><value>{0} is already the shortcut for {1}.</value></data>
+  <data name="ClipboardUnavailable" xml:space="preserve"><value>The clipboard is not available.</value></data>
+  <data name="WindowPickingUnsupported" xml:space="preserve"><value>Picking a window is not supported on this system.</value></data>
+  <data name="AutoSaveFailed" xml:space="preserve"><value>The snip could not be saved to {0}.&#xA;&#xA;{1}</value></data>
+  <data name="DefaultModePurpose" xml:space="preserve"><value>snips in the default mode</value></data>
+  <data name="RectanglePurpose" xml:space="preserve"><value>rectangle snips</value></data>
+  <data name="WindowPurpose" xml:space="preserve"><value>window snips</value></data>
+  <data name="FullscreenPurpose" xml:space="preserve"><value>full screen snips</value></data>
+  <data name="FreeformPurpose" xml:space="preserve"><value>freeform snips</value></data>
+  <data name="WholeWindowPurpose" xml:space="preserve"><value>whole window snips</value></data>
+  <data name="OpenWSnip" xml:space="preserve"><value>Open WSnip</value></data>
+  <data name="Exit" xml:space="preserve"><value>Exit</value></data>
+  <data name="OverlayTitle" xml:space="preserve"><value>WSnip overlay</value></data>
+  <data name="ModeDescription" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="CancelTip" xml:space="preserve"><value>Cancel (Esc)</value></data>
+  <data name="OK" xml:space="preserve"><value>OK</value></data>
+  <data name="Rectangle" xml:space="preserve"><value>Rectangle</value></data>
+  <data name="RectangleDescription" xml:space="preserve"><value>Drag a rectangle on the frozen screen</value></data>
+  <data name="Window" xml:space="preserve"><value>Window</value></data>
+  <data name="WindowDescription" xml:space="preserve"><value>Pick a window on the frozen screen, as it is visible</value></data>
+  <data name="Fullscreen" xml:space="preserve"><value>Full screen</value></data>
+  <data name="FullscreenDescription" xml:space="preserve"><value>Pick a display on the frozen screen</value></data>
+  <data name="Freeform" xml:space="preserve"><value>Freeform</value></data>
+  <data name="FreeformDescription" xml:space="preserve"><value>Draw any shape on the frozen screen</value></data>
+  <data name="WholeWindow" xml:space="preserve"><value>Whole window</value></data>
+  <data name="WholeWindowDescription" xml:space="preserve"><value>Click a window while the screen stays live; it is captured whole, even where covered, with its transparency</value></data>
+  <data name="NoDelay" xml:space="preserve"><value>No delay</value></data>
+  <data name="Seconds" xml:space="preserve"><value>{0} seconds</value></data>
+  <data name="PngHdrFormat" xml:space="preserve"><value>PNG HDR (16-bit PQ)</value></data>
+  <data name="HeicFormat" xml:space="preserve"><value>HEIC (gain map)</value></data>
+  <data name="AvifFormat" xml:space="preserve"><value>AVIF (gain map)</value></data>
+  <data name="ScreenshotName" xml:space="preserve"><value>Screenshot {0}</value></data>
+  <data name="InvalidPath" xml:space="preserve"><value>Invalid path.</value></data>
+  <data name="MissingPipeWire" xml:space="preserve"><value>WSnip captures the screen through PipeWire, which this system does not have. Install PipeWire and the screen sharing portal of your desktop, such as xdg-desktop-portal-kde or xdg-desktop-portal-gnome, then sign in again.</value></data>
+  <data name="MissingPortal" xml:space="preserve"><value>WSnip captures the screen through the desktop's screen sharing portal, which this session does not offer. Install xdg-desktop-portal with the portal of your desktop, such as xdg-desktop-portal-kde or xdg-desktop-portal-gnome, and PipeWire, then sign in again.</value></data>
+  <data name="UnsupportedKey" xml:space="preserve"><value>The key '{0}' is not supported.</value></data>
+  <data name="HotkeyUsed" xml:space="preserve"><value>{0} is already used by another application or by Windows.</value></data>
+  <data name="HotkeyRegistrationFailed" xml:space="preserve"><value>{0} could not be registered (error {1}).</value></data>
+  <data name="ShortcutsInSystem" xml:space="preserve"><value>Shortcuts are assigned in the system settings.</value></data>
+  <data name="SharedWindow" xml:space="preserve"><value>Shared window</value></data>
+  <data name="NoDisplays" xml:space="preserve"><value>No display is available to capture.</value></data>
+  <data name="NoWindowContent" xml:space="preserve"><value>The window '{0}' has no content to capture.</value></data>
+  <data name="WindowNoFrame" xml:space="preserve"><value>The window '{0}' delivered no frame.</value></data>
+  <data name="DisplayNoFrame" xml:space="preserve"><value>The display {0} delivered no frame.</value></data>
+  <data name="PointerWatchFailed" xml:space="preserve"><value>The pointer could not be watched (error {0}).</value></data>
+  <data name="ClipboardBusy" xml:space="preserve"><value>The clipboard is in use by another app.</value></data>
+  <data name="CannotShareWindows" xml:space="preserve"><value>The desktop cannot share single windows.</value></data>
+  <data name="CannotShareScreens" xml:space="preserve"><value>The desktop cannot share screens.</value></data>
+  <data name="NothingShared" xml:space="preserve"><value>The system shared nothing to capture.</value></data>
+  <data name="SharingDeclined" xml:space="preserve"><value>Screen sharing was declined.</value></data>
+  <data name="SharingFailed" xml:space="preserve"><value>The system could not start screen sharing. It needs a Wayland session whose desktop shares screens through PipeWire, such as KDE Plasma or GNOME.</value></data>
+  <data name="KWinNoDisplay" xml:space="preserve"><value>KWin has no display to share.</value></data>
+  <data name="KWinDisplayFailed" xml:space="preserve"><value>KWin could not share the display {0}: {1}.</value></data>
+  <data name="KWinWindowFailed" xml:space="preserve"><value>KWin could not share the window: {0}.</value></data>
+  <data name="KWinDisplaysTimeout" xml:space="preserve"><value>KWin did not start sharing the displays in time.</value></data>
+  <data name="KWinWindowTimeout" xml:space="preserve"><value>KWin did not start sharing the window in time.</value></data>
+  <data name="KWinConnectionFailed" xml:space="preserve"><value>The connection to KWin failed: {0}.</value></data>
+  <data name="ErrorCode" xml:space="preserve"><value>error {0}</value></data>
+  <data name="KWinWaitFailed" xml:space="preserve"><value>Waiting for KWin failed (error {0}).</value></data>
+  <data name="KWinUnavailable" xml:space="preserve"><value>KWin no longer offers {0} to WSnip.</value></data>
+  <data name="PipeWireConnectFailed" xml:space="preserve"><value>PipeWire could not connect to the shared screen (error {0}).</value></data>
+  <data name="PipeWireNoFrame" xml:space="preserve"><value>The shared screen delivered no frame (PipeWire node {0}).</value></data>
+  <data name="PipeWireLoopFailed" xml:space="preserve"><value>PipeWire could not create a thread loop.</value></data>
+  <data name="PipeWireStartFailed" xml:space="preserve"><value>PipeWire could not start.</value></data>
+  <data name="PipeWireStreamFailed" xml:space="preserve"><value>The PipeWire stream of node {0} failed: {1}.</value></data>
+  <data name="PipeWireStreamEnded" xml:space="preserve"><value>The PipeWire stream of node {0} ended.</value></data>
+  <data name="PipeWireFormatUnsupported" xml:space="preserve"><value>The PipeWire stream of node {0} chose a format WSnip cannot read.</value></data>
+  <data name="PipeWireCreateStreamFailed" xml:space="preserve"><value>PipeWire could not create a stream for node {0}.</value></data>
+  <data name="PipeWireConnectNodeFailed" xml:space="preserve"><value>PipeWire could not connect to node {0} (error {1}).</value></data>
+  <data name="PixelFormatUnsupported" xml:space="preserve"><value>The pixel format {0} is not supported.</value></data>
+  <data name="EncoderUnavailable" xml:space="preserve"><value>The encoder '{0}' is not available.</value></data>
+  <data name="EncoderNoData" xml:space="preserve"><value>{0} produced no data.</value></data>
+  <data name="PngEncodingFailed" xml:space="preserve"><value>The image could not be encoded as PNG.</value></data>
+  <data name="PngImageTooLarge" xml:space="preserve"><value>The image is too large for PNG encoding.</value></data>
+  <data name="GainMapEncodingFailed" xml:space="preserve"><value>The gain map could not be encoded as JPEG.</value></data>
+  <data name="SdrJpegEncodingFailed" xml:space="preserve"><value>The SDR image could not be encoded as JPEG.</value></data>
+  <data name="NoSessionBus" xml:space="preserve"><value>No D-Bus session bus is available.</value></data>
+</root>

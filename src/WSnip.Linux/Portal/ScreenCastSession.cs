@@ -1,5 +1,6 @@
 using Microsoft.Win32.SafeHandles;
 using Tmds.DBus.Protocol;
+using WSnip.Core.Strings;
 
 namespace WSnip.Linux.Portal;
 
@@ -80,7 +81,7 @@ internal sealed class ScreenCastSession : IAsyncDisposable
         CancellationToken cancellationToken)
     {
         if ((capabilities.Sources & request.Sources) == 0)
-            throw new PlatformNotSupportedException($"The desktop cannot share {(request.Sources == ScreenCastSources.Window ? "single windows" : "screens")}.");
+            throw new PlatformNotSupportedException(request.Sources == ScreenCastSources.Window ? AppStrings.CannotShareWindows : AppStrings.CannotShareScreens);
 
         string token = DesktopPortal.NewToken();
         string sessionToken = DesktopPortal.NewToken();
@@ -147,7 +148,7 @@ internal sealed class ScreenCastSession : IAsyncDisposable
                 ? ReadStreams(DesktopPortal.Unwrap(value))
                 : [];
             if (streams.Count == 0)
-                throw new InvalidOperationException("The system shared nothing to capture.");
+                throw new InvalidOperationException(AppStrings.NothingShared);
             string? restoreToken = results.TryGetValue("restore_token", out VariantValue restore) ? DesktopPortal.Unwrap(restore).GetString() : null;
             return new ScreenCastSession(connection, session, streams, restoreToken);
         }
@@ -183,11 +184,9 @@ internal sealed class ScreenCastSession : IAsyncDisposable
             case PortalResponse.Success:
                 return;
             case PortalResponse.Cancelled:
-                throw new OperationCanceledException("Screen sharing was declined.");
+                throw new OperationCanceledException(AppStrings.SharingDeclined);
             default:
-                throw new InvalidOperationException(
-                    "The system could not start screen sharing. It needs a Wayland session whose desktop shares screens through " +
-                    "PipeWire, such as KDE Plasma or GNOME.");
+                throw new InvalidOperationException(AppStrings.SharingFailed);
         }
     }
 

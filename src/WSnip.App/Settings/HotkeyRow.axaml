@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:strings="using:WSnip.Core.Strings"
              x:Class="WSnip.App.Settings.HotkeyRow">
     <Border Classes="settingRow">
         <Grid ColumnDefinitions="*,Auto">
@@ -8,9 +9,9 @@
                 <TextBlock x:Name="InfoText" Classes="caption" TextWrapping="Wrap" />
             </StackPanel>
             <StackPanel x:Name="Editor" Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                <Button x:Name="PrintScreenButton" Classes="flat" Content="Print Screen" ToolTip.Tip="Use the Print Screen key" />
-                <TextBox x:Name="GestureBox" Width="114" IsReadOnly="True" PlaceholderText="None" />
-                <Button x:Name="ClearButton" Classes="icon" ToolTip.Tip="No shortcut">
+                <Button x:Name="PrintScreenButton" Classes="flat" Content="{x:Static strings:AppStrings.PrintScreen}" ToolTip.Tip="{x:Static strings:AppStrings.PrintScreenTip}" />
+                <TextBox x:Name="GestureBox" Width="114" IsReadOnly="True" PlaceholderText="{x:Static strings:AppStrings.None}" />
+                <Button x:Name="ClearButton" Classes="icon" ToolTip.Tip="{x:Static strings:AppStrings.NoShortcut}">
                     <Viewbox Width="14" Height="14"><Path Data="{StaticResource IconClose}" /></Viewbox>
                 </Button>
             </StackPanel>

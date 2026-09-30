@@ -1,6 +1,8 @@
 using FFmpeg.AutoGen.Abstractions;
 using LightStudio.FfmpegShim.Interop;
 
+using WSnip.Core.Strings;
+
 namespace WSnip.Core.Encoding;
 
 /// <summary>Planes of one picture handed to an FFmpeg encoder.</summary>
@@ -51,7 +53,7 @@ internal static unsafe class FfmpegStillEncoder
     {
         AVCodec* codec = ffmpeg.avcodec_find_encoder_by_name(encoderName);
         if (codec == null)
-            throw new NotSupportedException($"The FFmpeg encoder '{encoderName}' is not available.");
+            throw new NotSupportedException(string.Format(AppStrings.EncoderUnavailable, encoderName));
 
         AVCodecContext* context = ffmpeg.avcodec_alloc_context3(codec);
         AVFrame* frame = null;
@@ -118,7 +120,7 @@ internal static unsafe class FfmpegStillEncoder
             }
 
             if (output.Length == 0)
-                throw new InvalidDataException($"{encoderName} produced no data.");
+                throw new InvalidDataException(string.Format(AppStrings.EncoderNoData, encoderName));
             return output.ToArray();
         }
         finally

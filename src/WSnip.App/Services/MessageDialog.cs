@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
+using WSnip.Core.Strings;
 
 namespace WSnip.App.Services;
 
@@ -10,7 +11,7 @@ public static class MessageDialog
 {
     public static void Show(Window? owner, string title, string message)
     {
-        var ok = new Button { Content = "OK", Classes = { "accent" }, HorizontalAlignment = HorizontalAlignment.Right, MinWidth = 80 };
+        var ok = new Button { Content = AppStrings.OK, Classes = { "accent" }, HorizontalAlignment = HorizontalAlignment.Right, MinWidth = 80 };
         var window = new Window
         {
             Title = title,

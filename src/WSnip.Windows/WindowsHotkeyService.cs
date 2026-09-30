@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Runtime.Versioning;
 using WSnip.Core.Platform;
+using WSnip.Core.Strings;
 using WSnip.Windows.Interop;
 
 namespace WSnip.Windows;
@@ -35,7 +36,7 @@ public sealed unsafe class WindowsHotkeyService : IGlobalHotkeyService
     {
         uint? key = VirtualKey(gesture.Key);
         if (key is null)
-            return $"The key '{gesture.Key}' is not supported.";
+            return string.Format(AppStrings.UnsupportedKey, gesture.Key);
 
         uint modifiers = NoRepeat | (gesture.Alt ? Alt : 0) | (gesture.Control ? Control : 0) |
             (gesture.Shift ? Shift : 0) | (gesture.Windows ? Win : 0);
@@ -48,8 +49,8 @@ public sealed unsafe class WindowsHotkeyService : IGlobalHotkeyService
 
                 // ERROR_HOTKEY_ALREADY_REGISTERED; for Print Screen held by another app, Windows sets no error.
                 return error is 1409 or 0
-                    ? $"{gesture} is already used by another application or by Windows."
-                    : $"{gesture} could not be registered (error {error}).";
+                    ? string.Format(AppStrings.HotkeyUsed, gesture)
+                    : string.Format(AppStrings.HotkeyRegistrationFailed, gesture, error);
             }
 
             registered[id] = gesture;

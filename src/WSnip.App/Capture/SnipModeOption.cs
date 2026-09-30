@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using WSnip.Core.Capture;
+using WSnip.Core.Strings;
 
 namespace WSnip.App.Capture;
 
@@ -10,12 +11,11 @@ public sealed record SnipModeOption(SnipMode Mode, string Label, string IconKey,
 {
     public static IReadOnlyList<SnipModeOption> All { get; } =
     [
-        new(SnipMode.Rectangle, "Rectangle", "IconSnipRectangle", "Drag a rectangle on the frozen screen"),
-        new(SnipMode.Window, "Window", "IconSnipWindow", "Pick a window on the frozen screen, as it is visible"),
-        new(SnipMode.Fullscreen, "Full screen", "IconSnipFullscreen", "Pick a display on the frozen screen"),
-        new(SnipMode.Freeform, "Freeform", "IconSnipFreeform", "Draw any shape on the frozen screen"),
-        new(SnipMode.WholeWindow, "Whole window", "IconSnipWholeWindow",
-            "Click a window while the screen stays live; it is captured whole, even where covered, with its transparency"),
+        new(SnipMode.Rectangle, AppStrings.Rectangle, "IconSnipRectangle", AppStrings.RectangleDescription),
+        new(SnipMode.Window, AppStrings.Window, "IconSnipWindow", AppStrings.WindowDescription),
+        new(SnipMode.Fullscreen, AppStrings.Fullscreen, "IconSnipFullscreen", AppStrings.FullscreenDescription),
+        new(SnipMode.Freeform, AppStrings.Freeform, "IconSnipFreeform", AppStrings.FreeformDescription),
+        new(SnipMode.WholeWindow, AppStrings.WholeWindow, "IconSnipWholeWindow", AppStrings.WholeWindowDescription),
     ];
 
     /// <summary>The glyph from the application's icon resources.</summary>
@@ -29,7 +29,7 @@ public sealed record DelayOption(int Seconds)
 {
     public static IReadOnlyList<DelayOption> All { get; } = [new(0), new(3), new(5), new(10)];
 
-    public string Label => Seconds == 0 ? "No delay" : $"{Seconds} seconds";
+    public string Label => Seconds == 0 ? AppStrings.NoDelay : string.Format(AppStrings.Seconds, Seconds);
 
     public static DelayOption For(int seconds) => All.FirstOrDefault(o => o.Seconds == seconds) ?? All[0];
 }

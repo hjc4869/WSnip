@@ -9,6 +9,7 @@ using Avalonia.Threading;
 using WSnip.App.Rendering;
 using WSnip.Core.Capture;
 using WSnip.Core.Imaging;
+using WSnip.Core.Strings;
 using PixelRect = WSnip.Core.Imaging.PixelRect;
 using ShapePath = Avalonia.Controls.Shapes.Path;
 
@@ -264,7 +265,7 @@ internal sealed class OverlayWindow : Window
 
         Width = monitor.Bounds.Width / monitor.Scaling;
         Height = monitor.Bounds.Height / monitor.Scaling;
-        Title = "WSnip overlay";
+        Title = AppStrings.OverlayTitle;
         Cursor = new Cursor(StandardCursorType.Cross);
 
         frozen = new HdrImageView { Smooth = false };
@@ -380,7 +381,7 @@ internal sealed class OverlayWindow : Window
                 IsChecked = session.Mode == mode,
                 Cursor = new Cursor(StandardCursorType.Arrow),
             };
-            ToolTip.SetTip(button, $"{option.Label}: {option.Description}");
+            ToolTip.SetTip(button, string.Format(AppStrings.ModeDescription, option.Label, option.Description));
             AutomationProperties.SetName(button, option.Label);
             button.Click += (_, _) =>
             {
@@ -394,7 +395,7 @@ internal sealed class OverlayWindow : Window
 
         panel.Children.Add(new Border { Classes = { "divider" } });
         var close = new Button { Classes = { "icon" }, Content = CreateIcon("IconClose"), Cursor = new Cursor(StandardCursorType.Arrow) };
-        ToolTip.SetTip(close, "Cancel (Esc)");
+        ToolTip.SetTip(close, AppStrings.CancelTip);
         close.Click += (_, _) => session.Cancel();
         panel.Children.Add(close);
 

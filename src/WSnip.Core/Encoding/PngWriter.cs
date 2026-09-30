@@ -3,6 +3,8 @@ using System.IO.Compression;
 using SkiaSharp;
 using WSnip.Core.Imaging;
 
+using WSnip.Core.Strings;
+
 namespace WSnip.Core.Encoding;
 
 /// <summary>Writes 8-bit SDR PNG through Skia and 16-bit HDR PNG tagged with a cICP chunk.</summary>
@@ -16,7 +18,7 @@ public static class PngWriter
         SkiaImages.WithSdrPixmap(rendition, pixmap =>
         {
             if (!pixmap.Encode(output, new SKPngEncoderOptions(SKPngEncoderFilterFlags.AllFilters, 6)))
-                throw new InvalidOperationException("The image could not be encoded as PNG.");
+                throw new InvalidOperationException(AppStrings.PngEncodingFailed);
             return true;
         });
     }
@@ -55,7 +57,7 @@ public static class PngWriter
     private static byte[] FilterRows(PqImage image, int channels, int rowBytes)
     {
         var filtered = new byte[(long)image.Height * (rowBytes + 1) > Array.MaxLength
-            ? throw new InvalidDataException("The image is too large for PNG encoding.")
+            ? throw new InvalidDataException(AppStrings.PngImageTooLarge)
             : image.Height * (rowBytes + 1)];
 
         ParallelRows.For(image.Height, y =>

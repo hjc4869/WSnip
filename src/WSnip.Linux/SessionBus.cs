@@ -1,6 +1,8 @@
 using Tmds.DBus.Protocol;
 using WSnip.Linux.Portal;
 
+using WSnip.Core.Strings;
+
 namespace WSnip.Linux;
 
 /// <summary>The user's session bus: one connection, opened on first use and shared by the platform services.</summary>
@@ -55,7 +57,7 @@ internal sealed class SessionBus(string? hostAppId) : IDisposable
     {
         string address = DBusAddress.Session is { Length: > 0 } session
             ? session
-            : throw new InvalidOperationException("No D-Bus session bus is available.");
+            : throw new InvalidOperationException(AppStrings.NoSessionBus);
         var connection = new DBusConnection(address);
         try
         {

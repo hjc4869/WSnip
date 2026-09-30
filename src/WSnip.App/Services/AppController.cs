@@ -14,6 +14,7 @@ using WSnip.Core.Encoding;
 using WSnip.Core.Imaging;
 using WSnip.Core.Platform;
 using WSnip.Core.Settings;
+using WSnip.Core.Strings;
 
 namespace WSnip.App.Services;
 
@@ -183,7 +184,7 @@ public sealed class AppController : IDisposable
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
             AppLog.Error("Snip", "Taking a snip failed.", exception);
-            MessageDialog.Show(editor is { IsVisible: true } ? editor : null, "WSnip", $"The screen could not be captured.\n\n{exception.Message}");
+            MessageDialog.Show(editor is { IsVisible: true } ? editor : null, "WSnip", string.Format(AppStrings.CaptureFailed, exception.Message));
         }
         finally
         {
@@ -256,7 +257,7 @@ public sealed class AppController : IDisposable
             foreach (SnipMode? other in HotkeyModes)
             {
                 if (other != mode && HotkeyFor(other) == gesture)
-                    return $"{gesture} is already the shortcut for {HotkeyPurpose(other)}.";
+                    return string.Format(AppStrings.HotkeyConflict, gesture, HotkeyPurpose(other));
             }
 
             // Registering the shortcut before saving it finds out whether the system lets WSnip
@@ -311,7 +312,7 @@ public sealed class AppController : IDisposable
         }
 
         // The windowing backend serves the image as PNG to apps that paste, so it stays alive while it is on the clipboard.
-        IClipboard clipboard = EnsureEditor().Clipboard ?? throw new InvalidOperationException("The clipboard is not available.");
+        IClipboard clipboard = EnsureEditor().Clipboard ?? throw new InvalidOperationException(AppStrings.ClipboardUnavailable);
         var bitmap = new Bitmap(new MemoryStream(image.Png));
         try
         {
@@ -384,7 +385,7 @@ public sealed class AppController : IDisposable
     private async Task SnipWholeWindowAsync(int delaySeconds)
     {
         if (!platform.WindowPicker.IsSupported)
-            throw new NotSupportedException("Picking a window is not supported on this system.");
+            throw new NotSupportedException(AppStrings.WindowPickingUnsupported);
 
         List<(Window Window, Window? Owner)> hidden = HideWindows();
         CapturedWindow? window;
@@ -452,7 +453,7 @@ public sealed class AppController : IDisposable
             catch (Exception exception) when (exception is not OutOfMemoryException)
             {
                 AppLog.Error("Snip", "Copying the snip failed.", exception);
-                problem = $"The snip could not be copied to the clipboard.\n\n{exception.Message}";
+                problem = string.Format(AppStrings.CopyFailed, exception.Message);
             }
         }
 
@@ -465,7 +466,7 @@ public sealed class AppController : IDisposable
             catch (Exception exception) when (exception is not OutOfMemoryException)
             {
                 AppLog.Error("Snip", "Saving the snip failed.", exception);
-                problem = $"The snip could not be saved to {SaveFolder}.\n\n{exception.Message}";
+                problem = string.Format(AppStrings.AutoSaveFailed, SaveFolder, exception.Message);
             }
         }
 
@@ -522,7 +523,7 @@ public sealed class AppController : IDisposable
                 continue;
             int earlier = hotkeys.FindIndex(h => h.Gesture == gesture);
             string? error = earlier >= 0
-                ? $"{gesture} is already the shortcut for {HotkeyPurpose(hotkeys[earlier].Mode)}."
+                ? string.Format(AppStrings.HotkeyConflict, gesture, HotkeyPurpose(hotkeys[earlier].Mode))
                 : platform.Hotkeys.Register(gesture);
             hotkeys.Add((mode, gesture, error));
             if (error is not null)
@@ -549,9 +550,15 @@ public sealed class AppController : IDisposable
         }
     }
 
-    private static string HotkeyPurpose(SnipMode? mode) => mode is { } snipMode
-        ? $"{SnipModeOption.For(snipMode).Label.ToLowerInvariant()} snips"
-        : "snips in the default mode";
+    private static string HotkeyPurpose(SnipMode? mode) => mode switch
+    {
+        SnipMode.Rectangle => AppStrings.RectanglePurpose,
+        SnipMode.Window => AppStrings.WindowPurpose,
+        SnipMode.Fullscreen => AppStrings.FullscreenPurpose,
+        SnipMode.Freeform => AppStrings.FreeformPurpose,
+        SnipMode.WholeWindow => AppStrings.WholeWindowPurpose,
+        _ => AppStrings.DefaultModePurpose,
+    };
 
     private async Task SyncLaunchAtStartupAsync()
     {
@@ -573,12 +580,12 @@ public sealed class AppController : IDisposable
     private void CreateTray()
     {
         var menu = new NativeMenu();
-        menu.Items.Add(MenuItem("New snip", () => _ = StartSnipAsync()));
-        menu.Items.Add(MenuItem("Open WSnip", () => ShowEditor()));
-        menu.Items.Add(MenuItem("Open screenshots folder", () => platform.Shell.OpenFolder(SaveFolder)));
-        menu.Items.Add(MenuItem("Settings", ShowSettings));
+        menu.Items.Add(MenuItem(AppStrings.NewSnip, () => _ = StartSnipAsync()));
+        menu.Items.Add(MenuItem(AppStrings.OpenWSnip, () => ShowEditor()));
+        menu.Items.Add(MenuItem(AppStrings.OpenFolder, () => platform.Shell.OpenFolder(SaveFolder)));
+        menu.Items.Add(MenuItem(AppStrings.Settings, ShowSettings));
         menu.Items.Add(new NativeMenuItemSeparator());
-        menu.Items.Add(MenuItem("Exit", Exit));
+        menu.Items.Add(MenuItem(AppStrings.Exit, Exit));
 
         using Stream icon = AssetLoader.Open(new Uri("avares://WSnip.App/Assets/wsnip.ico"));
         tray = new TrayIcon

@@ -13,6 +13,7 @@ using WSnip.App.Services;
 using WSnip.Core.Capture;
 using WSnip.Core.Encoding;
 using WSnip.Core.Imaging;
+using WSnip.Core.Strings;
 
 namespace WSnip.App.Editor;
 
@@ -24,15 +25,15 @@ public partial class EditorWindow : Window
 {
     private static readonly (string Name, ScRgb Color)[] PenColors =
     [
-        ("Black", ScRgb.FromSrgb(0x1A, 0x1A, 0x1A)), ("White", ScRgb.FromSrgb(0xFF, 0xFF, 0xFF)), ("Red", ScRgb.FromSrgb(0xE8, 0x11, 0x23)),
-        ("Yellow", ScRgb.FromSrgb(0xFF, 0xB9, 0x00)), ("Green", ScRgb.FromSrgb(0x10, 0x89, 0x3E)),
-        ("Blue", ScRgb.FromSrgb(0x00, 0x78, 0xD7)), ("Purple", ScRgb.FromSrgb(0x88, 0x64, 0xB8)),
+        (AppStrings.Black, ScRgb.FromSrgb(0x1A, 0x1A, 0x1A)), (AppStrings.White, ScRgb.FromSrgb(0xFF, 0xFF, 0xFF)), (AppStrings.Red, ScRgb.FromSrgb(0xE8, 0x11, 0x23)),
+        (AppStrings.Yellow, ScRgb.FromSrgb(0xFF, 0xB9, 0x00)), (AppStrings.Green, ScRgb.FromSrgb(0x10, 0x89, 0x3E)),
+        (AppStrings.Blue, ScRgb.FromSrgb(0x00, 0x78, 0xD7)), (AppStrings.Purple, ScRgb.FromSrgb(0x88, 0x64, 0xB8)),
     ];
 
     private static readonly (string Name, ScRgb Color)[] HighlighterColors =
     [
-        ("Yellow", ScRgb.FromSrgb(0xFF, 0xF1, 0x00)), ("Green", ScRgb.FromSrgb(0x9B, 0xE5, 0x64)), ("Cyan", ScRgb.FromSrgb(0x5C, 0xE1, 0xE6)),
-        ("Pink", ScRgb.FromSrgb(0xFF, 0x8A, 0xD8)), ("Orange", ScRgb.FromSrgb(0xFF, 0xB3, 0x47)),
+        (AppStrings.Yellow, ScRgb.FromSrgb(0xFF, 0xF1, 0x00)), (AppStrings.Green, ScRgb.FromSrgb(0x9B, 0xE5, 0x64)), (AppStrings.Cyan, ScRgb.FromSrgb(0x5C, 0xE1, 0xE6)),
+        (AppStrings.Pink, ScRgb.FromSrgb(0xFF, 0x8A, 0xD8)), (AppStrings.Orange, ScRgb.FromSrgb(0xFF, 0xB3, 0x47)),
     ];
 
     private readonly AppController controller;
@@ -290,9 +291,9 @@ public partial class EditorWindow : Window
 
         if (custom is not null)
         {
-            var edit = new MenuItem { Header = "Edit color" };
+            var edit = new MenuItem { Header = AppStrings.EditColor };
             edit.Click += (_, _) => OpenColorEditor(swatch, custom);
-            var remove = new MenuItem { Header = "Remove color" };
+            var remove = new MenuItem { Header = AppStrings.RemoveColor };
             remove.Click += (_, _) => RemoveCustomColor(custom, highlighter);
             swatch.ContextMenu = new ContextMenu { Items = { edit, remove } };
         }
@@ -409,10 +410,10 @@ public partial class EditorWindow : Window
         }
 
         PixelLinear.IsVisible = !plainSrgb;
-        PixelLinear.Text = string.Create(culture, $"Linear scRGB {color.R:0.000}, {color.G:0.000}, {color.B:0.000}");
+        PixelLinear.Text = string.Format(culture, AppStrings.LinearColor, color.R, color.G, color.B);
         float luminance = color.Luminance;
-        PixelLuminance.Text = string.Create(culture, $"Luminance {luminance:0.000}\u00D7 SDR white, {luminance * WhiteNits:0.#} nits") +
-            (alpha < 0.999f ? string.Create(culture, $"  \u00B7  alpha {alpha:0.00}") : string.Empty);
+        PixelLuminance.Text = string.Format(culture, AppStrings.PixelLuminance, luminance, luminance * WhiteNits) +
+            (alpha < 0.999f ? string.Format(culture, AppStrings.AlphaSuffix, alpha) : string.Empty);
 
         // Beside the pointer, flipped to the other side near the edges of the view.
         PixelInfo.Measure(Size.Infinity);
@@ -481,12 +482,12 @@ public partial class EditorWindow : Window
         {
             Snip snip = await Task.Run(document.Flatten);
             await controller.CopyAsync(snip);
-            ShowStatusMessage("Copied to the clipboard.");
+            ShowStatusMessage(AppStrings.Copied);
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
             AppLog.Error("Editor", "Copying failed.", exception);
-            MessageDialog.Show(this, "WSnip", $"The snip could not be copied.\n\n{exception.Message}");
+            MessageDialog.Show(this, "WSnip", string.Format(AppStrings.CopyFailed, exception.Message));
         }
     }
 
@@ -508,7 +509,7 @@ public partial class EditorWindow : Window
             savedPath is not null ? Path.GetDirectoryName(savedPath)! : controller.SaveFolder);
         SaveFilePickerResult result = await StorageProvider.SaveFilePickerWithResultAsync(new FilePickerSaveOptions
         {
-            Title = "Save snip",
+            Title = AppStrings.SaveSnip,
             SuggestedFileName = Path.GetFileNameWithoutExtension(SnipExporter.DefaultFileName(document.CapturedAt, preferred)),
             DefaultExtension = SnipExporter.Extension(preferred).TrimStart('.'),
             FileTypeChoices = choices,
@@ -528,7 +529,7 @@ public partial class EditorWindow : Window
 
         try
         {
-            ShowStatusMessage("Saving\u2026");
+            ShowStatusMessage(AppStrings.Saving);
             await controller.SaveAsync(snip, path, format);
             savedPath = path;
             document.MarkClean();
@@ -537,7 +538,7 @@ public partial class EditorWindow : Window
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException or NotSupportedException or InvalidOperationException)
         {
             AppLog.Error("Editor", $"Saving {path} failed.", exception);
-            MessageDialog.Show(this, "WSnip", $"The snip could not be saved.\n\n{exception.Message}");
+            MessageDialog.Show(this, "WSnip", string.Format(AppStrings.SaveFailed, exception.Message));
             UpdateStatus();
         }
     }
@@ -558,7 +559,7 @@ public partial class EditorWindow : Window
         ZoomButton.IsEnabled = has;
         SavedLink.IsVisible = savedPath is not null;
         SavedText.Text = savedPath is null ? null : Path.GetFileName(savedPath);
-        Title = document is null ? "WSnip" : $"WSnip \u2014 {SnipExporter.DefaultFileName(document.CapturedAt, SnipFormat.Png)[..^4]}";
+        Title = document is null ? "WSnip" : string.Format(AppStrings.EditorTitle, SnipExporter.DefaultFileName(document.CapturedAt, SnipFormat.Png)[..^4]);
         UpdateZoomLabel();
         UpdateStatus();
     }
@@ -575,14 +576,14 @@ public partial class EditorWindow : Window
     {
         if (!controller.Platform.Hotkeys.IsSupported)
         {
-            EmptyHint.Text = "Select New to capture the screen, or give WSnip's New snip action a shortcut in the system settings.";
+            EmptyHint.Text = AppStrings.NoSystemHotkeyHint;
             return;
         }
 
-        string hotkey = controller.Hotkey?.ToString() ?? "a hotkey (none set)";
+        string hotkey = controller.Hotkey?.ToString() ?? AppStrings.NoHotkey;
         EmptyHint.Text = controller.HotkeyError is { } error
-            ? $"Select New to capture the screen. {error} Choose another shortcut in Settings."
-            : $"Press {hotkey} anywhere, or select New, to capture the screen. HDR and wide-color content is kept.";
+            ? string.Format(AppStrings.HotkeyErrorHint, error)
+            : string.Format(AppStrings.HotkeyHint, hotkey);
     }
 
     private void UpdateStatus()
@@ -590,8 +591,8 @@ public partial class EditorWindow : Window
         HdrToggle.IsEnabled = Canvas.Surface.ExtendedRange;
         HdrIcon.Data = (Avalonia.Media.Geometry?)this.FindResource(HdrToggle.IsChecked == true && Canvas.Surface.ExtendedRange ? "IconHdrOn" : "IconHdrOff");
         ToolTip.SetTip(HdrToggle, Canvas.Surface.ExtendedRange
-            ? (HdrToggle.IsChecked == true ? "Showing HDR; select to preview the SDR version" : "Showing the SDR version; select to show HDR")
-            : "This display shows SDR only");
+            ? (HdrToggle.IsChecked == true ? AppStrings.ShowingHdr : AppStrings.ShowingSdr)
+            : AppStrings.SdrOnly);
         if (document is null)
         {
             StatusText.Text = Canvas.Surface.ExtendedRange ? DisplayDescription() : null;
@@ -603,7 +604,7 @@ public partial class EditorWindow : Window
         if (stats.HasHdr)
         {
             double nits = stats.PeakComponent * document.SourceSdrWhiteNits;
-            parts.Add(string.Create(CultureInfo.CurrentCulture, $"HDR, peak {stats.PeakComponent:0.0}\u00D7 SDR white ({nits:0} nits)"));
+            parts.Add(string.Format(CultureInfo.CurrentCulture, AppStrings.HdrPeak, stats.PeakComponent, nits));
         }
         else
         {
@@ -611,21 +612,20 @@ public partial class EditorWindow : Window
         }
 
         if (stats.OutsideDisplayP3Pixels >= 16)
-            parts.Add("wide color beyond Display P3");
+            parts.Add(AppStrings.WideBeyondP3);
         else if (stats.HasWideGamut)
-            parts.Add("wide color (Display P3)");
+            parts.Add(AppStrings.WideP3Status);
         if (document.Current.Strokes.Count > 0)
-            parts.Add($"{document.Current.Strokes.Count} stroke{(document.Current.Strokes.Count == 1 ? "" : "s")}");
+            parts.Add(string.Format(document.Current.Strokes.Count == 1 ? AppStrings.StrokeCountOne : AppStrings.StrokeCountMany, document.Current.Strokes.Count));
         parts.Add(DisplayDescription());
         StatusText.Text = string.Join("  \u00B7  ", parts);
     }
 
     private string DisplayDescription() => Canvas.Surface switch
     {
-        { ExtendedRange: true, Headroom: > 1.01 } surface => string.Create(CultureInfo.CurrentCulture,
-            $"HDR display, {surface.Headroom:0.0}\u00D7 headroom"),
-        { ExtendedRange: true } => "Wide color display",
-        _ => "SDR display",
+        { ExtendedRange: true, Headroom: > 1.01 } surface => string.Format(CultureInfo.CurrentCulture, AppStrings.HdrDisplay, surface.Headroom),
+        { ExtendedRange: true } => AppStrings.WideDisplay,
+        _ => AppStrings.SdrDisplay,
     };
 
     private void ShowStatusMessage(string message) => StatusText.Text = message;

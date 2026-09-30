@@ -5,6 +5,8 @@ using WSnip.Core.Capture;
 using WSnip.Core.Platform;
 using WSnip.Windows.Interop;
 
+using WSnip.Core.Strings;
+
 namespace WSnip.Windows.Capture;
 
 /// <summary>
@@ -74,7 +76,7 @@ public sealed unsafe class WindowsWindowPicker : IWindowPickerService
             mouse = Native.SetWindowsHookEx(MouseHook, &OnMouse, module, 0);
             keyboard = Native.SetWindowsHookEx(KeyboardHook, &OnKeyboard, module, 0);
             if (mouse == 0 || keyboard == 0)
-                throw new InvalidOperationException($"The pointer could not be watched (error {Marshal.GetLastPInvokeError()}).");
+                throw new InvalidOperationException(string.Format(AppStrings.PointerWatchFailed, Marshal.GetLastPInvokeError()));
             ReplaceCursors();
 
             while (Native.GetMessage(&message, 0, 0, 0) > 0)

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using LightStudio.Logging;
 using Microsoft.Win32.SafeHandles;
+using WSnip.Core.Strings;
 using WSnip.Linux.Interop;
 using static WSnip.Linux.Interop.PipeWire;
 
@@ -47,7 +48,7 @@ internal static class PipeWireFrameReader
                 }
 
                 if (core == 0)
-                    throw new InvalidOperationException($"PipeWire could not connect to the shared screen (error {Marshal.GetLastPInvokeError()}).");
+                    throw new InvalidOperationException(string.Format(AppStrings.PipeWireConnectFailed, Marshal.GetLastPInvokeError()));
 
                 byte[] formats = SpaPod.CaptureFormats(alpha);
                 foreach (uint node in nodes)
@@ -74,7 +75,7 @@ internal static class PipeWireFrameReader
                 catch (TimeoutException)
                 {
                     uint[] missing = streams.Where(s => !s.Frame.Task.IsCompleted).Select(s => s.Node).ToArray();
-                    throw new TimeoutException($"The shared screen delivered no frame (PipeWire node {string.Join(", ", missing)}).");
+                    throw new TimeoutException(string.Format(AppStrings.PipeWireNoFrame, string.Join(", ", missing)));
                 }
 
                 pending.Remove(done);
@@ -103,14 +104,14 @@ internal static class PipeWireFrameReader
         fixed (byte* name = "wsnip-capture"u8)
             loop = pw_thread_loop_new(name, 0);
         if (loop == 0)
-            throw new InvalidOperationException("PipeWire could not create a thread loop.");
+            throw new InvalidOperationException(AppStrings.PipeWireLoopFailed);
         nint context = pw_context_new(pw_thread_loop_get_loop(loop), 0, 0);
         if (context == 0 || pw_thread_loop_start(loop) < 0)
         {
             if (context != 0)
                 pw_context_destroy(context);
             pw_thread_loop_destroy(loop);
-            throw new InvalidOperationException("PipeWire could not start.");
+            throw new InvalidOperationException(AppStrings.PipeWireStartFailed);
         }
 
         return (loop, context);
@@ -133,11 +134,11 @@ internal static class PipeWireFrameReader
         if (state == StreamStateError)
         {
             string message = Marshal.PtrToStringUTF8((nint)error) ?? "unknown error";
-            stream.Frame.TrySetException(new InvalidOperationException($"The PipeWire stream of node {stream.Node} failed: {message}."));
+            stream.Frame.TrySetException(new InvalidOperationException(string.Format(AppStrings.PipeWireStreamFailed, stream.Node, message)));
         }
         else if (state == StreamStateUnconnected && old != StreamStateUnconnected)
         {
-            stream.Frame.TrySetException(new InvalidOperationException($"The PipeWire stream of node {stream.Node} ended."));
+            stream.Frame.TrySetException(new InvalidOperationException(string.Format(AppStrings.PipeWireStreamEnded, stream.Node)));
         }
     }
 
@@ -152,7 +153,7 @@ internal static class PipeWireFrameReader
         if (stream.Info is { } info)
             AppLog.Debug("Capture", $"PipeWire node {stream.Node} delivers {info.Format} {info.Width}x{info.Height}.");
         else
-            stream.Frame.TrySetException(new NotSupportedException($"The PipeWire stream of node {stream.Node} chose a format WSnip cannot read."));
+            stream.Frame.TrySetException(new NotSupportedException(string.Format(AppStrings.PipeWireFormatUnsupported, stream.Node)));
     }
 
     [UnmanagedCallersOnly(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
@@ -244,7 +245,7 @@ internal static class PipeWireFrameReader
             fixed (byte* name = "wsnip-capture"u8)
                 stream.Handle = pw_stream_new(core, name, properties);
             if (stream.Handle == 0)
-                throw new InvalidOperationException($"PipeWire could not create a stream for node {node}.");
+                throw new InvalidOperationException(string.Format(AppStrings.PipeWireCreateStreamFailed, node));
 
             stream.self = GCHandle.Alloc(stream);
             stream.hook = NativeMemory.AllocZeroed(HookSize);
@@ -256,7 +257,7 @@ internal static class PipeWireFrameReader
                 if (result < 0)
                 {
                     stream.Destroy();
-                    throw new InvalidOperationException($"PipeWire could not connect to node {node} (error {-result}).");
+                    throw new InvalidOperationException(string.Format(AppStrings.PipeWireConnectNodeFailed, node, -result));
                 }
             }
 

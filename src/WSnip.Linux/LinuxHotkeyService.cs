@@ -1,4 +1,5 @@
 using WSnip.Core.Platform;
+using WSnip.Core.Strings;
 
 namespace WSnip.Linux;
 
@@ -16,7 +17,7 @@ internal sealed class LinuxHotkeyService : IGlobalHotkeyService
         remove { }
     }
 
-    public string? Register(HotkeyGesture gesture) => "Shortcuts are assigned in the system settings.";
+    public string? Register(HotkeyGesture gesture) => AppStrings.ShortcutsInSystem;
 
     public void UnregisterAll()
     {

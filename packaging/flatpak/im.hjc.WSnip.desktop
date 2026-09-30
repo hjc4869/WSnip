@@ -2,12 +2,30 @@
 Type=Application
 Name=WSnip
 GenericName=Screenshot Tool
+GenericName[es_ES]=Herramienta de capturas de pantalla
+GenericName[fr_FR]=Outil de capture d'écran
+GenericName[de_DE]=Screenshot-Werkzeug
+GenericName[ja_JP]=スクリーンショットツール
+GenericName[zh_CN]=截图工具
+GenericName[zh_TW]=螢幕擷取工具
 Comment=Capture, mark up and save screenshots
+Comment[es_ES]=Captura, anota y guarda capturas de pantalla
+Comment[fr_FR]=Capturer, annoter et enregistrer des captures d'écran
+Comment[de_DE]=Screenshots aufnehmen, beschriften und speichern
+Comment[ja_JP]=スクリーンショットを撮影、注釈、保存
+Comment[zh_CN]=截取、标注并保存屏幕截图
+Comment[zh_TW]=擷取、標註並儲存螢幕畫面
 Exec=wsnip
 Icon=im.hjc.WSnip
 Terminal=false
 Categories=Graphics;Utility;
 Keywords=screenshot;snip;capture;screen;
+Keywords[es_ES]=captura;pantalla;recorte;
+Keywords[fr_FR]=capture;écran;image;
+Keywords[de_DE]=Screenshot;Aufnahme;Bildschirm;
+Keywords[ja_JP]=スクリーンショット;キャプチャ;画面;
+Keywords[zh_CN]=截图;截屏;捕获;屏幕;
+Keywords[zh_TW]=截圖;擷取;螢幕;
 StartupNotify=true
 SingleMainWindow=true
 Actions=NewSnip;Rectangle;Window;Fullscreen;Freeform;WholeWindow;
@@ -15,24 +33,60 @@ X-KDE-Wayland-Interfaces=zkde_screencast_unstable_v1
 
 [Desktop Action NewSnip]
 Name=New snip
+Name[es_ES]=Nueva captura
+Name[fr_FR]=Nouvelle capture
+Name[de_DE]=Neue Aufnahme
+Name[ja_JP]=新しいキャプチャ
+Name[zh_CN]=新建截图
+Name[zh_TW]=新增擷取
 Exec=wsnip --snip
 
 [Desktop Action Rectangle]
 Name=Rectangle snip
+Name[es_ES]=Captura rectangular
+Name[fr_FR]=Capture rectangulaire
+Name[de_DE]=Rechteckige Aufnahme
+Name[ja_JP]=四角形のキャプチャ
+Name[zh_CN]=矩形截图
+Name[zh_TW]=矩形擷取
 Exec=wsnip --snip rectangle
 
 [Desktop Action Window]
 Name=Window snip
+Name[es_ES]=Captura de ventana
+Name[fr_FR]=Capture de fenêtre
+Name[de_DE]=Fensteraufnahme
+Name[ja_JP]=ウィンドウのキャプチャ
+Name[zh_CN]=窗口截图
+Name[zh_TW]=視窗擷取
 Exec=wsnip --snip window
 
 [Desktop Action Fullscreen]
 Name=Full screen snip
+Name[es_ES]=Captura de pantalla completa
+Name[fr_FR]=Capture plein écran
+Name[de_DE]=Vollbildaufnahme
+Name[ja_JP]=全画面のキャプチャ
+Name[zh_CN]=全屏截图
+Name[zh_TW]=全螢幕擷取
 Exec=wsnip --snip fullscreen
 
 [Desktop Action Freeform]
 Name=Freeform snip
+Name[es_ES]=Captura de forma libre
+Name[fr_FR]=Capture de forme libre
+Name[de_DE]=Freiformaufnahme
+Name[ja_JP]=自由形のキャプチャ
+Name[zh_CN]=自由形状截图
+Name[zh_TW]=任意形狀擷取
 Exec=wsnip --snip freeform
 
 [Desktop Action WholeWindow]
 Name=Whole window snip
+Name[es_ES]=Captura de ventana completa
+Name[fr_FR]=Capture de fenêtre entière
+Name[de_DE]=Aufnahme des ganzen Fensters
+Name[ja_JP]=ウィンドウ全体のキャプチャ
+Name[zh_CN]=完整窗口截图
+Name[zh_TW]=完整視窗擷取
 Exec=wsnip --snip wholewindow
