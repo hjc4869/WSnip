@@ -112,8 +112,10 @@ differs from Windows:
 - **Overlay:** Wayland apps can't place their windows, so one full-screen overlay opens on the
   display the compositor picks and shows that display.
 - **Window mode** snips the whole display, as Wayland doesn't tell apps where windows are.
-  **Whole window mode** picks the window in the system's sharing dialog instead of with a click on
-  the live screen.
+- **Whole window mode** on KDE Plasma picks the window with KWin's own pointer, which it asks for
+  over KWin's D-Bus interface (`org.kde.KWin`), and KWin streams that window whole. This needs
+  KWin's screencast; otherwise the window is picked in the system's sharing dialog instead of with a
+  click on the live screen.
 - **Hotkey:** Wayland gives apps no global hotkeys. Bind a shortcut to the desktop entry's
   **New snip** action (KDE: System Settings > Keyboard > Shortcuts), or to `wsnip --snip`.
 - **Clipboard:** the SDR rendition as PNG. Wayland apps serve what they copy, so it can be pasted
@@ -138,7 +140,8 @@ displays are captured.
   ```
 
   A system-wide install keeps its entry in `/var/lib/flatpak/exports/share/applications`. The
-  Flatpak reads the streams from the PipeWire daemon (`--filesystem=xdg-run/pipewire-0`).
+  Flatpak reads the streams from the PipeWire daemon (`--filesystem=xdg-run/pipewire-0`) and talks
+  to KWin over D-Bus (`--talk-name=org.kde.KWin`).
 - **Other builds:** KWin looks for an entry whose `Exec` is the absolute path of the WSnip
   executable, such as this one in `~/.local/share/applications`:
 
@@ -160,7 +163,7 @@ src/
   WSnip.App       Avalonia UI (cross-platform): overlay, editor, settings, tray, theming.
   WSnip.Windows   Windows implementations of the platform interfaces.
   WSnip.Linux     Linux implementations: KWin screencast, ScreenCast portal and PipeWire capture,
-                  D-Bus single instance, freedesktop shell integration.
+                  KWin window picking, D-Bus single instance, freedesktop shell integration.
   WSnip.Desktop   Head for Windows and Linux: the WSnip executable and NativeAOT; on Windows also
                   the manifest and FFmpeg bundling.
 ```

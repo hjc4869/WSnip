@@ -28,7 +28,7 @@ public static class LinuxPlatform
         {
             DataDirectory = DataDirectory,
             Capture = capture,
-            WindowPicker = new PortalWindowPicker(portal),
+            WindowPicker = new KWinWindowPicker(bus, capture, new PortalWindowPicker(portal)),
             Hotkeys = new LinuxHotkeyService(),
             Windows = new LinuxWindowIntegrationService(canPlaceWindows: !compositorPlacesWindows, capture),
             Shell = new LinuxShellService(bus, DataDirectory),

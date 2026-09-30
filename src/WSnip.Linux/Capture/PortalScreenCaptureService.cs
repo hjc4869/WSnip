@@ -58,7 +58,7 @@ public sealed class PortalScreenCaptureService : IScreenCaptureService, IDisposa
             SaveRestoreToken(session.RestoreToken);
 
             DateTimeOffset capturedAt = DateTimeOffset.Now;
-            IReadOnlyList<PipeWireFrame> frames = await GrabAsync(session, cancellationToken).ConfigureAwait(false);
+            IReadOnlyList<PipeWireFrame> frames = await GrabAsync(session, alpha: false, cancellationToken).ConfigureAwait(false);
             SharedDisplay[] displays = session.Streams.Select(stream => new SharedDisplay($"node {stream.NodeId}", null, stream.Position, stream.Size)).ToArray();
             MonitorCapture[] monitors = await Task.Run(() => DisplayLayout.CreateMonitors(displays, frames), cancellationToken).ConfigureAwait(false);
             AppLog.Information("Capture", $"Captured {monitors.Length} display(s) in {watch.ElapsedMilliseconds} ms: " +
@@ -85,7 +85,7 @@ public sealed class PortalScreenCaptureService : IScreenCaptureService, IDisposa
             }, cancellationToken).ConfigureAwait(false);
 
             DateTimeOffset capturedAt = DateTimeOffset.Now;
-            PipeWireFrame frame = (await GrabAsync(session, cancellationToken).ConfigureAwait(false))[0];
+            PipeWireFrame frame = (await GrabAsync(session, alpha: true, cancellationToken).ConfigureAwait(false))[0];
             HdrImage image = await Task.Run(() => FrameConverter.ToLinear(frame, keepAlpha: true), cancellationToken).ConfigureAwait(false);
             AppLog.Information("Capture", $"Captured a window {image.Width}x{image.Height} ({frame.Info.Format}) in {watch.ElapsedMilliseconds} ms.");
             return new WindowCapture
@@ -125,11 +125,11 @@ public sealed class PortalScreenCaptureService : IScreenCaptureService, IDisposa
         return await ScreenCastSession.StartAsync(connection, capabilities, request, cancellationToken).ConfigureAwait(false);
     }
 
-    private static async Task<IReadOnlyList<PipeWireFrame>> GrabAsync(ScreenCastSession session, CancellationToken cancellationToken)
+    private static async Task<IReadOnlyList<PipeWireFrame>> GrabAsync(ScreenCastSession session, bool alpha, CancellationToken cancellationToken)
     {
         using SafeFileHandle remote = await session.OpenPipeWireRemoteAsync().ConfigureAwait(false);
         uint[] nodes = session.Streams.Select(stream => stream.NodeId).ToArray();
-        return await PipeWireFrameReader.ReadAsync(remote, nodes, FrameTimeout, cancellationToken).ConfigureAwait(false);
+        return await PipeWireFrameReader.ReadAsync(remote, nodes, alpha, FrameTimeout, cancellationToken).ConfigureAwait(false);
     }
 
     private string? ReadRestoreToken()

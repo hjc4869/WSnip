@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!--
     Linux implementation of the platform services: screen capture through KWin's screencast
-    protocol or the xdg-desktop-portal ScreenCast interface, and PipeWire, a single instance on the
-    session bus, and desktop shell integration. PipeWire and libwayland-client are loaded from the
-    system when a capture starts.
+    protocol or the xdg-desktop-portal ScreenCast interface, and PipeWire, window picking with KWin's
+    pointer, a single instance on the session bus, and desktop shell integration. PipeWire and
+    libwayland-client are loaded from the system when a capture starts.
   -->
   <PropertyGroup>
     <RootNamespace>WSnip.Linux</RootNamespace>

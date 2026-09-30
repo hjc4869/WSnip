@@ -32,7 +32,8 @@ internal static class SpaPod
     /// The formats a capture accepts: raw video in any 8-bit packed RGB layout, at any size and
     /// frame rate. Leaving out DMA-BUF modifiers makes the producer share memory the CPU can map.
     /// </summary>
-    public static byte[] CaptureFormats()
+    /// <param name="alpha">Prefers layouts with alpha, which keep a window's transparency.</param>
+    public static byte[] CaptureFormats(bool alpha)
     {
         var pod = new Builder();
         int frame = pod.BeginObject(ObjectFormat, ParamEnumFormat);
@@ -41,9 +42,19 @@ internal static class SpaPod
         pod.Property(KeyMediaSubtype);
         pod.Id(MediaSubtypeRaw);
         pod.Property(KeyVideoFormat);
-        pod.ChoiceEnumId(
-            (uint)SpaVideoFormat.BGRx, (uint)SpaVideoFormat.BGRx, (uint)SpaVideoFormat.BGRA, (uint)SpaVideoFormat.RGBx, (uint)SpaVideoFormat.RGBA,
-            (uint)SpaVideoFormat.xRGB, (uint)SpaVideoFormat.ARGB, (uint)SpaVideoFormat.xBGR, (uint)SpaVideoFormat.ABGR);
+        if (alpha)
+        {
+            pod.ChoiceEnumId(
+                (uint)SpaVideoFormat.BGRA, (uint)SpaVideoFormat.BGRA, (uint)SpaVideoFormat.RGBA, (uint)SpaVideoFormat.ARGB, (uint)SpaVideoFormat.ABGR,
+                (uint)SpaVideoFormat.BGRx, (uint)SpaVideoFormat.RGBx, (uint)SpaVideoFormat.xRGB, (uint)SpaVideoFormat.xBGR);
+        }
+        else
+        {
+            pod.ChoiceEnumId(
+                (uint)SpaVideoFormat.BGRx, (uint)SpaVideoFormat.BGRx, (uint)SpaVideoFormat.BGRA, (uint)SpaVideoFormat.RGBx, (uint)SpaVideoFormat.RGBA,
+                (uint)SpaVideoFormat.xRGB, (uint)SpaVideoFormat.ARGB, (uint)SpaVideoFormat.xBGR, (uint)SpaVideoFormat.ABGR);
+        }
+
         pod.Property(KeyVideoSize);
         pod.ChoiceRange(TypeRectangle, (1920, 1080), (1, 1), (16384, 16384));
         pod.Property(KeyVideoFramerate);

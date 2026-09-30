@@ -20,8 +20,9 @@ internal static class PipeWireFrameReader
     private static readonly unsafe StreamEvents* Events = CreateEvents();
 
     /// <param name="remote">The portal's PipeWire connection, or null for the session's PipeWire daemon.</param>
+    /// <param name="alpha">Prefers pixel formats with alpha, which keep a window's transparency.</param>
     /// <exception cref="TimeoutException">A stream delivered no frame in time.</exception>
-    public static async Task<IReadOnlyList<PipeWireFrame>> ReadAsync(SafeFileHandle? remote, IReadOnlyList<uint> nodes, TimeSpan timeout,
+    public static async Task<IReadOnlyList<PipeWireFrame>> ReadAsync(SafeFileHandle? remote, IReadOnlyList<uint> nodes, bool alpha, TimeSpan timeout,
         CancellationToken cancellationToken)
     {
         EnsureInitialized();
@@ -48,7 +49,7 @@ internal static class PipeWireFrameReader
                 if (core == 0)
                     throw new InvalidOperationException($"PipeWire could not connect to the shared screen (error {Marshal.GetLastPInvokeError()}).");
 
-                byte[] formats = SpaPod.CaptureFormats();
+                byte[] formats = SpaPod.CaptureFormats(alpha);
                 foreach (uint node in nodes)
                     streams.Add(CaptureStream.Connect(core, node, formats));
             }

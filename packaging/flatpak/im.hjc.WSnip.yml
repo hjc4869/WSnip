@@ -35,6 +35,8 @@ finish-args:
   - --filesystem=xdg-pictures
   # KWin's screencast protocol streams the displays to the PipeWire daemon, where WSnip reads them.
   - --filesystem=xdg-run/pipewire-0
+  # Picking a window for a whole window snip with KWin's own pointer.
+  - --talk-name=org.kde.KWin
   # The notification area icon: the host's watcher and the item's name (sandbox pid 2, first icon).
   - --talk-name=org.kde.StatusNotifierWatcher
   - --own-name=org.kde.StatusNotifierItem-2-0
