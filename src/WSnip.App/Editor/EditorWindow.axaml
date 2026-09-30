@@ -1,0 +1,178 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:editor="using:WSnip.App.Editor"
+        xmlns:capture="using:WSnip.App.Capture"
+        xmlns:rendering="using:WSnip.App.Rendering"
+        x:Class="WSnip.App.Editor.EditorWindow"
+        Title="WSnip"
+        Width="1120" Height="740" MinWidth="640" MinHeight="400"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource AppShellBackgroundBrush}"
+        Icon="avares://WSnip.App/Assets/wsnip.ico">
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+        <!-- Toolbar -->
+        <Border Grid.Row="0" Background="{DynamicResource AppToolbarSurfaceBrush}"
+                BorderBrush="{DynamicResource AppChromeDividerBrush}" BorderThickness="0,0,0,1" Padding="10,6">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <Button x:Name="NewButton" Classes="accent" ToolTip.Tip="New snip (Ctrl+N)" AutomationProperties.Name="New snip">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Viewbox Width="14" Height="14">
+                                <Path Data="{StaticResource IconAdd}" />
+                            </Viewbox>
+                            <TextBlock Text="New" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <ComboBox x:Name="ModeBox" MinWidth="150" VerticalAlignment="Center" ToolTip.Tip="Snipping mode"
+                              AutomationProperties.Name="Snipping mode">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="capture:SnipModeOption">
+                                <StackPanel Orientation="Horizontal" Spacing="8" ToolTip.Tip="{Binding Description}">
+                                    <Viewbox Width="16" Height="16">
+                                        <Path Data="{Binding Icon}" Fill="{DynamicResource AppPrimaryTextBrush}" />
+                                    </Viewbox>
+                                    <TextBlock Text="{Binding Label}" VerticalAlignment="Center" Foreground="{DynamicResource AppPrimaryTextBrush}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <ComboBox x:Name="DelayBox" MinWidth="112" VerticalAlignment="Center" ToolTip.Tip="Delay before the snip starts"
+                              AutomationProperties.Name="Delay">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="capture:DelayOption">
+                                <TextBlock Text="{Binding Label}" Foreground="{DynamicResource AppPrimaryTextBrush}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+
+                <StackPanel x:Name="MarkupBar" Grid.Column="1" Orientation="Horizontal" Spacing="2"
+                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <ToggleButton x:Name="PenTool" Classes="tool" ToolTip.Tip="Pen" AutomationProperties.Name="Pen">
+                        <Viewbox Width="18" Height="18"><Path Data="{StaticResource IconPen}" /></Viewbox>
+                    </ToggleButton>
+                    <ToggleButton x:Name="HighlighterTool" Classes="tool" ToolTip.Tip="Highlighter" AutomationProperties.Name="Highlighter">
+                        <Viewbox Width="18" Height="18"><Path Data="{StaticResource IconHighlighter}" /></Viewbox>
+                    </ToggleButton>
+                    <ToggleButton x:Name="EraserTool" Classes="tool" ToolTip.Tip="Eraser" AutomationProperties.Name="Eraser">
+                        <Viewbox Width="18" Height="18"><Path Data="{StaticResource IconEraser}" /></Viewbox>
+                    </ToggleButton>
+                    <ToggleButton x:Name="CropTool" Classes="tool" ToolTip.Tip="Crop" AutomationProperties.Name="Crop">
+                        <Viewbox Width="18" Height="18"><Path Data="{StaticResource IconCrop}" /></Viewbox>
+                    </ToggleButton>
+                    <Border Classes="divider" />
+                    <Button x:Name="UndoButton" Classes="icon" ToolTip.Tip="Undo (Ctrl+Z)" AutomationProperties.Name="Undo">
+                        <Viewbox Width="18" Height="18"><Path Data="{StaticResource IconUndo}" /></Viewbox>
+                    </Button>
+                    <Button x:Name="RedoButton" Classes="icon" ToolTip.Tip="Redo (Ctrl+Y)" AutomationProperties.Name="Redo">
+                        <Viewbox Width="18" Height="18"><Path Data="{StaticResource IconRedo}" /></Viewbox>
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                    <ToggleButton x:Name="HdrToggle" Classes="tool" ToolTip.Tip="Show HDR" AutomationProperties.Name="Show HDR">
+                        <Viewbox Width="27" Height="18"><Path x:Name="HdrIcon" Data="{StaticResource IconHdrOn}" /></Viewbox>
+                    </ToggleButton>
+                    <Button x:Name="ZoomOutButton" Classes="icon" ToolTip.Tip="Zoom out (Ctrl+-)" AutomationProperties.Name="Zoom out">
+                        <Viewbox Width="18" Height="18"><Path Data="{StaticResource IconZoomOut}" /></Viewbox>
+                    </Button>
+                    <Button x:Name="ZoomButton" Classes="flat" MinWidth="60" HorizontalContentAlignment="Center" ToolTip.Tip="Fit to window or show actual size (Ctrl+0)">
+                        <TextBlock x:Name="ZoomLabel" Text="100%" />
+                    </Button>
+                    <Button x:Name="ZoomInButton" Classes="icon" ToolTip.Tip="Zoom in (Ctrl++)" AutomationProperties.Name="Zoom in">
+                        <Viewbox Width="18" Height="18"><Path Data="{StaticResource IconZoomIn}" /></Viewbox>
+                    </Button>
+                    <Border Classes="divider" />
+                    <Button x:Name="CopyButton" Classes="icon" ToolTip.Tip="Copy (Ctrl+C)" AutomationProperties.Name="Copy">
+                        <Viewbox Width="18" Height="18"><Path Data="{StaticResource IconCopy}" /></Viewbox>
+                    </Button>
+                    <Button x:Name="SaveButton" Classes="icon" ToolTip.Tip="Save as (Ctrl+S)" AutomationProperties.Name="Save as">
+                        <Viewbox Width="18" Height="18"><Path Data="{StaticResource IconSave}" /></Viewbox>
+                    </Button>
+                    <Button x:Name="MoreButton" Classes="icon" ToolTip.Tip="More" AutomationProperties.Name="More">
+                        <Viewbox Width="18" Height="18"><Path Data="{StaticResource IconMore}" /></Viewbox>
+                        <Button.Flyout>
+                            <MenuFlyout Placement="BottomEdgeAlignedRight">
+                                <MenuItem x:Name="OpenFolderItem" Header="Open screenshots folder" />
+                                <MenuItem x:Name="SettingsItem" Header="Settings" />
+                                <Separator />
+                                <MenuItem x:Name="ExitItem" Header="Exit WSnip" />
+                            </MenuFlyout>
+                        </Button.Flyout>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Pen and highlighter options -->
+        <Border x:Name="ToolOptions" Grid.Row="1" IsVisible="False" Background="{DynamicResource AppToolbarSurfaceBrush}"
+                BorderBrush="{DynamicResource AppChromeDividerBrush}" BorderThickness="0,0,0,1" Padding="10,2">
+            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                <StackPanel x:Name="Swatches" Orientation="Horizontal" VerticalAlignment="Center" />
+                <Button x:Name="AddColorButton" Classes="icon" Padding="6" VerticalAlignment="Center"
+                        ToolTip.Tip="Add a color" AutomationProperties.Name="Add a color">
+                    <Viewbox Width="16" Height="16"><Path Data="{StaticResource IconAdd}" /></Viewbox>
+                </Button>
+                <ToggleButton x:Name="PickColorTool" Classes="tool" Padding="6" VerticalAlignment="Center"
+                              ToolTip.Tip="Pick a color from the snip, including HDR and wide colors (Esc to stop)"
+                              AutomationProperties.Name="Pick a color from the snip">
+                    <Viewbox Width="16" Height="16"><Path Data="{StaticResource IconEyedropper}" /></Viewbox>
+                </ToggleButton>
+                <Border Classes="divider" />
+                <TextBlock Text="Size" VerticalAlignment="Center" Classes="caption" />
+                <Slider x:Name="SizeSlider" Width="150" Minimum="1" Maximum="40" VerticalAlignment="Center" />
+            </StackPanel>
+        </Border>
+
+        <!-- The snip -->
+        <Border Grid.Row="2" Background="{DynamicResource AppCanvasBackgroundBrush}">
+            <Panel>
+                <editor:SnipCanvas x:Name="Canvas" />
+                <Canvas x:Name="PixelInfoLayer" IsHitTestVisible="False" ClipToBounds="True">
+                    <Border x:Name="PixelInfo" Classes="pixelInfo" IsVisible="False">
+                        <Grid ColumnDefinitions="Auto,*">
+                            <rendering:ColorSwatch x:Name="PixelSwatch" Width="28" Height="28" VerticalAlignment="Top" Margin="0,2,8,0" />
+                            <StackPanel Grid.Column="1" Spacing="1">
+                                <TextBlock x:Name="PixelPosition" FontWeight="SemiBold" />
+                                <TextBlock x:Name="PixelColor" />
+                                <TextBlock x:Name="PixelLinear" Classes="caption" />
+                                <TextBlock x:Name="PixelLuminance" Classes="caption" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Canvas>
+                <StackPanel x:Name="EmptyState" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" MaxWidth="460">
+                    <Viewbox Width="52" Height="52" HorizontalAlignment="Center">
+                        <Path Data="{StaticResource IconScissors}" Fill="{DynamicResource AppAccentBrush}" />
+                    </Viewbox>
+                    <TextBlock Text="Take a snip" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center"
+                               Foreground="{DynamicResource AppPrimaryTextBrush}" />
+                    <TextBlock x:Name="EmptyHint" TextWrapping="Wrap" TextAlignment="Center" FontSize="13"
+                               Foreground="{DynamicResource AppSecondaryTextBrush}" />
+                </StackPanel>
+                <Border x:Name="CropBar" Classes="overlayBar" IsVisible="False" HorizontalAlignment="Center"
+                        VerticalAlignment="Bottom" Margin="0,0,0,20">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock x:Name="CropSize" VerticalAlignment="Center" Margin="10,0" Foreground="{DynamicResource AppSecondaryTextBrush}" />
+                        <Button x:Name="ApplyCropButton" Classes="accent" Content="Apply" />
+                        <Button x:Name="CancelCropButton" Classes="flat" Content="Cancel" />
+                    </StackPanel>
+                </Border>
+            </Panel>
+        </Border>
+
+        <!-- Status -->
+        <Border Grid.Row="3" Padding="12,4" Background="{DynamicResource AppToolbarSurfaceBrush}"
+                BorderBrush="{DynamicResource AppChromeDividerBrush}" BorderThickness="0,1,0,0">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock x:Name="StatusText" Classes="caption" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                <Button x:Name="SavedLink" Grid.Column="1" Classes="flat" Padding="6,2" IsVisible="False" ToolTip.Tip="Show in folder">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Viewbox Width="14" Height="14"><Path Data="{StaticResource IconFolder}" Fill="{DynamicResource AppSecondaryTextBrush}" /></Viewbox>
+                        <TextBlock x:Name="SavedText" Classes="caption" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

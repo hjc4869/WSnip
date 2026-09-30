@@ -1,0 +1,156 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="WSnip.App.Settings.SettingsWindow"
+        Title="WSnip settings"
+        Width="660" Height="760" MinWidth="520" MinHeight="420"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource AppShellBackgroundBrush}"
+        Icon="avares://WSnip.App/Assets/wsnip.ico">
+    <ScrollViewer>
+        <StackPanel Margin="24,12,24,24">
+            <TextBlock Text="Settings" FontSize="24" FontWeight="SemiBold" Margin="0,4,0,4" Foreground="{DynamicResource AppPrimaryTextBrush}" />
+
+            <TextBlock Classes="sectionTitle" Text="Taking snips" />
+            <Border Classes="settingRow">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Shortcut" />
+                        <TextBlock x:Name="HotkeyInfo" Classes="caption" TextWrapping="Wrap" Text="Click the box and press a key combination." />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <TextBox x:Name="HotkeyBox" Width="170" IsReadOnly="True" PlaceholderText="None" />
+                        <Button x:Name="PrintScreenButton" Classes="flat" Content="Print Screen" ToolTip.Tip="Use the Print Screen key" />
+                        <Button x:Name="ClearHotkeyButton" Classes="icon" ToolTip.Tip="No shortcut">
+                            <Viewbox Width="14" Height="14"><Path Data="{StaticResource IconClose}" /></Viewbox>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+            <Border Classes="settingRow">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="Snipping mode" VerticalAlignment="Center" />
+                    <ComboBox x:Name="ModeBox" Grid.Column="1" Width="190" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+            <Border Classes="settingRow">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="Delay" VerticalAlignment="Center" />
+                    <ComboBox x:Name="DelayBox" Grid.Column="1" Width="170" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+            <Border Classes="settingRow">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="Include the mouse pointer" VerticalAlignment="Center" />
+                    <ToggleSwitch x:Name="CursorSwitch" Grid.Column="1" OnContent="" OffContent="" />
+                </Grid>
+            </Border>
+
+            <TextBlock Classes="sectionTitle" Text="After a snip" />
+            <Border Classes="settingRow">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="Copy to the clipboard" VerticalAlignment="Center" />
+                    <ToggleSwitch x:Name="CopySwitch" Grid.Column="1" OnContent="" OffContent="" />
+                </Grid>
+            </Border>
+            <Border Classes="settingRow">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="Open the editor" VerticalAlignment="Center" />
+                    <ToggleSwitch x:Name="EditorSwitch" Grid.Column="1" OnContent="" OffContent="" />
+                </Grid>
+            </Border>
+            <Border Classes="settingRow">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Show pixel information" />
+                        <TextBlock Classes="caption" TextWrapping="Wrap"
+                                   Text="Position, color and luminance of the pixel under the pointer, including HDR and wide colors." />
+                    </StackPanel>
+                    <ToggleSwitch x:Name="PixelInfoSwitch" Grid.Column="1" OnContent="" OffContent="" />
+                </Grid>
+            </Border>
+            <Border Classes="settingRow">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Save automatically" />
+                        <TextBlock x:Name="FolderText" Classes="caption" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <Button x:Name="FolderButton" Classes="flat" Content="Change folder" />
+                        <ToggleSwitch x:Name="AutoSaveSwitch" OnContent="" OffContent="" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <TextBlock Classes="sectionTitle" Text="Files" />
+            <Border Classes="settingRow">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Format for SDR snips" />
+                        <TextBlock Classes="caption" TextWrapping="Wrap" Text="PNG keeps screen content pixel-exact." />
+                    </StackPanel>
+                    <ComboBox x:Name="SdrFormatBox" Grid.Column="1" Width="210" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+            <Border Classes="settingRow">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Format for HDR snips" />
+                        <TextBlock Classes="caption" TextWrapping="Wrap" Text="Gain map formats show an SDR image everywhere and the HDR one where supported." />
+                    </StackPanel>
+                    <ComboBox x:Name="HdrFormatBox" Grid.Column="1" Width="210" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+            <Border Classes="settingRow">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Quality" />
+                        <TextBlock Classes="caption" Text="For JPEG, HEIC, AVIF and JPEG XL. 100 is lossless for JPEG XL." />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <Slider x:Name="QualitySlider" Width="160" Minimum="50" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" />
+                        <TextBlock x:Name="QualityText" Width="28" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+            <Border Classes="settingRow">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="SDR version of HDR snips" />
+                        <TextBlock x:Name="ToneMappingInfo" Classes="caption" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <ComboBox x:Name="ToneMappingBox" Grid.Column="1" Width="210" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+
+            <TextBlock Classes="sectionTitle" Text="Appearance" />
+            <Border Classes="settingRow">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="Theme" VerticalAlignment="Center" />
+                    <ComboBox x:Name="ThemeBox" Grid.Column="1" Width="170" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+            <Border x:Name="MicaRow" Classes="settingRow">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Mica backdrop" />
+                        <TextBlock Classes="caption" Text="Let the desktop wallpaper tint the window, as Windows 11 apps do." />
+                    </StackPanel>
+                    <ToggleSwitch x:Name="MicaSwitch" Grid.Column="1" OnContent="" OffContent="" />
+                </Grid>
+            </Border>
+
+            <TextBlock Classes="sectionTitle" Text="Startup" />
+            <Border Classes="settingRow">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Start with Windows" />
+                        <TextBlock Classes="caption" Text="Runs in the notification area so the shortcut always works." />
+                    </StackPanel>
+                    <ToggleSwitch x:Name="StartupSwitch" Grid.Column="1" OnContent="" OffContent="" />
+                </Grid>
+            </Border>
+
+            <TextBlock x:Name="AboutText" Classes="caption" Margin="2,20,2,0" TextWrapping="Wrap" />
+        </StackPanel>
+    </ScrollViewer>
+</Window>

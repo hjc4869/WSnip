@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Platform-neutral core: capture models, platform service contracts, HDR image processing
+    (analysis, SDR rendition, gain maps) and the still-image encoders. FFmpeg bindings are
+    abstract here; each application head initializes the implementation it ships.
+  -->
+  <PropertyGroup>
+    <RootNamespace>WSnip.Core</RootNamespace>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="FFmpeg.AutoGen.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(LightPlayerRoot)src\LightStudio.Logging\LightStudio.Logging.csproj" />
+    <ProjectReference Include="$(LightPlayerRoot)src\LightStudio.FfmpegShim\LightStudio.FfmpegShim.csproj" />
+  </ItemGroup>
+</Project>

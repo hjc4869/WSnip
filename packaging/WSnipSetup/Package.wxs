@@ -1,0 +1,67 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package
+    Name="WSnip"
+    Manufacturer="Light Studio"
+    Version="$(MsiVersion)"
+    UpgradeCode="$(PackageUpgradeCode)"
+    UpgradeStrategy="majorUpgrade"
+    Scope="perMachine"
+    Compressed="yes">
+
+    <MediaTemplate EmbedCab="yes" />
+    <MajorUpgrade
+      AllowSameVersionUpgrades="yes"
+      DowngradeErrorMessage="A newer version of [ProductName] is already installed."
+      Schedule="afterInstallInitialize" />
+    <Icon Id="WSnip.exe" SourceFile="$(IconPath)" />
+    <Property Id="ARPPRODUCTICON" Value="WSnip.exe" />
+    <Property Id="DISABLEADVTSHORTCUTS" Value="1" />
+
+    <InstallExecuteSequence>
+      <RemoveShortcuts Condition="NOT UPGRADINGPRODUCTCODE" />
+    </InstallExecuteSequence>
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="WSnip" />
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder" />
+
+    <ComponentGroup Id="PublishedFiles" Directory="INSTALLFOLDER">
+      <Files Include="$(PublishDirectory)\**">
+        <Exclude Files="$(PublishDirectory)\WSnip.exe" />
+        <Exclude Files="$(PublishDirectory)\**\*.pdb" />
+        <Exclude Files="$(PublishDirectory)\**\*.dbg" />
+      </Files>
+    </ComponentGroup>
+
+    <Component Id="ApplicationExecutable" Directory="INSTALLFOLDER" Guid="*">
+      <File Id="WSnipExecutable" Source="$(PublishDirectory)\WSnip.exe" KeyPath="yes">
+        <Shortcut
+          Id="StartMenuShortcut"
+          Directory="ProgramMenuFolder"
+          Name="WSnip"
+          Description="Screenshots that keep HDR and wide color"
+          WorkingDirectory="INSTALLFOLDER"
+          Advertise="yes" />
+      </File>
+      <File Id="WSnipLicenseFile" Source="$(LicensePath)" Name="LICENSE.txt" />
+      <File Id="WSnipThirdPartyFile" Source="$(ThirdPartyPath)" Name="THIRDPARTY.txt" />
+    </Component>
+
+    <!-- Lets Run, scripts and shortcuts start WSnip.exe, with or without its snip switch, without a path. -->
+    <Component Id="ApplicationPathRegistration" Directory="INSTALLFOLDER" Guid="*">
+      <RegistryValue
+        Root="HKLM"
+        Key="Software\Microsoft\Windows\CurrentVersion\App Paths\WSnip.exe"
+        Value="[INSTALLFOLDER]WSnip.exe"
+        KeyPath="yes" />
+      <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\App Paths\WSnip.exe" Name="Path" Value="[INSTALLFOLDER]" />
+    </Component>
+
+    <Feature Id="MainFeature" Title="WSnip">
+      <ComponentGroupRef Id="PublishedFiles" />
+      <ComponentRef Id="ApplicationExecutable" />
+      <ComponentRef Id="ApplicationPathRegistration" />
+    </Feature>
+  </Package>
+</Wix>

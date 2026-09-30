@@ -1,0 +1,230 @@
+name: Release
+
+# Builds the Windows x64/ARM64 MSIX bundle and the WiX setup executables, then publishes them in one
+# GitHub Release. Triggered by pushing a version tag (e.g. v0.2.0) or run manually from the Actions
+# tab.
+#
+# WSnip builds against a Light Player checkout (shared sources, build/Ffmpeg.targets), which is
+# private: the LIGHTPLAYER_DEPLOY_KEY secret holds a read-only deploy key of that repository.
+# Packages are signed with the same Light Studio certificate as Light Player. See README.md
+# ("Releases") for the secrets and repository settings this workflow needs.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to create and publish (e.g. v0.2.0).'
+        required: true
+        type: string
+      lightplayer_ref:
+        description: 'Light Player branch, tag or commit to build against.'
+        required: false
+        default: 'main'
+        type: string
+
+# Required so the release step can create the release and upload the packages.
+permissions:
+  contents: write
+
+env:
+  LIGHTPLAYER_REPOSITORY: hjc4869/LightPlayer-Internal
+  LIGHTPLAYER_REF: ${{ github.event.inputs.lightplayer_ref || vars.LIGHTPLAYER_REF || 'main' }}
+  RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  build-windows:
+    name: Build Windows MSIX bundle
+    runs-on: windows-2025-vs2026
+    steps:
+      # The projects find Light Player at ..\LightPlayer, so both repositories are checked out side by side.
+      - name: Checkout WSnip
+        uses: actions/checkout@v4
+        with:
+          path: WSnip
+
+      - name: Checkout Light Player
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.LIGHTPLAYER_REPOSITORY }}
+          ref: ${{ env.LIGHTPLAYER_REF }}
+          path: LightPlayer
+          ssh-key: ${{ secrets.LIGHTPLAYER_DEPLOY_KEY }}
+          persist-credentials: false
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Set up MSBuild
+        uses: microsoft/setup-msbuild@v3
+        with:
+          msbuild-architecture: x64
+
+      - name: Stamp release version
+        shell: pwsh
+        run: |
+          $version = & "$env:GITHUB_WORKSPACE\WSnip\packaging\Set-Version.ps1" -Tag $env:RELEASE_TAG
+          Write-Host "Packaging WSnip $version"
+
+      - name: Restore signing certificate from secrets
+        shell: pwsh
+        env:
+          WINDOWS_SIGNING_CERTIFICATE_BASE64: ${{ secrets.WINDOWS_SIGNING_CERTIFICATE_BASE64 }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:WINDOWS_SIGNING_CERTIFICATE_BASE64)) {
+            throw 'The WINDOWS_SIGNING_CERTIFICATE_BASE64 secret is not configured. See README.md (Releases).'
+          }
+
+          $certificatePath = Join-Path $env:GITHUB_WORKSPACE 'WSnip\packaging\WSnipMSIX\WSnipMSIX_TemporaryKey.pfx'
+          [System.IO.File]::WriteAllBytes(
+            $certificatePath,
+            [System.Convert]::FromBase64String($env:WINDOWS_SIGNING_CERTIFICATE_BASE64))
+
+      - name: Build signed MSIX bundle
+        shell: pwsh
+        env:
+          WINDOWS_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_SIGNING_CERTIFICATE_PASSWORD }}
+        run: |
+          $project = Join-Path $env:GITHUB_WORKSPACE 'WSnip\packaging\WSnipMSIX\WSnipMSIX.wapproj'
+          $packageRoot = Join-Path $env:GITHUB_WORKSPACE 'WSnip\artifacts\msix\AppPackages'
+          $certificatePath = Join-Path $env:GITHUB_WORKSPACE 'WSnip\packaging\WSnipMSIX\WSnipMSIX_TemporaryKey.pfx'
+
+          # Supplying this as an environment property preserves the semicolon as a runtime-list
+          # delimiter while WAP builds each platform with its RID.
+          $env:RuntimeIdentifiers = 'win-x64;win-arm64'
+
+          # The wapproj already points PackageCertificateKeyFile at this file; the password is passed
+          # as an environment property so it never appears in the command line MSBuild echoes.
+          if (-not (Test-Path -LiteralPath $certificatePath)) {
+            throw "The signing certificate was not restored to $certificatePath."
+          }
+          $env:PackageCertificatePassword = $env:WINDOWS_SIGNING_CERTIFICATE_PASSWORD
+
+          msbuild $project `
+            /restore `
+            /m `
+            /p:Configuration=Release `
+            /p:Platform=x64 `
+            /p:GenerateAppxPackageOnBuild=true `
+            /p:UapAppxPackageBuildMode=SideloadOnly `
+            /p:AppxBundle=Always `
+            '/p:AppxBundlePlatforms=x64|ARM64' `
+            /p:AppxPackageDir=$packageRoot\ `
+            /p:AppxPackageSigningEnabled=true
+          if ($LASTEXITCODE -ne 0) {
+            throw "MSBuild exited with code $LASTEXITCODE."
+          }
+
+      - name: Archive complete MSIX sideload package
+        shell: pwsh
+        run: |
+          $packageRoot = Join-Path $env:GITHUB_WORKSPACE 'WSnip\artifacts\msix\AppPackages'
+          $packageFolders = @(Get-ChildItem $packageRoot -Directory -Filter '*_Test')
+          if ($packageFolders.Count -ne 1) {
+            throw "Expected exactly one MSIX sideload package folder, found $($packageFolders.Count)."
+          }
+
+          $packageFolder = $packageFolders[0]
+          $bundles = @(Get-ChildItem $packageFolder.FullName -File -Filter '*.msixbundle')
+          if ($bundles.Count -ne 1) {
+            throw "Expected exactly one MSIX bundle, found $($bundles.Count)."
+          }
+
+          foreach ($requiredFile in @('Add-AppDevPackage.ps1', 'Install.ps1')) {
+            if (-not (Test-Path (Join-Path $packageFolder.FullName $requiredFile))) {
+              throw "The generated sideload package is missing $requiredFile."
+            }
+          }
+
+          if (-not (Get-ChildItem $packageFolder.FullName -File -Filter '*.cer')) {
+            throw 'The generated sideload package is missing its public signing certificate.'
+          }
+
+          $releaseDirectory = Join-Path $env:GITHUB_WORKSPACE 'WSnip\artifacts\release'
+          New-Item -ItemType Directory -Path $releaseDirectory -Force | Out-Null
+          Compress-Archive -LiteralPath $packageFolder.FullName -DestinationPath (Join-Path $releaseDirectory 'WSnipMSIX.zip')
+
+      - name: Remove signing certificate from the runner
+        if: always()
+        shell: pwsh
+        run: |
+          $certificatePath = Join-Path $env:GITHUB_WORKSPACE 'WSnip\packaging\WSnipMSIX\WSnipMSIX_TemporaryKey.pfx'
+          Remove-Item -LiteralPath $certificatePath -Force -ErrorAction SilentlyContinue
+
+      - name: Upload Windows release asset
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-windows
+          path: WSnip/artifacts/release/*.zip
+          if-no-files-found: error
+          retention-days: 1
+
+  build-windows-setup:
+    name: Build Windows setup executables
+    runs-on: windows-2025-vs2026
+    steps:
+      - name: Checkout WSnip
+        uses: actions/checkout@v4
+        with:
+          path: WSnip
+
+      - name: Checkout Light Player
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.LIGHTPLAYER_REPOSITORY }}
+          ref: ${{ env.LIGHTPLAYER_REF }}
+          path: LightPlayer
+          ssh-key: ${{ secrets.LIGHTPLAYER_DEPLOY_KEY }}
+          persist-credentials: false
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Stamp release version
+        shell: pwsh
+        run: |
+          $version = & "$env:GITHUB_WORKSPACE\WSnip\packaging\Set-Version.ps1" -Tag $env:RELEASE_TAG
+          Write-Host "Packaging WSnip $version"
+
+      # NativeAOT publishes for x64 and ARM64; WiX is restored through its MSBuild SDK.
+      - name: Build x64 and ARM64 setup executables
+        shell: pwsh
+        run: ./WSnip/packaging/WSnipSetup/build.ps1
+
+      - name: Upload Windows setup release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-windows-setup
+          path: WSnip/artifacts/release/WSnipSetup-*.exe
+          if-no-files-found: error
+          retention-days: 1
+
+  publish-release:
+    name: Publish release
+    needs:
+      - build-windows
+      - build-windows-setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download release assets
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: WSnip ${{ env.RELEASE_TAG }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            release-assets/*.zip
+            release-assets/*.exe

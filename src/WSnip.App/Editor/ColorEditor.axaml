@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:rendering="using:WSnip.App.Rendering"
+             x:Class="WSnip.App.Editor.ColorEditor"
+             Width="320">
+    <StackPanel Spacing="10">
+        <Grid ColumnDefinitions="Auto,*">
+            <rendering:ColorSwatch x:Name="Preview" Width="44" Height="44" VerticalAlignment="Center" />
+            <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" Spacing="2">
+                <TextBlock x:Name="TitleText" FontWeight="SemiBold" Foreground="{DynamicResource AppPrimaryTextBrush}" />
+                <TextBlock x:Name="SummaryText" Classes="caption" TextWrapping="Wrap" />
+            </StackPanel>
+        </Grid>
+
+        <Grid ColumnDefinitions="84,*,44" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="6">
+            <TextBlock x:Name="GamutLabel" Text="Color space" VerticalAlignment="Center" Classes="caption" />
+            <ComboBox x:Name="GamutBox" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" />
+
+            <TextBlock Grid.Row="1" Text="Hex" VerticalAlignment="Center" Classes="caption" />
+            <TextBox x:Name="HexBox" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" MaxLength="7" />
+
+            <TextBlock Grid.Row="2" Text="Red" VerticalAlignment="Center" Classes="caption" />
+            <Slider x:Name="RedSlider" Grid.Row="2" Grid.Column="1" Minimum="0" Maximum="255" />
+            <TextBlock x:Name="RedText" Grid.Row="2" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Classes="caption" />
+
+            <TextBlock Grid.Row="3" Text="Green" VerticalAlignment="Center" Classes="caption" />
+            <Slider x:Name="GreenSlider" Grid.Row="3" Grid.Column="1" Minimum="0" Maximum="255" />
+            <TextBlock x:Name="GreenText" Grid.Row="3" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Classes="caption" />
+
+            <TextBlock Grid.Row="4" Text="Blue" VerticalAlignment="Center" Classes="caption" />
+            <Slider x:Name="BlueSlider" Grid.Row="4" Grid.Column="1" Minimum="0" Maximum="255" />
+            <TextBlock x:Name="BlueText" Grid.Row="4" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Classes="caption" />
+
+            <TextBlock x:Name="BrightnessLabel" Grid.Row="5" Text="Brightness" VerticalAlignment="Center" Classes="caption"
+                       ToolTip.Tip="Multiples of SDR white. Above 1× the color is HDR: brighter than white on an HDR display, and kept in HDR files." />
+            <Slider x:Name="BrightnessSlider" Grid.Row="5" Grid.Column="1" Minimum="0" Maximum="4" SmallChange="0.1" LargeChange="1" />
+            <TextBlock x:Name="BrightnessText" Grid.Row="5" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Classes="caption" />
+        </Grid>
+
+        <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right">
+            <Button x:Name="CancelButton" Classes="flat" Content="Cancel" />
+            <Button x:Name="ApplyButton" Classes="accent" Content="Add" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

@@ -1,0 +1,34 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <!-- Keep these in sync with Light Player, whose renderer and FFmpeg interop are shared. -->
+    <AvaloniaVersion>12.1.3</AvaloniaVersion>
+    <AvaloniaForkVersion>12.1.4-lightplayer.10</AvaloniaForkVersion>
+    <FFmpegAutoGenVersion Condition="'$(FFmpegAutoGenVersion)' == ''">9.0.1.1</FFmpegAutoGenVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageVersion Include="Avalonia" Version="$(AvaloniaForkVersion)" />
+    <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.FreeDesktop" Version="$(AvaloniaForkVersion)" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.HarfBuzz" Version="$(AvaloniaForkVersion)" />
+    <PackageVersion Include="Avalonia.Skia" Version="$(AvaloniaForkVersion)" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Win32" Version="$(AvaloniaForkVersion)" />
+    <!-- Must match the SkiaSharp/HarfBuzzSharp that Avalonia.Skia binds to. -->
+    <PackageVersion Include="SkiaSharp" Version="3.119.4" />
+    <PackageVersion Include="HarfBuzzSharp" Version="8.3.1.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageVersion Include="FFmpeg.AutoGen.Abstractions" Version="$(FFmpegAutoGenVersion)" />
+    <PackageVersion Include="FFmpeg.AutoGen.Bindings.DynamicallyLoaded" Version="$(FFmpegAutoGenVersion)" />
+  </ItemGroup>
+
+  <!-- Packaging (packaging/WSnipMSIX and packaging/WSnipSetup), matching Light Player. -->
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
+    <PackageVersion Include="WixToolset.BootstrapperApplications.wixext" Version="5.0.2" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,79 @@
+WSnip License
+Copyright (c) 2026 David Huang. All Rights Reserved.
+
+The source code, assets, and accompanying materials in this repository (the
+"Software") are made available for reference and for private, personal,
+non-commercial use only. Subject to the terms below, any individual who has
+lawfully obtained a copy of the Software is granted a limited, non-exclusive,
+non-transferable, revocable permission to view and study the source code and to
+modify, compile and run the Software on devices they own or control, solely for
+private, personal, and evaluation purposes.
+
+PERMITTED FUNCTIONAL MODIFICATIONS AND PATCH DISTRIBUTION
+
+Notwithstanding the prohibitions below, permission is expressly granted to make
+functional modifications to the Software and to publish and distribute those
+modifications, including modified binaries, provided that ALL of the following
+conditions are met:
+
+  a. The modifications are functional in nature (for example: bug fixes,
+     performance improvements, new or changed features, platform or packaging
+     support, or compatibility changes).
+  b. The complete corresponding source of every modification (the full patch
+     set) is published together with, and is publicly and freely accessible at
+     the same time as, any distributed modified binary. Distributing modified
+     binaries without the corresponding published patch set is not permitted.
+  c. The modifications are distributed either as patches against the Software or
+     as a publicly visible fork of the Software's source repository, in each
+     case making clear which changes were made relative to the original.
+  d. The name, branding, logos, icons, trademarks, and trade dress of the
+     Software are not altered, replaced, or removed in anything published or
+     distributed, and are not used in a way that suggests endorsement by, or
+     affiliation with, the copyright holder. Modified versions must be clearly
+     identified as unofficial and modified.
+  e. This license, the copyright notice, and all attribution contained in the
+     Software are retained unaltered and applied unchanged to the modified
+     Software and to every distributed copy. The modified Software may not be
+     relicensed under any other terms.
+  f. The distribution is non-commercial. No fee or other consideration may be
+     charged for the modified Software or its distribution.
+
+A permitted example is forking the Software's public repository, applying
+functional modifications, and using the hosting provider's continuous
+integration to publish an unofficial modified build alongside its full source.
+
+This permission covers only functional modification and its distribution as
+described above. It does not grant any right to modify or replace the name,
+brand, or license of the Software, nor any trademark license.
+
+The following are prohibited without the prior written permission of the
+copyright holder:
+
+  1. Redistribution, publication, mirroring, sublicensing, lending, sale, or any
+     other distribution of the Software or any portion of it, in source or
+     binary form, whether modified or unmodified, except as expressly permitted
+     under "Permitted Functional Modifications and Patch Distribution" above.
+  2. Use of the Software, or any portion of it, for any commercial purpose or in
+     any commercial product or service.
+  3. Distribution of derivative works based on the Software, except as expressly
+     permitted under "Permitted Functional Modifications and Patch Distribution"
+     above.
+  4. Removal, alteration, or obscuring of this license, the copyright notice, or
+     any attribution contained in the Software.
+  5. Alteration, replacement, or removal of the name, branding, logos, icons,
+     trademarks, or trade dress of the Software in any publicly distributed
+     copy, or relicensing of the Software or any portion of it under different
+     terms.
+
+All rights not expressly granted herein are reserved by the copyright holder. No
+license or right is granted, by implication, estoppel, or otherwise, under any
+patent, trademark, or other intellectual property right, except for the limited
+permissions expressly stated above. The copyright holder may revoke the
+permissions granted by this license at any time.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT
+HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

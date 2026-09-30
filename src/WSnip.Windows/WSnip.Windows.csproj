@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Windows implementation of the platform services: Windows.Graphics.Capture in FP16 scRGB,
+    display color information, window enumeration, global hotkeys, Mica and shell integration.
+  -->
+  <PropertyGroup>
+    <TargetFramework>$(TargetFramework)-$(WindowsTargetVersion)</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <RootNamespace>WSnip.Windows</RootNamespace>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WSnip.Core\WSnip.Core.csproj" />
+  </ItemGroup>
+</Project>

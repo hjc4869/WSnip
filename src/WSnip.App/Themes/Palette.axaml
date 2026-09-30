@@ -1,0 +1,57 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        Neutral palette. ThemeService republishes these at run time with the accent derived
+        from the Windows accent color, and turns the chrome surfaces translucent when the
+        window sits on the Mica backdrop.
+    -->
+    <x:Boolean x:Key="AppIsMicaActive">False</x:Boolean>
+
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+            <Color x:Key="AppAccentColor">#005A9E</Color>
+            <SolidColorBrush x:Key="AppAccentBrush" Color="#005A9E" />
+            <SolidColorBrush x:Key="AppOnAccentBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="AppPageBackgroundBrush" Color="#F6F6F6" />
+            <SolidColorBrush x:Key="AppPanelBackgroundBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="AppNavBackgroundBrush" Color="#EFEFEF" />
+            <SolidColorBrush x:Key="AppPrimaryTextBrush" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="AppSecondaryTextBrush" Color="#5E5E5E" />
+            <SolidColorBrush x:Key="AppDisabledTextBrush" Color="#A7A7A7" />
+            <SolidColorBrush x:Key="AppSelectionBrush" Color="#D6E4F0" />
+            <SolidColorBrush x:Key="AppHoverBrush" Color="#E6E6E6" />
+            <SolidColorBrush x:Key="AppDividerBrush" Color="#E2E2E2" />
+            <SolidColorBrush x:Key="AppCanvasBackgroundBrush" Color="#E9E9E9" />
+            <SolidColorBrush x:Key="AppShellBackgroundBrush" Color="#F6F6F6" />
+            <SolidColorBrush x:Key="AppToolbarSurfaceBrush" Color="#EFEFEF" />
+            <SolidColorBrush x:Key="AppContentLayerBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="AppChromeDividerBrush" Color="#E2E2E2" />
+            <SolidColorBrush x:Key="AppSubtleHoverBrush" Color="#E6E6E6" />
+            <SolidColorBrush x:Key="AppSubtlePressedBrush" Color="#DADADA" />
+            <SolidColorBrush x:Key="AppFlyoutBrush" Color="#F9F9F9" />
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Dark">
+            <Color x:Key="AppAccentColor">#60CDFF</Color>
+            <SolidColorBrush x:Key="AppAccentBrush" Color="#60CDFF" />
+            <SolidColorBrush x:Key="AppOnAccentBrush" Color="#000000" />
+            <SolidColorBrush x:Key="AppPageBackgroundBrush" Color="#161616" />
+            <SolidColorBrush x:Key="AppPanelBackgroundBrush" Color="#1E1E1E" />
+            <SolidColorBrush x:Key="AppNavBackgroundBrush" Color="#202020" />
+            <SolidColorBrush x:Key="AppPrimaryTextBrush" Color="#EFEFEF" />
+            <SolidColorBrush x:Key="AppSecondaryTextBrush" Color="#A4A4A4" />
+            <SolidColorBrush x:Key="AppDisabledTextBrush" Color="#6A6A6A" />
+            <SolidColorBrush x:Key="AppSelectionBrush" Color="#23384A" />
+            <SolidColorBrush x:Key="AppHoverBrush" Color="#2A2A2A" />
+            <SolidColorBrush x:Key="AppDividerBrush" Color="#323232" />
+            <SolidColorBrush x:Key="AppCanvasBackgroundBrush" Color="#111111" />
+            <SolidColorBrush x:Key="AppShellBackgroundBrush" Color="#161616" />
+            <SolidColorBrush x:Key="AppToolbarSurfaceBrush" Color="#202020" />
+            <SolidColorBrush x:Key="AppContentLayerBrush" Color="#1E1E1E" />
+            <SolidColorBrush x:Key="AppChromeDividerBrush" Color="#323232" />
+            <SolidColorBrush x:Key="AppSubtleHoverBrush" Color="#2A2A2A" />
+            <SolidColorBrush x:Key="AppSubtlePressedBrush" Color="#333333" />
+            <SolidColorBrush x:Key="AppFlyoutBrush" Color="#2B2B2B" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>

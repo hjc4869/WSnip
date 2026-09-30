@@ -1,0 +1,22 @@
+<Wix
+  xmlns="http://wixtoolset.org/schemas/v4/wxs"
+  xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
+  <Bundle
+    Name="WSnip"
+    Manufacturer="Light Studio"
+    Version="$(InstallerVersion)"
+    UpgradeCode="$(BundleUpgradeCode)"
+    Compressed="yes"
+    IconSourceFile="$(IconPath)">
+    <BootstrapperApplication>
+      <bal:WixStandardBootstrapperApplication
+        Theme="rtfLicense"
+        LicenseFile="$(LicensePath)"
+        ShowVersion="yes"
+        SuppressOptionsUI="yes" />
+    </BootstrapperApplication>
+    <Chain>
+      <MsiPackage SourceFile="$(MsiPath)" Visible="no" Vital="yes" />
+    </Chain>
+  </Bundle>
+</Wix>

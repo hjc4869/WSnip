@@ -1,0 +1,78 @@
+WSnip — Third-Party Notices
+===========================
+
+WSnip is built on the following third-party components. Each remains the property of its
+respective authors and is used under the terms of the license noted below. The complete license
+text for every component is available at the referenced URL.
+
+
+User-interface framework
+------------------------
+Avalonia
+  (Avalonia, Avalonia.Desktop, Avalonia.Win32, Avalonia.Skia, Avalonia.HarfBuzz,
+   Avalonia.Themes.Fluent; the Win32, Skia and HarfBuzz backends are forked version)
+  License: MIT
+  https://github.com/AvaloniaUI/Avalonia/blob/main/licence.md
+
+Inter typeface  (Avalonia.Fonts.Inter)
+  License: SIL Open Font License 1.1
+  https://github.com/rsms/inter/blob/master/LICENSE.txt
+
+Material Design Icons  (toolbar glyphs)
+  License: Apache License 2.0
+  https://github.com/Templarian/MaterialDesign/blob/master/LICENSE
+
+
+Graphics
+--------
+SkiaSharp and Skia
+  License: MIT (SkiaSharp), BSD 3-Clause (Skia)
+  https://github.com/mono/SkiaSharp/blob/main/LICENSE.md
+  https://skia.googlesource.com/skia/+/refs/heads/main/LICENSE
+
+HarfBuzzSharp and HarfBuzz
+  License: MIT (HarfBuzzSharp), Old MIT (HarfBuzz)
+  https://github.com/mono/SkiaSharp/blob/main/LICENSE.md
+  https://github.com/harfbuzz/harfbuzz/blob/main/COPYING
+
+Adobe Gain Map
+  This product includes Gain Map technology under license by Adobe.
+  https://helpx.adobe.com/camera-raw/using/gain-map.html
+
+
+Image encoding (FFmpeg)
+-----------------------
+FFmpeg.AutoGen  (managed FFmpeg bindings)
+  License: MIT
+  https://github.com/Ruslan-B/FFmpeg.AutoGen/blob/main/LICENSE.txt
+
+FFmpeg
+  (LGPL shared libraries from BtbN/FFmpeg-Builds, installed next to WSnip.exe; used for the HEIC,
+   AVIF and JPEG XL encoders)
+  License: GNU LGPL v2.1-or-later
+  https://www.ffmpeg.org/legal.html
+  Build sources: https://github.com/BtbN/FFmpeg-Builds
+
+  Libraries in that build that WSnip's encoders use:
+  Kvazaar (HEVC)   License: BSD 3-Clause   https://github.com/ultravideo/kvazaar/blob/master/LICENSE
+  libaom (AV1)     License: BSD 2-Clause and the Alliance for Open Media Patent License 1.0
+                   https://aomedia.googlesource.com/aom/+/refs/heads/main/LICENSE
+                   https://aomedia.googlesource.com/aom/+/refs/heads/main/PATENTS
+  libjxl (JPEG XL) License: BSD 3-Clause   https://github.com/libjxl/libjxl/blob/main/LICENSE
+
+
+.NET runtime & libraries
+------------------------
+.NET Runtime and the .NET base class libraries
+  License: MIT
+  https://github.com/dotnet/runtime/blob/main/LICENSE.TXT
+
+
+Packaging
+---------
+WiX Toolset 5.0.2
+  (build tooling and the WixStandardBootstrapperApplication embedded in Windows
+   setup executables)
+  License: Microsoft Reciprocal License (MS-RL)
+  Source: https://github.com/wixtoolset/wix/tree/v5.0.2
+  https://github.com/wixtoolset/wix/blob/v5.0.2/LICENSE.TXT

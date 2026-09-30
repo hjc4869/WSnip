@@ -1,0 +1,20 @@
+<Project Sdk="WixToolset.Sdk/5.0.2">
+  <PropertyGroup>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <OutputType>Bundle</OutputType>
+    <InstallerArchitecture Condition="'$(InstallerArchitecture)' == ''">x64</InstallerArchitecture>
+    <InstallerPlatform>$(InstallerArchitecture)</InstallerPlatform>
+    <BundleUpgradeCode>7cf88276-b25b-413c-889f-44556f982849</BundleUpgradeCode>
+    <InstallerVersion Condition="'$(InstallerVersion)' == ''">$(Version)</InstallerVersion>
+    <MsiPath Condition="'$(MsiPath)' == ''">$(MSBuildThisFileDirectory)..\..\artifacts\windows-installer\$(InstallerArchitecture)\msi\WSnip-$(InstallerArchitecture).msi</MsiPath>
+    <OutputPath>$(MSBuildThisFileDirectory)..\..\artifacts\release\</OutputPath>
+    <IntermediateOutputPath>$(MSBuildThisFileDirectory)..\..\artifacts\obj\WSnipSetup\bundle\$(InstallerArchitecture)\</IntermediateOutputPath>
+    <OutputName>WSnipSetup-$(InstallerArchitecture)</OutputName>
+    <DefaultCompressionLevel>high</DefaultCompressionLevel>
+    <DefineConstants>$(DefineConstants);InstallerVersion=$(InstallerVersion);BundleUpgradeCode=$(BundleUpgradeCode);MsiPath=$(MsiPath);IconPath=$(MSBuildThisFileDirectory)..\..\src\WSnip.App\Assets\wsnip.ico;LicensePath=$(LicensePath)</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Bundle.wxs" />
+    <PackageReference Include="WixToolset.BootstrapperApplications.wixext" />
+  </ItemGroup>
+</Project>

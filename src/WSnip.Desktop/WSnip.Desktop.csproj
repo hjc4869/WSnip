@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Windows application head: the WSnip.exe entry point, its manifest and icon, the Windows
+    platform services, NativeAOT publishing and the LGPL FFmpeg libraries used by the HEIC, AVIF
+    and JPEG XL encoders, shared with Light Player through its build/Ffmpeg.targets.
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>$(TargetFramework)-$(WindowsTargetVersion)</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <AssemblyName>WSnip</AssemblyName>
+    <RootNamespace>WSnip.Desktop</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>..\WSnip.App\Assets\wsnip.ico</ApplicationIcon>
+    <PublishAot>true</PublishAot>
+    <BundleFfmpeg>true</BundleFfmpeg>
+    <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
+  </PropertyGroup>
+
+  <!-- The forked backends are referenced directly so they replace the ones Avalonia.Desktop brings. -->
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Win32" />
+    <PackageReference Include="Avalonia.FreeDesktop" />
+    <PackageReference Include="Avalonia.HarfBuzz" />
+    <PackageReference Include="FFmpeg.AutoGen.Bindings.DynamicallyLoaded" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WSnip.App\WSnip.App.csproj" />
+    <ProjectReference Include="..\WSnip.Windows\WSnip.Windows.csproj" />
+  </ItemGroup>
+
+  <Import Project="$(LightPlayerRoot)build\Ffmpeg.targets" />
+</Project>

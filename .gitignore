@@ -1,0 +1,13 @@
+artifacts/
+bin/
+obj/
+.vs/
+*.user
+*.suo
+
+# Signing keys and package outputs
+*.pfx
+AppPackages/
+BundleArtifacts/
+*.msix
+*.msixbundle

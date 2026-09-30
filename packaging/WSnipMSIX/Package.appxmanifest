@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
+  xmlns:uap11="http://schemas.microsoft.com/appx/manifest/uap/windows10/11"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap uap5 uap11 desktop rescap">
+
+  <!--
+    Publisher must match the subject of the Light Studio signing certificate exactly.
+    packaging/Set-Version.ps1 stamps Version from the release tag or Directory.Build.props.
+  -->
+  <Identity
+    Name="LightStudio.WSnip"
+    Publisher="CN=Light Studio, O=Light Studio, C=US"
+    Version="0.1.0.0" />
+
+  <Properties>
+    <DisplayName>WSnip</DisplayName>
+    <PublisherDisplayName>David Huang</PublisherDisplayName>
+    <Logo>Images\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="x-generate" />
+  </Resources>
+
+  <Applications>
+    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="$targetentrypoint$">
+      <uap:VisualElements DisplayName="ms-resource:AppName" Description="ms-resource:AppDescription" BackgroundColor="transparent" Square150x150Logo="Images\Square150x150Logo.png" Square44x44Logo="Images\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Images\Wide310x150Logo.png" />
+        <uap:SplashScreen Image="Images\SplashScreen.png" />
+      </uap:VisualElements>
+      <Extensions>
+        <!--
+          Package registry writes are private to the package, so "Start with Windows" uses this task
+          instead of the Run key (WindowsShellService.StartupTaskId); such launches start in the tray.
+          The packaging tools resolve $targetnametoken$ on the Application only, so extensions name the
+          entry point project's folder in the package.
+        -->
+        <desktop:Extension Category="windows.startupTask" Executable="WSnip.Desktop\WSnip.exe" EntryPoint="Windows.FullTrustApplication">
+          <desktop:StartupTask TaskId="WSnipStartup" Enabled="false" DisplayName="WSnip" />
+        </desktop:Extension>
+        <!-- Keeps WSnip.exe, with or without its snip switch, working from Run, scripts and shortcuts. -->
+        <uap5:Extension Category="windows.appExecutionAlias" Executable="WSnip.Desktop\WSnip.exe" EntryPoint="Windows.FullTrustApplication">
+          <uap5:AppExecutionAlias>
+            <uap5:ExecutionAlias Alias="WSnip.exe" />
+          </uap5:AppExecutionAlias>
+        </uap5:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+    <!-- Captures without the yellow capture border, as the unpackaged build does. -->
+    <uap11:Capability Name="graphicsCaptureProgrammatic" />
+    <uap11:Capability Name="graphicsCaptureWithoutBorder" />
+  </Capabilities>
+</Package>
