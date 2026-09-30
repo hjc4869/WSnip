@@ -36,6 +36,12 @@ public sealed class MonitorCapture
     /// <summary>Position in physical pixels on the virtual desktop.</summary>
     public required PixelRect Bounds { get; init; }
 
+    /// <summary>
+    /// The display in the coordinates the windowing system gives screens, where those are not the
+    /// physical pixels of <see cref="Bounds"/>: Wayland lays displays out in logical pixels.
+    /// </summary>
+    public PixelRect? LogicalBounds { get; init; }
+
     /// <summary>Display scaling relative to 96 DPI.</summary>
     public double Scaling { get; init; } = 1;
 

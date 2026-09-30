@@ -29,6 +29,8 @@ public sealed unsafe class WindowsHotkeyService : IGlobalHotkeyService
 
     public event EventHandler<HotkeyGesture>? Pressed;
 
+    public bool IsSupported => true;
+
     public string? Register(HotkeyGesture gesture)
     {
         uint? key = VirtualKey(gesture.Key);

@@ -1,20 +1,48 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!--
-    Windows application head: the WSnip.exe entry point, its manifest and icon, the Windows
-    platform services, NativeAOT publishing and the LGPL FFmpeg libraries used by the HEIC, AVIF
-    and JPEG XL encoders, shared with Light Player through its build/Ffmpeg.targets.
+    Desktop application head: the WSnip executable for Windows and Linux, NativeAOT publishing and
+    the platform services of the target operating system. Windows builds get the manifest, the icon
+    and the LGPL FFmpeg libraries used by the HEIC, AVIF and JPEG XL encoders, shared with Light
+    Player through its build/Ffmpeg.targets. Linux builds load FFmpeg and PipeWire from the system,
+    or from the runtime of the Flatpak.
   -->
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>$(TargetFramework)-$(WindowsTargetVersion)</TargetFramework>
-    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
     <AssemblyName>WSnip</AssemblyName>
     <RootNamespace>WSnip.Desktop</RootNamespace>
+    <PublishAot>true</PublishAot>
+    <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
+  </PropertyGroup>
+
+  <!--
+    The target operating system comes from the RuntimeIdentifier when publishing for one, so that
+    cross-publishing stays correct, and from the build host otherwise. Each target gets a compilation
+    constant (WINDOWS, LINUX) and an Is<OS>Target property for conditional items.
+  -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <_TargetOS Condition="$(RuntimeIdentifier.StartsWith('win'))">windows</_TargetOS>
+    <_TargetOS Condition="$(RuntimeIdentifier.StartsWith('linux'))">linux</_TargetOS>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' == ''">
+    <_TargetOS Condition="$([MSBuild]::IsOSPlatform('Windows'))">windows</_TargetOS>
+    <_TargetOS Condition="$([MSBuild]::IsOSPlatform('Linux'))">linux</_TargetOS>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IsWindowsTarget Condition="'$(_TargetOS)' == 'windows'">true</IsWindowsTarget>
+    <IsLinuxTarget Condition="'$(_TargetOS)' == 'linux'">true</IsLinuxTarget>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsWindowsTarget)' == 'true'">
+    <TargetFramework>$(TargetFramework)-$(WindowsTargetVersion)</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>..\WSnip.App\Assets\wsnip.ico</ApplicationIcon>
-    <PublishAot>true</PublishAot>
     <BundleFfmpeg>true</BundleFfmpeg>
-    <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(IsLinuxTarget)' == 'true'">
+    <DefineConstants>$(DefineConstants);LINUX</DefineConstants>
   </PropertyGroup>
 
   <!-- The forked backends are referenced directly so they replace the ones Avalonia.Desktop brings. -->
@@ -23,12 +51,14 @@
     <PackageReference Include="Avalonia.Win32" />
     <PackageReference Include="Avalonia.FreeDesktop" />
     <PackageReference Include="Avalonia.HarfBuzz" />
+    <PackageReference Condition="'$(IsLinuxTarget)' == 'true'" Include="Avalonia.Wayland" />
     <PackageReference Include="FFmpeg.AutoGen.Bindings.DynamicallyLoaded" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\WSnip.App\WSnip.App.csproj" />
-    <ProjectReference Include="..\WSnip.Windows\WSnip.Windows.csproj" />
+    <ProjectReference Condition="'$(IsWindowsTarget)' == 'true'" Include="..\WSnip.Windows\WSnip.Windows.csproj" />
+    <ProjectReference Condition="'$(IsLinuxTarget)' == 'true'" Include="..\WSnip.Linux\WSnip.Linux.csproj" />
   </ItemGroup>
 
   <Import Project="$(LightPlayerRoot)build\Ffmpeg.targets" />

@@ -52,6 +52,9 @@ public partial class SettingsWindow : Window
         foreach (ThemePreference theme in Enum.GetValues<ThemePreference>())
             ThemeBox.Items.Add(new ComboBoxItem { Content = theme == ThemePreference.System ? "Use system setting" : theme.ToString(), Tag = theme });
         MicaRow.IsVisible = controller.Theme.IsMicaSupported;
+        HotkeyEditor.IsVisible = controller.Platform.Hotkeys.IsSupported;
+        if (!OperatingSystem.IsWindows())
+            StartupTitle.Text = "Start when you sign in";
 
         Load();
 
@@ -87,7 +90,9 @@ public partial class SettingsWindow : Window
         loading = true;
         AppSettings settings = controller.Settings;
         HotkeyBox.Text = controller.Hotkey?.ToString() ?? string.Empty;
-        HotkeyInfo.Text = controller.HotkeyError ?? "Click the box and press a key combination.";
+        HotkeyInfo.Text = !controller.Platform.Hotkeys.IsSupported
+            ? "Give WSnip's New snip action a shortcut in the system settings."
+            : controller.HotkeyError ?? "Click the box and press a key combination.";
         Select(ModeBox, settings.Mode);
         Select(DelayBox, settings.DelaySeconds);
         CursorSwitch.IsChecked = settings.IncludeCursor;

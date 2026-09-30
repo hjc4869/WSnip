@@ -9,8 +9,9 @@ text for every component is available at the referenced URL.
 User-interface framework
 ------------------------
 Avalonia
-  (Avalonia, Avalonia.Desktop, Avalonia.Win32, Avalonia.Skia, Avalonia.HarfBuzz,
-   Avalonia.Themes.Fluent; the Win32, Skia and HarfBuzz backends are forked version)
+  (Avalonia, Avalonia.Desktop, Avalonia.Win32, Avalonia.X11, Avalonia.Wayland,
+   Avalonia.FreeDesktop, Avalonia.Skia, Avalonia.HarfBuzz, Avalonia.Themes.Fluent; the Win32,
+   Wayland, FreeDesktop, Skia and HarfBuzz backends are forked versions)
   License: MIT
   https://github.com/AvaloniaUI/Avalonia/blob/main/licence.md
 
@@ -59,6 +60,32 @@ FFmpeg
                    https://aomedia.googlesource.com/aom/+/refs/heads/main/LICENSE
                    https://aomedia.googlesource.com/aom/+/refs/heads/main/PATENTS
   libjxl (JPEG XL) License: BSD 3-Clause   https://github.com/libjxl/libjxl/blob/main/LICENSE
+
+  On Linux, WSnip loads the FFmpeg libraries of the system, or of the org.freedesktop.Platform
+  runtime in the Flatpak, and distributes none.
+
+
+Linux platform
+--------------
+Tmds.DBus.Protocol  (session bus: desktop portals, single instance, file manager)
+  License: MIT
+  https://github.com/tmds/Tmds.DBus/blob/main/LICENSE
+
+NWayland  (NWayland, NWayland.Protocols.Plasma; Wayland client bindings for the Wayland backend
+  and KWin's screencast protocol)
+  License: MIT
+  https://github.com/kekekeks/NWayland/blob/master/licence.md
+
+Wayland
+  (libwayland-client, loaded from the system or the Flatpak runtime; not distributed with WSnip)
+  License: MIT
+  https://gitlab.freedesktop.org/wayland/wayland/-/blob/main/COPYING
+
+PipeWire
+  (libpipewire-0.3 for screen capture, loaded from the system or the Flatpak runtime; not
+   distributed with WSnip)
+  License: MIT
+  https://gitlab.freedesktop.org/pipewire/pipewire/-/blob/master/COPYING
 
 
 .NET runtime & libraries

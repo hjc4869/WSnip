@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>im.hjc.WSnip</id>
+
+  <!-- License of this metainfo file (not the application). -->
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LicenseRef-proprietary</project_license>
+
+  <name>WSnip</name>
+  <summary>Capture, mark up and save screenshots</summary>
+
+  <description>
+    <p>
+      WSnip is a screenshot tool with the feel of the Windows Snipping Tool. Freeze the screen,
+      pick what to keep, mark it up and share it.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>Rectangle, window, full screen and freeform snips, with an optional delay</li>
+      <li>Pen, highlighter, eraser and crop markup</li>
+      <li>Copy to the clipboard and save as PNG, JPEG, HEIC, AVIF or JPEG XL</li>
+      <li>HDR snips keep their highlights in gain map images</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">im.hjc.WSnip.desktop</launchable>
+
+  <developer id="im.hjc">
+    <name>Light Studio</name>
+  </developer>
+
+  <categories>
+    <category>Graphics</category>
+    <category>Utility</category>
+  </categories>
+
+  <content_rating type="oars-1.1" />
+
+  <releases>
+    <release version="0.1.0" date="2026-09-30" />
+  </releases>
+</component>

@@ -1,0 +1,104 @@
+app-id: im.hjc.WSnip
+runtime: org.freedesktop.Platform
+runtime-version: '26.08'
+sdk: org.freedesktop.Sdk
+# Build-only .NET toolchain supplied by the SDK extension.
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.dotnet10
+command: wsnip
+
+# The app is published with NativeAOT *inside the sandbox* by the dotnet10 SDK extension, so no
+# .NET runtime is added to /app. FFmpeg 8.1 (the HEIC, AVIF and JPEG XL encoders), PipeWire and
+# libwayland-client (screen capture through KWin's screencast protocol or the ScreenCast portal)
+# come from org.freedesktop.Platform 26.08.
+#
+# NuGet restore runs offline: flatpak-builder downloads every package pinned in
+# nuget-sources.json into ./nuget-sources during its fetch phase. `make flatpak` generates that
+# list with Light Player's packaging/flatpak/nuget-sources.py and stages the WSnip sources next
+# to the Light Player sources they share.
+build-options:
+  prepend-path: /usr/lib/sdk/dotnet10/bin
+  append-ld-library-path: /usr/lib/sdk/dotnet10/lib
+  prepend-pkg-config-path: /usr/lib/sdk/dotnet10/lib/pkgconfig
+  env:
+    DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+    DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
+    DOTNET_NOLOGO: '1'
+
+finish-args:
+  # Windowing and rendering; X11 only where the session has no Wayland.
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --share=ipc
+  - --device=dri
+  # Saving snips into Pictures/Screenshots.
+  - --filesystem=xdg-pictures
+  # KWin's screencast protocol streams the displays to the PipeWire daemon, where WSnip reads them.
+  - --filesystem=xdg-run/pipewire-0
+  # The notification area icon: the host's watcher and the item's name (sandbox pid 2, first icon).
+  - --talk-name=org.kde.StatusNotifierWatcher
+  - --own-name=org.kde.StatusNotifierItem-2-0
+  # Showing a saved snip in the file manager.
+  - --talk-name=org.freedesktop.FileManager1
+
+modules:
+  - name: wsnip
+    buildsystem: simple
+    build-commands:
+      # Publish inside the sandbox. -p:Flatpak=true selects the FFmpeg 8.1 bindings that match
+      # the runtime, and LightPlayerRoot points at the staged Light Player sources. The .NET RID
+      # and MSBuild platform follow the Flatpak build architecture.
+      - |
+        set -e
+        case "$FLATPAK_ARCH" in
+          x86_64)  DOTNET_RID=linux-x64;   DOTNET_PLATFORM=x64 ;;
+          aarch64) DOTNET_RID=linux-arm64; DOTNET_PLATFORM=ARM64 ;;
+          *) echo "unsupported Flatpak arch: $FLATPAK_ARCH" >&2; exit 1 ;;
+        esac
+        export NUGET_PACKAGES="$PWD/.nuget-packages"
+        export DOTNET_CLI_HOME="$PWD/.dotnet-home"
+        dotnet publish wsnip/src/WSnip.Desktop/WSnip.Desktop.csproj \
+          -c Release -r "$DOTNET_RID" --self-contained true \
+          -p:Flatpak=true -p:Platform="$DOTNET_PLATFORM" \
+          -p:LightPlayerRoot="$PWD/lightplayer/" \
+          --source ./nuget-sources \
+          -o publish
+        # Debug symbols (*.pdb, and *.dbg from NativeAOT) are not used at run time.
+        find publish \( -name '*.pdb' -o -name '*.dbg' \) -delete
+        find publish -mindepth 1 -type d -empty -delete
+      - mkdir -p /app/wsnip
+      - cp -a publish/. /app/wsnip/
+      - chmod +x /app/wsnip/WSnip
+      # The launcher on PATH; the executable resolves its real location through the link.
+      - mkdir -p /app/bin
+      - ln -sf /app/wsnip/WSnip /app/bin/wsnip
+      - install -Dm644 im.hjc.WSnip.desktop /app/share/applications/im.hjc.WSnip.desktop
+      - install -Dm644 im.hjc.WSnip.metainfo.xml /app/share/metainfo/im.hjc.WSnip.metainfo.xml
+      - |
+        for size in 16 32 48 64 128 256; do
+          install -Dm644 "icons/${size}x${size}/im.hjc.WSnip.png" "/app/share/icons/hicolor/${size}x${size}/apps/im.hjc.WSnip.png"
+        done
+      - install -Dm644 LICENSE /app/share/licenses/im.hjc.WSnip/LICENSE
+      - install -Dm644 THIRDPARTY.txt /app/share/licenses/im.hjc.WSnip/THIRDPARTY.txt
+    sources:
+      # WSnip and the Light Player sources it builds against (staged by `make flatpak` without
+      # bin/, obj/ or artifacts/).
+      - type: dir
+        path: wsnip
+        dest: wsnip
+      - type: dir
+        path: lightplayer
+        dest: lightplayer
+      # Pinned offline NuGet feed generated on the host by nuget-sources.py.
+      - nuget-sources.json
+      - type: dir
+        path: icons
+        dest: icons
+      - type: file
+        path: im.hjc.WSnip.desktop
+      - type: file
+        path: im.hjc.WSnip.metainfo.xml
+      - type: file
+        path: LICENSE
+      - type: file
+        path: THIRDPARTY.txt

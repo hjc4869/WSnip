@@ -573,6 +573,12 @@ public partial class EditorWindow : Window
 
     private void UpdateEmptyHint()
     {
+        if (!controller.Platform.Hotkeys.IsSupported)
+        {
+            EmptyHint.Text = "Select New to capture the screen, or give WSnip's New snip action a shortcut in the system settings.";
+            return;
+        }
+
         string hotkey = controller.Hotkey?.ToString() ?? "a hotkey (none set)";
         EmptyHint.Text = controller.HotkeyError is { } error
             ? $"Select New to capture the screen. {error} Choose another shortcut in Settings."

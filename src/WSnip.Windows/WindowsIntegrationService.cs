@@ -22,6 +22,10 @@ public sealed unsafe class WindowsIntegrationService : IWindowIntegrationService
 
     public bool IsMicaSupported => OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000);
 
+    public bool CanExcludeFromCapture => true;
+
+    public bool CanPlaceWindows => true;
+
     public void SetMica(nint windowHandle, bool enabled, bool darkTheme)
     {
         if (windowHandle == 0 || !IsMicaSupported)

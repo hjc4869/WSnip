@@ -17,7 +17,7 @@
                         <TextBlock Text="Shortcut" />
                         <TextBlock x:Name="HotkeyInfo" Classes="caption" TextWrapping="Wrap" Text="Click the box and press a key combination." />
                     </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <StackPanel x:Name="HotkeyEditor" Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                         <TextBox x:Name="HotkeyBox" Width="170" IsReadOnly="True" PlaceholderText="None" />
                         <Button x:Name="PrintScreenButton" Classes="flat" Content="Print Screen" ToolTip.Tip="Use the Print Screen key" />
                         <Button x:Name="ClearHotkeyButton" Classes="icon" ToolTip.Tip="No shortcut">
@@ -143,7 +143,7 @@
             <Border Classes="settingRow">
                 <Grid ColumnDefinitions="*,Auto">
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Start with Windows" />
+                        <TextBlock x:Name="StartupTitle" Text="Start with Windows" />
                         <TextBlock Classes="caption" Text="Runs in the notification area so the shortcut always works." />
                     </StackPanel>
                     <ToggleSwitch x:Name="StartupSwitch" Grid.Column="1" OnContent="" OffContent="" />

@@ -5,6 +5,9 @@ gamut content. Screens are captured at 16-bit float precision. SDR content stays
 HDR highlights are saved as gain-map images: SDR viewers show a tone-mapped base image, and HDR
 viewers restore the original brightness.
 
+WSnip runs on Windows and KDE; see [Linux](#linux) for what differs there. HDR / WCG is currently
+only supported on Windows.
+
 ## Features
 
 - **Snip modes:** rectangle, window, full screen and freeform, with an optional 3, 5 or 10 second
@@ -22,9 +25,9 @@ viewers restore the original brightness.
   - `WSnip.exe --snip [rectangle|window|fullscreen|freeform|wholewindow]`.
   - `--background` starts the app in the tray.
   - Later launches forward their command line to the running instance.
-- **Capture:** Windows.Graphics.Capture delivers `R16G16B16A16Float` scRGB frames at each
-  display's SDR white level and peak brightness. Nothing is clipped to SDR or sRGB. WSnip's own
-  windows stay open but are left out of the capture.
+- **Capture:** On Windows, Windows.Graphics.Capture delivers `R16G16B16A16Float` scRGB frames at
+  each display's SDR white level and peak brightness. Nothing is clipped to SDR or sRGB. WSnip's
+  own windows stay open but are left out of the capture.
 - **Editor:**
   - Pen, highlighter, eraser and crop tools, with undo/redo, zoom and pan.
   - On an HDR display it draws into an FP16 scRGB surface, so highlights show at their captured
@@ -91,6 +94,63 @@ is missing is hidden, and automatic saves fall back to PNG or UltraHDR JPEG.
 The gain-map output has been checked against libavif and FFmpeg decoders, and against Light
 Player's decoders.
 
+## Linux
+
+WSnip uses the Avalonia fork's Wayland backend in Wayland sessions, and X11 otherwise. What
+differs from Windows:
+
+- **Capture** on KDE Plasma goes through KWin's screencast protocol where KWin grants it to WSnip
+  (see [KWin screencast access](#kwin-screencast-access)). KWin streams every display to PipeWire
+  without asking and leaves WSnip's own windows out, so they stay open. Otherwise capture goes
+  through the desktop's ScreenCast portal (xdg-desktop-portal) and PipeWire. The first snip opens
+  the system's screen sharing dialog: share the displays to snip and allow restoring, and later
+  snips skip the dialog. WSnip's windows can't be left out of a portal capture, so they hide while
+  one is taken. Compositors share 8-bit SDR frames for now (KWin offers nothing wider, on either
+  path), so snips are SDR. The frames become the same relative linear image as on Windows, so
+  wide-gamut and HDR formats can follow once compositors offer them. Without PipeWire or the
+  portal, WSnip says what to install.
+- **Overlay:** Wayland apps can't place their windows, so one full-screen overlay opens on the
+  display the compositor picks and shows that display.
+- **Window mode** snips the whole display, as Wayland doesn't tell apps where windows are.
+  **Whole window mode** picks the window in the system's sharing dialog instead of with a click on
+  the live screen.
+- **Hotkey:** Wayland gives apps no global hotkeys. Bind a shortcut to the desktop entry's
+  **New snip** action (KDE: System Settings > Keyboard > Shortcuts), or to `wsnip --snip`.
+- **Clipboard:** the SDR rendition as PNG. Wayland apps serve what they copy, so it can be pasted
+  while WSnip runs in the tray.
+- **Start when you sign in** writes an XDG autostart entry, or asks the Background portal in the
+  Flatpak.
+
+### KWin screencast access
+
+KWin offers its screencast protocol, `zkde_screencast_unstable_v1`, only to apps whose desktop
+entry lists it in `X-KDE-Wayland-Interfaces`. The log (see [Files](#files)) says which way the
+displays are captured.
+
+- **Flatpak:** KWin reads the entry named after the app ID, and the Flatpak's entry lists the
+  protocol. Recent Flatpak releases, such as 1.18.4 and 1.19.2, leave that key out of the entries
+  they install; there, a copy of the entry that keeps it grants the protocol:
+
+  ```sh
+  cp ~/.local/share/flatpak/exports/share/applications/im.hjc.WSnip.desktop ~/.local/share/applications/
+  sed -i '/^\[Desktop Entry\]$/a X-KDE-Wayland-Interfaces=zkde_screencast_unstable_v1' \
+    ~/.local/share/applications/im.hjc.WSnip.desktop
+  ```
+
+  A system-wide install keeps its entry in `/var/lib/flatpak/exports/share/applications`. The
+  Flatpak reads the streams from the PipeWire daemon (`--filesystem=xdg-run/pipewire-0`).
+- **Other builds:** KWin looks for an entry whose `Exec` is the absolute path of the WSnip
+  executable, such as this one in `~/.local/share/applications`:
+
+  ```ini
+  [Desktop Entry]
+  Type=Application
+  Name=WSnip
+  Exec=/opt/wsnip/WSnip
+  NoDisplay=true
+  X-KDE-Wayland-Interfaces=zkde_screencast_unstable_v1
+  ```
+
 ## Architecture
 
 ```
@@ -99,7 +159,10 @@ src/
                   settings and the platform interfaces. No UI and no OS dependencies.
   WSnip.App       Avalonia UI (cross-platform): overlay, editor, settings, tray, theming.
   WSnip.Windows   Windows implementations of the platform interfaces.
-  WSnip.Desktop   Windows head: WSnip.exe, manifest, NativeAOT and FFmpeg bundling.
+  WSnip.Linux     Linux implementations: KWin screencast, ScreenCast portal and PipeWire capture,
+                  D-Bus single instance, freedesktop shell integration.
+  WSnip.Desktop   Head for Windows and Linux: the WSnip executable and NativeAOT; on Windows also
+                  the manifest and FFmpeg bundling.
 ```
 
 Platform features are reached only through the interfaces in `WSnip.Core.Platform`:
@@ -107,27 +170,31 @@ Platform features are reached only through the interfaces in `WSnip.Core.Platfor
 - `IScreenCaptureService` (displays, and single windows from the compositor)
 - `IWindowPickerService` (pointing at a window on the live screen)
 - `IGlobalHotkeyService`
-- `IWindowIntegrationService` (Mica, frame theme, exclusion from capture, cursor position)
+- `IWindowIntegrationService` (Mica, frame theme, exclusion from capture, window placement, cursor
+  position)
 - `IShellService`
-- `IClipboardService`
+- `IClipboardService` (optional; Avalonia's clipboard serves without one)
 - `ISingleInstanceService`
 
-To port WSnip to another OS, implement these interfaces and add a head project like
-`WSnip.Desktop`.
+To port WSnip to another OS, implement these interfaces and create them in `Program.CreatePlatform`
+of `WSnip.Desktop`.
 
 Shared with Light Player (`..\LightPlayer`, source unchanged):
 
 - `LightStudio.Logging`
 - `LightStudio.FfmpegShim`
 - `build\Ffmpeg.targets`, which downloads and bundles the LGPL FFmpeg shared build
-- The Avalonia fork packages (`12.1.4-lightplayer.*`), including the `ExtendedLinear` Win32 color
-  mode that provides the FP16 scRGB surface
+- `packaging/flatpak/nuget-sources.py`, which pins the NuGet packages of the offline Flatpak build
+- The Avalonia fork packages (`12.1.4-lightplayer.*`), including the `ExtendedLinear` color mode of
+  the Win32 and Wayland backends that provides the FP16 scRGB surface
 
 ## Building
 
 Requirements:
 
 - Windows 10 2004 (build 19041) or later. HDR capture and display need an HDR-enabled display.
+- Or Linux with PipeWire and xdg-desktop-portal with the desktop's backend, such as
+  xdg-desktop-portal-kde. HEIC, AVIF and JPEG XL use the system's FFmpeg 9 libraries.
 - .NET SDK 10.0.301 or later 10.0 feature band, as pinned in `global.json`.
 - A Light Player checkout next to this repository (`..\LightPlayer`). To use another location, set
   `-p:LightPlayerRoot=...\`.
@@ -142,6 +209,16 @@ dotnet publish src\WSnip.Desktop -c Release -r win-x64 -p:Platform=x64
 ```
 
 For ARM64, use `-p:Platform=ARM64 -r win-arm64`.
+
+On Linux, the `Makefile` wraps the same commands. It passes `LIGHTPLAYER_ROOT` (by default
+`../LightStudio.LightPlayer`) as `LightPlayerRoot`:
+
+```sh
+make                        # Release build
+make run
+make publish                # NativeAOT: artifacts/publish/WSnip.Desktop/release_linux-x64/WSnip
+make publish RID=linux-arm64
+```
 
 ## Packaging
 
@@ -169,15 +246,23 @@ libraries.
   `packaging\WSnipSetup\build.ps1 [-Architecture x64,arm64]` publishes, builds the MSI and wraps
   it in `artifacts\release\WSnipSetup-<arch>.exe`. The setup shows `LICENSE` and `THIRDPARTY.txt`,
   and installs both next to `WSnip.exe`.
+- **Flatpak** (`packaging/flatpak`, app ID `im.hjc.WSnip`): `make flatpak` publishes the NativeAOT
+  build inside the `org.freedesktop.Sdk` 26.08 sandbox with the .NET 10 SDK extension, restoring
+  offline from pinned NuGet packages, and writes
+  `artifacts/flatpak-x86_64/im.hjc.WSnip-x86_64.flatpak`; `make flatpak-install` also installs it
+  for the current user. FFmpeg 8.1 and PipeWire come from the `org.freedesktop.Platform` runtime.
+  It needs `flatpak`, `flatpak-builder` and `python3`; the first build installs the SDK and its
+  extension from Flathub. Add a `<release>` to the metainfo for each version.
 
 `packaging\Set-Version.ps1 -Tag v1.2.3` stamps one version into `Directory.Build.props` and the MSIX
 manifest; the release workflow runs it with the release tag.
 
 ## Releases
 
-`.github/workflows/release.yml` builds both package kinds for x64 and ARM64 and publishes them in a
-GitHub Release when a `v*` tag is pushed, or when it is run from the Actions tab with a tag. It
-checks out Light Player next to WSnip, as local builds expect.
+`.github/workflows/release.yml` builds the MSIX bundle and the setup executables for x64 and ARM64
+and publishes them in a GitHub Release when a `v*` tag is pushed, or when it is run from the
+Actions tab with a tag. It checks out Light Player next to WSnip, as local builds expect. The
+Flatpak is built locally with `make flatpak`.
 
 One-time setup of the WSnip repository (**Settings > Secrets and variables > Actions**):
 
@@ -212,10 +297,16 @@ MSBuild 18, and the `.wapproj` builds only with Visual Studio's MSBuild.
   settings
 - Launch at startup: `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\WSnip`, or the package's
   startup task for the MSIX
+- On Linux: settings in `~/.config/WSnip` (`~/.var/app/im.hjc.WSnip/config/WSnip` for the
+  Flatpak), snips in `~/Pictures/Screenshots`, and launch at startup in
+  `~/.config/autostart/im.hjc.WSnip.desktop`. `screencast-restore-token` next to the settings
+  restores the displays shared through the portal; delete it to choose them again.
 
 ## Known limitations
 
-- Only the Windows platform is implemented.
+- Linux captures SDR only, and a Wayland overlay covers one display, so a snip can't span
+  displays there. The Linux version has been developed on KDE Plasma 6.7; other desktops are
+  untested.
 - Whole window snips keep the transparency a window draws itself. Windows 11's rounded corners
   and a window-wide opacity set with `SetLayeredWindowAttributes` are applied by the compositor
   afterwards and are not part of the captured window.

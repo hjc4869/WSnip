@@ -5,8 +5,10 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Threading;
 using WSnip.App.Rendering;
 using WSnip.Core.Capture;
+using WSnip.Core.Imaging;
 using PixelRect = WSnip.Core.Imaging.PixelRect;
 using ShapePath = Avalonia.Controls.Shapes.Path;
 
@@ -15,13 +17,18 @@ namespace WSnip.App.Capture;
 /// <summary>The region the user picked, in physical virtual-desktop pixels.</summary>
 public sealed record SnipSelection(SnipMode Mode, PixelRect Region, IReadOnlyList<(double X, double Y)>? Outline);
 
+/// <summary>The part of a display's image that an overlay window shows, and the image pixels per window unit.</summary>
+internal readonly record struct OverlayView(MonitorCapture Monitor, PixelRect Source, double Scale);
+
 /// <summary>
 /// The frozen-screen overlay: one borderless topmost window per display showing what was captured,
-/// dimmed outside the selection, with the snip mode bar on the display under the pointer.
+/// dimmed outside the selection, with the snip mode bar on the display under the pointer. Where the
+/// compositor places windows, a single full-screen window shows the display it opens on.
 /// </summary>
 public sealed class OverlaySession
 {
     private readonly ScreenSnapshot snapshot;
+    private readonly bool placeWindows;
     private readonly List<OverlayWindow> windows = [];
     private readonly TaskCompletionSource<SnipSelection?> result = new();
     private PixelPoint? anchor;
@@ -29,9 +36,11 @@ public sealed class OverlaySession
     private List<(double X, double Y)>? outline;
     private bool finished;
 
-    public OverlaySession(ScreenSnapshot snapshot, SnipMode mode)
+    /// <param name="placeWindows">Whether windows can be placed on each display, rather than by the compositor.</param>
+    public OverlaySession(ScreenSnapshot snapshot, SnipMode mode, bool placeWindows)
     {
         this.snapshot = snapshot;
+        this.placeWindows = placeWindows;
         Mode = mode;
     }
 
@@ -52,9 +61,19 @@ public sealed class OverlaySession
     {
         MonitorCapture barMonitor = snapshot.MonitorAt(pointer.X, pointer.Y)
             ?? snapshot.Monitors.FirstOrDefault(m => m.IsPrimary) ?? snapshot.Monitors[0];
+        if (!placeWindows)
+        {
+            var window = new OverlayWindow(this, barMonitor, showBar: true, fullScreen: true);
+            windows.Add(window);
+            window.Show();
+            window.Activate();
+            UpdateHover(pointer);
+            return result.Task;
+        }
+
         foreach (MonitorCapture monitor in snapshot.Monitors)
         {
-            var window = new OverlayWindow(this, monitor, showBar: monitor == barMonitor);
+            var window = new OverlayWindow(this, monitor, showBar: monitor == barMonitor, fullScreen: false);
             windows.Add(window);
             window.Show();
         }
@@ -63,6 +82,30 @@ public sealed class OverlaySession
         UpdateHover(pointer);
         return result.Task;
     }
+
+    /// <summary>
+    /// The captured pixels under a screen, given in the coordinates the windowing system gives
+    /// screens: the display with those bounds, or else the capture covering the screen's center,
+    /// such as one of a whole workspace.
+    /// </summary>
+    internal OverlayView? ViewOf(PixelRect screen)
+    {
+        MonitorCapture? monitor = snapshot.Monitors.FirstOrDefault(m => (m.LogicalBounds ?? m.Bounds) == screen)
+            ?? snapshot.Monitors.FirstOrDefault(m => (m.LogicalBounds ?? m.Bounds).Contains(screen.X + screen.Width / 2, screen.Y + screen.Height / 2));
+        if (monitor is null)
+            return null;
+
+        PixelRect logical = monitor.LogicalBounds ?? monitor.Bounds;
+        double scale = (double)monitor.Bounds.Width / logical.Width;
+        PixelRect source = new PixelRect(
+                (int)Math.Round((screen.X - logical.X) * scale), (int)Math.Round((screen.Y - logical.Y) * scale),
+                (int)Math.Round(screen.Width * scale), (int)Math.Round(screen.Height * scale))
+            .Intersect(new PixelRect(0, 0, monitor.Image.Width, monitor.Image.Height));
+        return source.IsEmpty ? null : new OverlayView(monitor, source, scale);
+    }
+
+    /// <summary>Redraws the windows after one of them changed what it shows.</summary>
+    internal void Refresh() => Changed?.Invoke(this, EventArgs.Empty);
 
     public void SetMode(SnipMode mode)
     {
@@ -195,24 +238,37 @@ internal sealed class OverlayWindow : Window
     private readonly OverlaySession session;
     private readonly HdrImageView frozen;
     private readonly List<ToggleButton> modeButtons = [];
+    private readonly bool fullScreen;
+    private OverlayView? view;
+    private DispatcherTimer? follow;
 
-    public OverlayWindow(OverlaySession session, MonitorCapture monitor, bool showBar)
+    /// <param name="fullScreen">
+    /// Fills whichever display the compositor puts the window on, and shows the captured pixels of
+    /// that display once it is known; otherwise the window is placed over <paramref name="monitor"/>.
+    /// </param>
+    public OverlayWindow(OverlaySession session, MonitorCapture monitor, bool showBar, bool fullScreen)
     {
         this.session = session;
+        this.fullScreen = fullScreen;
         Monitor = monitor;
         WindowDecorations = WindowDecorations.None;
         ShowInTaskbar = false;
         Topmost = true;
-        CanResize = false;
         Background = Brushes.Black;
-        WindowStartupLocation = WindowStartupLocation.Manual;
-        Position = new PixelPoint(monitor.Bounds.X, monitor.Bounds.Y);
+        if (!fullScreen)
+        {
+            CanResize = false;
+            WindowStartupLocation = WindowStartupLocation.Manual;
+            Position = new PixelPoint(monitor.Bounds.X, monitor.Bounds.Y);
+        }
+
         Width = monitor.Bounds.Width / monitor.Scaling;
         Height = monitor.Bounds.Height / monitor.Scaling;
         Title = "WSnip overlay";
         Cursor = new Cursor(StandardCursorType.Cross);
 
-        frozen = new HdrImageView { Smooth = false, Image = SharedImage.FromLinear(monitor.Image, monitor.Color.WhiteScale) };
+        frozen = new HdrImageView { Smooth = false };
+        ShowFrozenImage();
         var canvas = new OverlayCanvas(session, this);
         var root = new Grid();
         root.Children.Add(frozen);
@@ -224,6 +280,7 @@ internal sealed class OverlayWindow : Window
         session.Changed += OnSessionChanged;
         Closed += (_, _) =>
         {
+            follow?.Stop();
             session.Changed -= OnSessionChanged;
             frozen.Image = null;
         };
@@ -234,29 +291,80 @@ internal sealed class OverlayWindow : Window
         };
     }
 
-    public MonitorCapture Monitor { get; }
+    public MonitorCapture Monitor { get; private set; }
+
+    /// <summary>The shown part of the display's image; all of it unless the window shows a view.</summary>
+    private PixelRect Source => view?.Source ?? new PixelRect(0, 0, Monitor.Image.Width, Monitor.Image.Height);
+
+    /// <summary>Image pixels per device-independent pixel of the window.</summary>
+    private double PixelScale => view?.Scale ?? RenderScaling;
 
     /// <summary>Converts a window position in device-independent pixels to virtual-desktop pixels.</summary>
     public PixelPoint ToPhysical(Point point)
     {
-        double scale = RenderScaling;
-        return new PixelPoint(Monitor.Bounds.X + (int)Math.Floor(point.X * scale), Monitor.Bounds.Y + (int)Math.Floor(point.Y * scale));
+        double scale = PixelScale;
+        PixelRect source = Source;
+        return new PixelPoint(Monitor.Bounds.X + source.X + (int)Math.Floor(point.X * scale),
+            Monitor.Bounds.Y + source.Y + (int)Math.Floor(point.Y * scale));
     }
 
     public Point ToLocal(double x, double y)
     {
-        double scale = RenderScaling;
-        return new Point((x - Monitor.Bounds.X) / scale, (y - Monitor.Bounds.Y) / scale);
+        double scale = PixelScale;
+        PixelRect source = Source;
+        return new Point((x - Monitor.Bounds.X - source.X) / scale, (y - Monitor.Bounds.Y - source.Y) / scale);
     }
 
     protected override void OnOpened(EventArgs e)
     {
         base.OnOpened(e);
+        if (fullScreen)
+        {
+            WindowState = WindowState.FullScreen;
+            FollowScreen();
+            return;
+        }
 
         // The window takes the scale of the display it opened on; fit it to the display exactly.
         Width = Monitor.Bounds.Width / RenderScaling;
         Height = Monitor.Bounds.Height / RenderScaling;
         Position = new PixelPoint(Monitor.Bounds.X, Monitor.Bounds.Y);
+    }
+
+    /// <summary>
+    /// Shows the captured pixels of the screen the compositor put the window on. The screen is known
+    /// once the window appears on it, a few frames after it opens.
+    /// </summary>
+    private void FollowScreen()
+    {
+        int ticks = 0;
+        follow = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(50) };
+        follow.Tick += (_, _) =>
+        {
+            if (++ticks >= 40)
+                follow.Stop();
+            if (Screens.ScreenFromTopLevel(this) is not { } screen)
+                return;
+            Avalonia.PixelRect bounds = screen.Bounds;
+            if (session.ViewOf(new PixelRect(bounds.X, bounds.Y, bounds.Width, bounds.Height)) is not { } found || found == view)
+                return;
+            bool picture = found.Monitor != Monitor || found.Source != Source;
+            view = found;
+            Monitor = found.Monitor;
+            if (picture)
+                ShowFrozenImage();
+            session.Refresh();
+        };
+        follow.Start();
+    }
+
+    private void ShowFrozenImage()
+    {
+        PixelRect source = Source;
+        HdrImage image = source == new PixelRect(0, 0, Monitor.Image.Width, Monitor.Image.Height) ? Monitor.Image : Monitor.Image.Crop(source);
+        SharedImage shared = SharedImage.FromLinear(image, Monitor.Color.WhiteScale);
+        frozen.Image = shared;
+        shared.Release();
     }
 
     private Control CreateBar()

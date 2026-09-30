@@ -1,6 +1,8 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input.Platform;
+using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
 using LightStudio.Logging;
@@ -21,6 +23,9 @@ namespace WSnip.App.Services;
 /// </summary>
 public sealed class AppController : IDisposable
 {
+    /// <summary>How long hidden windows take to leave the screen, including the compositor's closing animation.</summary>
+    private static readonly TimeSpan HiddenWindowsSettle = TimeSpan.FromMilliseconds(300);
+
     private readonly Application app;
     private readonly PlatformServices platform;
     private readonly SettingsStore store;
@@ -28,6 +33,7 @@ public sealed class AppController : IDisposable
     private EditorWindow? editor;
     private SettingsWindow? settingsWindow;
     private TrayIcon? tray;
+    private Bitmap? clipboardBitmap;
     private bool capturing;
     private bool exiting;
 
@@ -94,6 +100,7 @@ public sealed class AppController : IDisposable
             return;
         capturing = true;
         var excluded = new List<nint>();
+        List<(Window Window, Window? Owner)>? hidden = null;
         try
         {
             SnipMode initialMode = mode ?? Settings.Mode;
@@ -105,24 +112,33 @@ public sealed class AppController : IDisposable
             }
 
             // The app's own windows stay open but are left out of the capture, which shows what is
-            // behind them instead.
-            foreach (Window window in lifetime.Windows)
+            // behind them instead. Where the system cannot leave them out, they step aside meanwhile.
+            if (platform.Windows.CanExcludeFromCapture)
             {
-                if (window.IsVisible && window.TryGetPlatformHandle() is { } handle)
+                foreach (Window window in lifetime.Windows)
                 {
-                    platform.Windows.SetExcludedFromCapture(handle.Handle, true);
-                    excluded.Add(handle.Handle);
+                    if (window.IsVisible && window.TryGetPlatformHandle() is { } handle)
+                    {
+                        platform.Windows.SetExcludedFromCapture(handle.Handle, true);
+                        excluded.Add(handle.Handle);
+                    }
                 }
+            }
+            else
+            {
+                hidden = HideWindows();
             }
 
             if (delay > 0)
                 await Task.Delay(TimeSpan.FromSeconds(delay));
             else if (excluded.Count > 0)
                 await Task.Delay(60);
+            else if (hidden is { Count: > 0 })
+                await Task.Delay(HiddenWindowsSettle);
 
             ScreenSnapshot snapshot = await platform.Capture.CaptureAsync(new CaptureOptions { IncludeCursor = Settings.IncludeCursor });
             platform.Windows.TryGetCursorPosition(out int x, out int y);
-            var session = new OverlaySession(snapshot, initialMode);
+            var session = new OverlaySession(snapshot, initialMode, placeWindows: platform.Windows.CanPlaceWindows);
             SnipSelection? selection = await session.ShowAsync(new PixelPoint(x, y));
 
             // A mode picked on the overlay's own bar becomes the default for the next snip.
@@ -140,6 +156,11 @@ public sealed class AppController : IDisposable
             AppLog.Information("Snip", $"{selection.Mode} snip {snip.Width}x{snip.Height}: {snip.Statistics}");
             await DeliverAsync(snip);
         }
+        catch (OperationCanceledException exception)
+        {
+            // The user declined the system's screen sharing prompt.
+            AppLog.Information("Snip", $"The snip was cancelled: {exception.Message}");
+        }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
             AppLog.Error("Snip", "Taking a snip failed.", exception);
@@ -149,6 +170,8 @@ public sealed class AppController : IDisposable
         {
             foreach (nint handle in excluded)
                 platform.Windows.SetExcludedFromCapture(handle, false);
+            if (hidden is not null)
+                RestoreWindows(hidden);
             capturing = false;
         }
     }
@@ -203,8 +226,28 @@ public sealed class AppController : IDisposable
     {
         SdrToneMapping toneMapping = Settings.ToneMapping;
         ClipboardImage image = await Task.Run(() => ClipboardImage.FromRendition(SnipExporter.BuildSdr(snip, toneMapping, flattenAlpha: false)));
-        nint owner = EnsureEditor().TryGetPlatformHandle()?.Handle ?? 0;
-        platform.Clipboard.SetImage(image, owner);
+        if (platform.Clipboard is { } system)
+        {
+            nint owner = EnsureEditor().TryGetPlatformHandle()?.Handle ?? 0;
+            system.SetImage(image, owner);
+            return;
+        }
+
+        // The windowing backend serves the image as PNG to apps that paste, so it stays alive while it is on the clipboard.
+        IClipboard clipboard = EnsureEditor().Clipboard ?? throw new InvalidOperationException("The clipboard is not available.");
+        var bitmap = new Bitmap(new MemoryStream(image.Png));
+        try
+        {
+            await clipboard.SetBitmapAsync(bitmap);
+        }
+        catch
+        {
+            bitmap.Dispose();
+            throw;
+        }
+
+        clipboardBitmap?.Dispose();
+        clipboardBitmap = bitmap;
     }
 
     /// <summary>Writes a snip in the format that suits its content into the screenshot folder.</summary>
@@ -379,7 +422,7 @@ public sealed class AppController : IDisposable
     {
         platform.Hotkeys.UnregisterAll();
         HotkeyError = null;
-        if (Hotkey is not { } gesture)
+        if (!platform.Hotkeys.IsSupported || Hotkey is not { } gesture)
             return;
         HotkeyError = platform.Hotkeys.Register(gesture);
         if (HotkeyError is not null)

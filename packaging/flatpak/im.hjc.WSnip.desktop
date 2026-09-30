@@ -1,0 +1,18 @@
+[Desktop Entry]
+Type=Application
+Name=WSnip
+GenericName=Screenshot Tool
+Comment=Capture, mark up and save screenshots
+Exec=wsnip
+Icon=im.hjc.WSnip
+Terminal=false
+Categories=Graphics;Utility;
+Keywords=screenshot;snip;capture;screen;
+StartupNotify=true
+SingleMainWindow=true
+Actions=NewSnip;
+X-KDE-Wayland-Interfaces=zkde_screencast_unstable_v1
+
+[Desktop Action NewSnip]
+Name=New snip
+Exec=wsnip --snip

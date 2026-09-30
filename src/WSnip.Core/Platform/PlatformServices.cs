@@ -87,6 +87,9 @@ public sealed record HotkeyGesture(string Key, bool Control = false, bool Shift 
 /// <summary>System-wide keyboard shortcuts.</summary>
 public interface IGlobalHotkeyService : IDisposable
 {
+    /// <summary>Whether the app can register shortcuts itself, rather than the user assigning them in the system settings.</summary>
+    bool IsSupported { get; }
+
     event EventHandler<HotkeyGesture>? Pressed;
 
     /// <summary>Registers a gesture; returns an error message when the system refuses it.</summary>
@@ -99,6 +102,15 @@ public interface IGlobalHotkeyService : IDisposable
 public interface IWindowIntegrationService
 {
     bool IsMicaSupported { get; }
+
+    /// <summary>Whether <see cref="SetExcludedFromCapture"/> takes effect; otherwise the app hides its windows while it captures.</summary>
+    bool CanExcludeFromCapture { get; }
+
+    /// <summary>
+    /// Whether windows can be placed at desktop coordinates. Where the compositor places them, as on
+    /// Wayland, the capture overlay fills the display it opens on.
+    /// </summary>
+    bool CanPlaceWindows { get; }
 
     /// <summary>Applies or removes the Mica backdrop of a top-level window.</summary>
     void SetMica(nint windowHandle, bool enabled, bool darkTheme);
@@ -209,7 +221,8 @@ public sealed class PlatformServices
 
     public required IShellService Shell { get; init; }
 
-    public required IClipboardService Clipboard { get; init; }
+    /// <summary>The system clipboard, or null where the windowing backend's own clipboard serves.</summary>
+    public IClipboardService? Clipboard { get; init; }
 
     public required ISingleInstanceService SingleInstance { get; init; }
 
