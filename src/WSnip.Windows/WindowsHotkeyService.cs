@@ -45,7 +45,9 @@ public sealed unsafe class WindowsHotkeyService : IGlobalHotkeyService
             if (!Native.RegisterHotKey(0, id, modifiers, key.Value))
             {
                 int error = System.Runtime.InteropServices.Marshal.GetLastPInvokeError();
-                return error == 1409
+
+                // ERROR_HOTKEY_ALREADY_REGISTERED; for Print Screen held by another app, Windows sets no error.
+                return error is 1409 or 0
                     ? $"{gesture} is already used by another application or by Windows."
                     : $"{gesture} could not be registered (error {error}).";
             }

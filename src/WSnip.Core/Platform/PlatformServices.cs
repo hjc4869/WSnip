@@ -45,6 +45,14 @@ public sealed record CaptureOptions
 /// <param name="Key">A platform-independent key name such as "S", "F9" or "PrintScreen".</param>
 public sealed record HotkeyGesture(string Key, bool Control = false, bool Shift = false, bool Alt = false, bool Windows = false)
 {
+    /// <summary>Whether both press the same keys; key names are not case-sensitive.</summary>
+    public bool Equals(HotkeyGesture? other) =>
+        other is not null && string.Equals(Key, other.Key, StringComparison.OrdinalIgnoreCase) &&
+        Control == other.Control && Shift == other.Shift && Alt == other.Alt && Windows == other.Windows;
+
+    public override int GetHashCode() =>
+        HashCode.Combine(StringComparer.OrdinalIgnoreCase.GetHashCode(Key), Control, Shift, Alt, Windows);
+
     public override string ToString()
     {
         var parts = new List<string>(5);

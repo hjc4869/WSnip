@@ -26,10 +26,16 @@ public sealed class AppController : IDisposable
     /// <summary>How long hidden windows take to leave the screen, including the compositor's closing animation.</summary>
     private static readonly TimeSpan HiddenWindowsSettle = TimeSpan.FromMilliseconds(300);
 
+    /// <summary>What a shortcut can snip in: the snipping mode setting (null), then each mode.</summary>
+    private static readonly SnipMode?[] HotkeyModes = [null, .. Enum.GetValues<SnipMode>()];
+
     private readonly Application app;
     private readonly PlatformServices platform;
     private readonly SettingsStore store;
     private readonly IClassicDesktopStyleApplicationLifetime lifetime;
+
+    /// <summary>The shortcuts of the settings, with why any of them is not in effect.</summary>
+    private readonly List<(SnipMode? Mode, HotkeyGesture Gesture, string? Error)> hotkeys = [];
     private EditorWindow? editor;
     private SettingsWindow? settingsWindow;
     private TrayIcon? tray;
@@ -37,6 +43,7 @@ public sealed class AppController : IDisposable
     private Bitmap? clipboardBitmap;
     private bool capturing;
     private bool exiting;
+    private bool hotkeysPaused;
 
     public AppController(Application app, PlatformServices platform, SettingsStore store, IClassicDesktopStyleApplicationLifetime lifetime)
     {
@@ -55,17 +62,25 @@ public sealed class AppController : IDisposable
     public PlatformServices Platform => platform;
 
     /// <summary>Why the capture hotkey could not be registered, if it could not.</summary>
-    public string? HotkeyError { get; private set; }
+    public string? HotkeyError => HotkeyErrorFor(null);
 
-    public HotkeyGesture? Hotkey => Settings.Hotkey is null ? platform.DefaultHotkey : HotkeyGesture.Parse(Settings.Hotkey);
+    public HotkeyGesture? Hotkey => HotkeyFor(null);
+
+    /// <summary>The shortcut that snips in a mode, or in the snipping mode setting when <paramref name="mode"/> is null.</summary>
+    public HotkeyGesture? HotkeyFor(SnipMode? mode) => mode is { } snipMode
+        ? HotkeyGesture.Parse(Settings.ModeHotkeys.GetValueOrDefault(snipMode))
+        : Settings.Hotkey is null ? platform.DefaultHotkey : HotkeyGesture.Parse(Settings.Hotkey);
+
+    /// <summary>Why the shortcut of <see cref="HotkeyFor"/> is not in effect, if it is not.</summary>
+    public string? HotkeyErrorFor(SnipMode? mode) => hotkeys.Find(h => h.Mode == mode).Error;
 
     public string SaveFolder => string.IsNullOrWhiteSpace(Settings.SaveFolder) ? platform.Shell.DefaultScreenshotFolder : Settings.SaveFolder;
 
     public void Start(IReadOnlyList<string> arguments)
     {
         Theme.Configure(Settings.Theme, Settings.UseMica);
-        platform.Hotkeys.Pressed += (_, _) => Dispatcher.UIThread.Post(() => _ = StartSnipAsync());
-        RegisterHotkey();
+        platform.Hotkeys.Pressed += (_, gesture) => Dispatcher.UIThread.Post(() => OnHotkeyPressed(gesture));
+        RegisterHotkeys();
         platform.SingleInstance.ArgumentsReceived += (_, forwarded) => Dispatcher.UIThread.Post(() => HandleArguments(forwarded, firstLaunch: false));
         platform.SingleInstance.StartListening();
         if (OperatingSystem.IsWindows())
@@ -213,17 +228,74 @@ public sealed class AppController : IDisposable
     public void UpdateSettings(AppSettings updated)
     {
         bool themeChanged = updated.Theme != Settings.Theme || updated.UseMica != Settings.UseMica;
-        bool hotkeyChanged = updated.Hotkey != Settings.Hotkey;
+        bool hotkeysChanged = updated.Hotkey != Settings.Hotkey || !ReferenceEquals(updated.ModeHotkeys, Settings.ModeHotkeys);
         bool startupChanged = updated.LaunchAtStartup != Settings.LaunchAtStartup;
         Settings = updated;
         store.Save(updated);
         if (themeChanged)
             Theme.Configure(updated.Theme, updated.UseMica);
-        if (hotkeyChanged)
-            RegisterHotkey();
+        if (hotkeysChanged)
+            RegisterHotkeys();
         if (startupChanged)
             _ = SyncLaunchAtStartupAsync();
         editor?.OnSettingsChanged();
+    }
+
+    /// <summary>
+    /// Gives a mode a shortcut, or the snipping mode setting when <paramref name="mode"/> is null,
+    /// or takes it away when <paramref name="gesture"/> is null. A shortcut that another of WSnip's
+    /// shortcuts, another app or Windows already uses is refused: nothing is saved or applied, and
+    /// the reason is returned.
+    /// </summary>
+    public string? ChangeHotkey(SnipMode? mode, HotkeyGesture? gesture)
+    {
+        if (gesture is not null)
+        {
+            if (gesture == HotkeyFor(mode))
+                return null;
+            foreach (SnipMode? other in HotkeyModes)
+            {
+                if (other != mode && HotkeyFor(other) == gesture)
+                    return $"{gesture} is already the shortcut for {HotkeyPurpose(other)}.";
+            }
+
+            // Registering the shortcut before saving it finds out whether the system lets WSnip
+            // have it; applying the settings then registers every shortcut afresh.
+            if (platform.Hotkeys.Register(gesture) is { } refused)
+                return refused;
+        }
+
+        UpdateSettings(Settings.With(s =>
+        {
+            if (mode is not { } snipMode)
+            {
+                s.Hotkey = gesture?.ToString() ?? string.Empty;
+                return;
+            }
+
+            var modeHotkeys = new Dictionary<SnipMode, string>(s.ModeHotkeys);
+            if (gesture is null)
+                modeHotkeys.Remove(snipMode);
+            else
+                modeHotkeys[snipMode] = gesture.ToString();
+            s.ModeHotkeys = modeHotkeys;
+        }));
+        return null;
+    }
+
+    /// <summary>
+    /// Stops WSnip's shortcuts from starting snips, so that their key combinations reach its own
+    /// windows, as when the user records a shortcut; or starts them again.
+    /// </summary>
+    public void PauseHotkeys(bool paused)
+    {
+        if (paused == hotkeysPaused)
+            return;
+        hotkeysPaused = paused;
+        if (paused)
+            platform.Hotkeys.UnregisterAll();
+        else
+            RegisterHotkeys();
     }
 
     /// <summary>Places the SDR rendition on the clipboard.</summary>
@@ -434,18 +506,52 @@ public sealed class AppController : IDisposable
         () => GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true),
         DispatcherPriority.Background);
 
-    private void RegisterHotkey()
+    /// <summary>
+    /// Registers the shortcuts of the settings, the snipping mode setting's first. One that repeats
+    /// an earlier shortcut, as only an edited settings file can, is left out.
+    /// </summary>
+    private void RegisterHotkeys()
     {
         platform.Hotkeys.UnregisterAll();
-        HotkeyError = null;
-        if (!platform.Hotkeys.IsSupported || Hotkey is not { } gesture)
+        hotkeys.Clear();
+        if (!platform.Hotkeys.IsSupported)
             return;
-        HotkeyError = platform.Hotkeys.Register(gesture);
-        if (HotkeyError is not null)
-            AppLog.Warning("Hotkey", HotkeyError);
-        else
-            AppLog.Information("Hotkey", $"Registered {gesture}.");
+        foreach (SnipMode? mode in HotkeyModes)
+        {
+            if (HotkeyFor(mode) is not { } gesture)
+                continue;
+            int earlier = hotkeys.FindIndex(h => h.Gesture == gesture);
+            string? error = earlier >= 0
+                ? $"{gesture} is already the shortcut for {HotkeyPurpose(hotkeys[earlier].Mode)}."
+                : platform.Hotkeys.Register(gesture);
+            hotkeys.Add((mode, gesture, error));
+            if (error is not null)
+                AppLog.Warning("Hotkey", error);
+        }
+
+        if (hotkeys.Exists(h => h.Error is null))
+            AppLog.Information("Hotkey", $"Registered {string.Join(", ", hotkeys.Where(h => h.Error is null).Select(h => $"{h.Gesture} for {HotkeyPurpose(h.Mode)}"))}.");
+
+        // Registering found out which shortcuts the system refuses; while paused, none is in effect.
+        if (hotkeysPaused)
+            platform.Hotkeys.UnregisterAll();
     }
+
+    private void OnHotkeyPressed(HotkeyGesture gesture)
+    {
+        foreach ((SnipMode? mode, HotkeyGesture registered, string? error) in hotkeys)
+        {
+            if (error is null && registered == gesture)
+            {
+                _ = StartSnipAsync(mode);
+                return;
+            }
+        }
+    }
+
+    private static string HotkeyPurpose(SnipMode? mode) => mode is { } snipMode
+        ? $"{SnipModeOption.For(snipMode).Label.ToLowerInvariant()} snips"
+        : "snips in the default mode";
 
     private async Task SyncLaunchAtStartupAsync()
     {

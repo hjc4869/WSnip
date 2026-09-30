@@ -149,6 +149,9 @@
         <Setter Property="FontSize" Value="12" />
         <Setter Property="Foreground" Value="{DynamicResource AppSecondaryTextBrush}" />
     </Style>
+    <Style Selector="TextBlock.caption.warning">
+        <Setter Property="Foreground" Value="{DynamicResource AppWarningTextBrush}" />
+    </Style>
 
     <Style Selector="TextBlock.sectionTitle">
         <Setter Property="FontSize" Value="14" />

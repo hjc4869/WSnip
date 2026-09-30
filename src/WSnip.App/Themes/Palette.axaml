@@ -17,6 +17,7 @@
             <SolidColorBrush x:Key="AppNavBackgroundBrush" Color="#EFEFEF" />
             <SolidColorBrush x:Key="AppPrimaryTextBrush" Color="#1A1A1A" />
             <SolidColorBrush x:Key="AppSecondaryTextBrush" Color="#5E5E5E" />
+            <SolidColorBrush x:Key="AppWarningTextBrush" Color="#9D5D00" />
             <SolidColorBrush x:Key="AppDisabledTextBrush" Color="#A7A7A7" />
             <SolidColorBrush x:Key="AppSelectionBrush" Color="#D6E4F0" />
             <SolidColorBrush x:Key="AppHoverBrush" Color="#E6E6E6" />
@@ -40,6 +41,7 @@
             <SolidColorBrush x:Key="AppNavBackgroundBrush" Color="#202020" />
             <SolidColorBrush x:Key="AppPrimaryTextBrush" Color="#EFEFEF" />
             <SolidColorBrush x:Key="AppSecondaryTextBrush" Color="#A4A4A4" />
+            <SolidColorBrush x:Key="AppWarningTextBrush" Color="#FCE100" />
             <SolidColorBrush x:Key="AppDisabledTextBrush" Color="#6A6A6A" />
             <SolidColorBrush x:Key="AppSelectionBrush" Color="#23384A" />
             <SolidColorBrush x:Key="AppHoverBrush" Color="#2A2A2A" />

@@ -1,15 +1,12 @@
 using System.Reflection;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
-using Avalonia.Input;
-using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using WSnip.App.Capture;
 using WSnip.App.Services;
 using WSnip.Core.Capture;
 using WSnip.Core.Encoding;
 using WSnip.Core.Imaging;
-using WSnip.Core.Platform;
 using WSnip.Core.Settings;
 
 namespace WSnip.App.Settings;
@@ -25,6 +22,10 @@ public partial class SettingsWindow : Window
     ];
 
     private readonly AppController controller;
+    private readonly List<(HotkeyRow Row, SnipMode? Mode)> hotkeyRows = [];
+
+    /// <summary>The shortcut WSnip last refused and why, shown on its row until the next shortcut change.</summary>
+    private (HotkeyRow Row, string Text)? hotkeyRefusal;
     private bool loading;
 
     public SettingsWindow()
@@ -52,15 +53,31 @@ public partial class SettingsWindow : Window
         foreach (ThemePreference theme in Enum.GetValues<ThemePreference>())
             ThemeBox.Items.Add(new ComboBoxItem { Content = theme == ThemePreference.System ? "Use system setting" : theme.ToString(), Tag = theme });
         MicaRow.IsVisible = controller.Theme.IsMicaSupported;
-        HotkeyEditor.IsVisible = controller.Platform.Hotkeys.IsSupported;
+        if (controller.Platform.Hotkeys.IsSupported)
+        {
+            AddHotkeyRow(DefaultHotkeyRow, null);
+            foreach (SnipModeOption option in SnipModeOption.All)
+            {
+                var row = new HotkeyRow { Title = option.Label, Caption = option.Description };
+                ModeHotkeyRows.Children.Add(row);
+                AddHotkeyRow(row, option.Mode);
+            }
+        }
+        else
+        {
+            DefaultHotkeyRow.IsEditorVisible = false;
+            DefaultHotkeyRow.Caption = "Give WSnip's snip actions shortcuts in the system settings.";
+            ModeHotkeySection.IsVisible = false;
+        }
+
         StartupSectionTitle.IsVisible = OperatingSystem.IsWindows();
         StartupRow.IsVisible = OperatingSystem.IsWindows();
 
         Load();
 
-        HotkeyBox.AddHandler(KeyDownEvent, OnHotkeyKeyDown, RoutingStrategies.Tunnel);
-        PrintScreenButton.Click += (_, _) => Update(s => s.Hotkey = "PrintScreen");
-        ClearHotkeyButton.Click += (_, _) => Update(s => s.Hotkey = string.Empty);
+        Activated += (_, _) => PauseHotkeysWhileRecording(active: true);
+        Deactivated += (_, _) => PauseHotkeysWhileRecording(active: false);
+        Closed += (_, _) => controller.PauseHotkeys(false);
         ModeBox.SelectionChanged += (_, _) => Update(s => s.Mode = Selected<SnipMode>(ModeBox));
         DelayBox.SelectionChanged += (_, _) => Update(s => s.DelaySeconds = Selected<int>(DelayBox));
         CursorSwitch.IsCheckedChanged += (_, _) => Update(s => s.IncludeCursor = CursorSwitch.IsChecked == true);
@@ -89,10 +106,12 @@ public partial class SettingsWindow : Window
     {
         loading = true;
         AppSettings settings = controller.Settings;
-        HotkeyBox.Text = controller.Hotkey?.ToString() ?? string.Empty;
-        HotkeyInfo.Text = !controller.Platform.Hotkeys.IsSupported
-            ? "Give WSnip's snip actions shortcuts in the system settings."
-            : controller.HotkeyError ?? "Click the box and press a key combination.";
+        foreach ((HotkeyRow row, SnipMode? mode) in hotkeyRows)
+        {
+            row.Gesture = controller.HotkeyFor(mode);
+            row.Warning = hotkeyRefusal is { } refusal && refusal.Row == row ? refusal.Text : controller.HotkeyErrorFor(mode);
+        }
+
         Select(ModeBox, settings.Mode);
         Select(DelayBox, settings.DelaySeconds);
         CursorSwitch.IsChecked = settings.IncludeCursor;
@@ -126,45 +145,25 @@ public partial class SettingsWindow : Window
         Load();
     }
 
-    private void OnHotkeyKeyDown(object? sender, KeyEventArgs e)
+    /// <summary>Lets a row change the shortcut for a mode, or for the default mode when <paramref name="mode"/> is null.</summary>
+    private void AddHotkeyRow(HotkeyRow row, SnipMode? mode)
     {
-        e.Handled = true;
-        if (e.Key is Key.LeftCtrl or Key.RightCtrl or Key.LeftShift or Key.RightShift or Key.LeftAlt or Key.RightAlt or Key.LWin or Key.RWin)
-            return;
-        if (e.Key is Key.Escape or Key.Tab)
+        hotkeyRows.Add((row, mode));
+        row.RecordingChanged += (_, _) => PauseHotkeysWhileRecording(IsActive);
+        row.GestureChosen += (_, gesture) =>
         {
-            e.Handled = e.Key == Key.Escape;
-            return;
-        }
-
-        string? name = KeyName(e.Key);
-        if (name is null)
-            return;
-        var gesture = new HotkeyGesture(name,
-            Control: e.KeyModifiers.HasFlag(KeyModifiers.Control),
-            Shift: e.KeyModifiers.HasFlag(KeyModifiers.Shift),
-            Alt: e.KeyModifiers.HasFlag(KeyModifiers.Alt),
-            Windows: e.KeyModifiers.HasFlag(KeyModifiers.Meta));
-        Update(s => s.Hotkey = gesture.ToString());
+            string? refused = controller.ChangeHotkey(mode, gesture);
+            hotkeyRefusal = refused is null ? null : (row, $"{refused} Choose another combination.");
+            Load();
+        };
     }
 
-    private static string? KeyName(Key key) => key switch
-    {
-        >= Key.A and <= Key.Z => key.ToString(),
-        >= Key.D0 and <= Key.D9 => ((char)('0' + (key - Key.D0))).ToString(),
-        >= Key.F1 and <= Key.F24 => key.ToString(),
-        Key.Snapshot => "PrintScreen",
-        Key.Space => "Space",
-        Key.Insert => "Insert",
-        Key.Delete => "Delete",
-        Key.Home => "Home",
-        Key.End => "End",
-        Key.PageUp => "PageUp",
-        Key.PageDown => "PageDown",
-        Key.Pause => "Pause",
-        Key.Scroll => "ScrollLock",
-        _ => null,
-    };
+    /// <summary>
+    /// Pauses WSnip's shortcuts while a box records one, so that the combinations the user presses,
+    /// WSnip's own included, reach the box instead of starting snips.
+    /// </summary>
+    private void PauseHotkeysWhileRecording(bool active) =>
+        controller.PauseHotkeys(active && hotkeyRows.Exists(h => h.Row.IsRecording));
 
     private async Task PickFolderAsync()
     {

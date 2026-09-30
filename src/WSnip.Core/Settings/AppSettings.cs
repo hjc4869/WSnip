@@ -18,6 +18,9 @@ public sealed class AppSettings
     /// <summary>The capture hotkey, such as "Win+Shift+A"; empty disables it.</summary>
     public string? Hotkey { get; set; }
 
+    /// <summary>Hotkeys that snip in a given mode rather than in <see cref="Mode"/>; a mode without one has none.</summary>
+    public IReadOnlyDictionary<SnipMode, string> ModeHotkeys { get; set; } = new Dictionary<SnipMode, string>();
+
     public SnipMode Mode { get; set; } = SnipMode.Rectangle;
 
     /// <summary>Seconds to wait before freezing the screen.</summary>
@@ -95,6 +98,7 @@ public sealed class SettingsStore(string path)
         {
             using FileStream stream = File.OpenRead(Path);
             AppSettings settings = JsonSerializer.Deserialize(stream, SettingsJsonContext.Default.AppSettings) ?? new AppSettings();
+            settings.ModeHotkeys ??= new Dictionary<SnipMode, string>();
             settings.CustomPenColors ??= [];
             settings.CustomHighlighterColors ??= [];
             return settings;

@@ -20,7 +20,8 @@ only supported on Windows.
   right-click cancels, and WSnip's windows come back either way.
 - **Entry points:**
   - On Windows, a global hotkey, **Win+Shift+H** by default. It can be changed, set to Print Screen
-    or turned off.
+    or turned off. Each snipping mode can have a hotkey of its own too. WSnip refuses a hotkey
+    that another of its hotkeys, another app or Windows already uses.
   - On Windows, a notification-area icon.
   - `WSnip.exe --snip [rectangle|window|fullscreen|freeform|wholewindow]`.
   - On Windows, `--background` starts the app in the tray.

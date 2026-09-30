@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:settings="using:WSnip.App.Settings"
         x:Class="WSnip.App.Settings.SettingsWindow"
         Title="WSnip settings"
         Width="660" Height="760" MinWidth="520" MinHeight="420"
@@ -11,21 +12,8 @@
             <TextBlock Text="Settings" FontSize="24" FontWeight="SemiBold" Margin="0,4,0,4" Foreground="{DynamicResource AppPrimaryTextBrush}" />
 
             <TextBlock Classes="sectionTitle" Text="Taking snips" />
-            <Border Classes="settingRow">
-                <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Shortcut" />
-                        <TextBlock x:Name="HotkeyInfo" Classes="caption" TextWrapping="Wrap" Text="Click the box and press a key combination." />
-                    </StackPanel>
-                    <StackPanel x:Name="HotkeyEditor" Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                        <Button x:Name="PrintScreenButton" Classes="flat" Content="Print Screen" ToolTip.Tip="Use the Print Screen key" />
-                        <TextBox x:Name="HotkeyBox" Width="114" IsReadOnly="True" PlaceholderText="None" />
-                        <Button x:Name="ClearHotkeyButton" Classes="icon" ToolTip.Tip="No shortcut">
-                            <Viewbox Width="14" Height="14"><Path Data="{StaticResource IconClose}" /></Viewbox>
-                        </Button>
-                    </StackPanel>
-                </Grid>
-            </Border>
+            <settings:HotkeyRow x:Name="DefaultHotkeyRow" Title="Shortcut"
+                                Caption="Snips in the default mode, set below. Click the box and press a key combination." />
             <Border Classes="settingRow">
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Text="Snipping mode" VerticalAlignment="Center" />
@@ -44,6 +32,11 @@
                     <ToggleSwitch x:Name="CursorSwitch" Grid.Column="1" OnContent="" OffContent="" />
                 </Grid>
             </Border>
+
+            <StackPanel x:Name="ModeHotkeySection">
+                <TextBlock Classes="sectionTitle" Text="Shortcuts for each mode" />
+                <StackPanel x:Name="ModeHotkeyRows" />
+            </StackPanel>
 
             <TextBlock Classes="sectionTitle" Text="After a snip" />
             <Border Classes="settingRow">
