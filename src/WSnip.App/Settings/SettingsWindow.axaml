@@ -18,8 +18,8 @@
                         <TextBlock x:Name="HotkeyInfo" Classes="caption" TextWrapping="Wrap" Text="Click the box and press a key combination." />
                     </StackPanel>
                     <StackPanel x:Name="HotkeyEditor" Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                        <TextBox x:Name="HotkeyBox" Width="170" IsReadOnly="True" PlaceholderText="None" />
                         <Button x:Name="PrintScreenButton" Classes="flat" Content="Print Screen" ToolTip.Tip="Use the Print Screen key" />
+                        <TextBox x:Name="HotkeyBox" Width="114" IsReadOnly="True" PlaceholderText="None" />
                         <Button x:Name="ClearHotkeyButton" Classes="icon" ToolTip.Tip="No shortcut">
                             <Viewbox Width="14" Height="14"><Path Data="{StaticResource IconClose}" /></Viewbox>
                         </Button>
@@ -29,13 +29,13 @@
             <Border Classes="settingRow">
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Text="Snipping mode" VerticalAlignment="Center" />
-                    <ComboBox x:Name="ModeBox" Grid.Column="1" Width="190" VerticalAlignment="Center" />
+                    <ComboBox x:Name="ModeBox" Grid.Column="1" Width="150" VerticalAlignment="Center" />
                 </Grid>
             </Border>
             <Border Classes="settingRow">
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Text="Delay" VerticalAlignment="Center" />
-                    <ComboBox x:Name="DelayBox" Grid.Column="1" Width="170" VerticalAlignment="Center" />
+                    <ComboBox x:Name="DelayBox" Grid.Column="1" Width="150" VerticalAlignment="Center" />
                 </Grid>
             </Border>
             <Border Classes="settingRow">
@@ -88,7 +88,7 @@
                         <TextBlock Text="Format for SDR snips" />
                         <TextBlock Classes="caption" TextWrapping="Wrap" Text="PNG keeps screen content pixel-exact." />
                     </StackPanel>
-                    <ComboBox x:Name="SdrFormatBox" Grid.Column="1" Width="210" VerticalAlignment="Center" />
+                    <ComboBox x:Name="SdrFormatBox" Grid.Column="1" Width="150" VerticalAlignment="Center" />
                 </Grid>
             </Border>
             <Border Classes="settingRow">
@@ -97,7 +97,7 @@
                         <TextBlock Text="Format for HDR snips" />
                         <TextBlock Classes="caption" TextWrapping="Wrap" Text="Gain map formats show an SDR image everywhere and the HDR one where supported." />
                     </StackPanel>
-                    <ComboBox x:Name="HdrFormatBox" Grid.Column="1" Width="210" VerticalAlignment="Center" />
+                    <ComboBox x:Name="HdrFormatBox" Grid.Column="1" Width="150" VerticalAlignment="Center" />
                 </Grid>
             </Border>
             <Border Classes="settingRow">
@@ -107,7 +107,7 @@
                         <TextBlock Classes="caption" Text="For JPEG, HEIC, AVIF and JPEG XL. 100 is lossless for JPEG XL." />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                        <Slider x:Name="QualitySlider" Width="160" Minimum="50" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" />
+                        <Slider x:Name="QualitySlider" Width="114" Minimum="50" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" />
                         <TextBlock x:Name="QualityText" Width="28" VerticalAlignment="Center" />
                     </StackPanel>
                 </Grid>
@@ -118,7 +118,7 @@
                         <TextBlock Text="SDR version of HDR snips" />
                         <TextBlock x:Name="ToneMappingInfo" Classes="caption" TextWrapping="Wrap" />
                     </StackPanel>
-                    <ComboBox x:Name="ToneMappingBox" Grid.Column="1" Width="210" VerticalAlignment="Center" />
+                    <ComboBox x:Name="ToneMappingBox" Grid.Column="1" Width="150" VerticalAlignment="Center" />
                 </Grid>
             </Border>
 
@@ -126,7 +126,7 @@
             <Border Classes="settingRow">
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Text="Theme" VerticalAlignment="Center" />
-                    <ComboBox x:Name="ThemeBox" Grid.Column="1" Width="170" VerticalAlignment="Center" />
+                    <ComboBox x:Name="ThemeBox" Grid.Column="1" Width="150" VerticalAlignment="Center" />
                 </Grid>
             </Border>
             <Border x:Name="MicaRow" Classes="settingRow">
