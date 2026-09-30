@@ -1,12 +1,12 @@
 name: Release
 
-# Builds the Windows x64/ARM64 MSIX bundle and the WiX setup executables, then publishes them in one
-# GitHub Release. Triggered by pushing a version tag (e.g. v0.2.0) or run manually from the Actions
-# tab.
+# Builds the Linux x86_64/aarch64 Flatpak bundles, the Windows x64/ARM64 MSIX bundle and the WiX
+# setup executables, then publishes them in one GitHub Release. Triggered by pushing a version tag
+# (e.g. v0.2.0) or run manually from the Actions tab.
 #
 # WSnip builds against a Light Player checkout (shared sources, build/Ffmpeg.targets), which is
 # private: the LIGHTPLAYER_DEPLOY_KEY secret holds a read-only deploy key of that repository.
-# Packages are signed with the same Light Studio certificate as Light Player. See README.md
+# Windows packages are signed with the same Light Studio certificate as Light Player. See README.md
 # ("Releases") for the secrets and repository settings this workflow needs.
 on:
   push:
@@ -204,11 +204,77 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+  build-linux:
+    name: Build Linux ${{ matrix.arch }} Flatpak
+    strategy:
+      matrix:
+        include:
+          - arch: x86_64
+            rid: linux-x64
+            runner: ubuntu-26.04
+          - arch: aarch64
+            rid: linux-arm64
+            runner: ubuntu-26.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout WSnip
+        uses: actions/checkout@v4
+        with:
+          path: WSnip
+
+      - name: Checkout Light Player
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.LIGHTPLAYER_REPOSITORY }}
+          ref: ${{ env.LIGHTPLAYER_REF }}
+          path: LightPlayer
+          ssh-key: ${{ secrets.LIGHTPLAYER_DEPLOY_KEY }}
+          persist-credentials: false
+
+      - name: Install flatpak and flatpak-builder
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends flatpak flatpak-builder elfutils
+
+      # flatpak-builder's bubblewrap sandbox needs them, and Ubuntu restricts them through AppArmor.
+      - name: Allow unprivileged user namespaces
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+      # flatpak-builder's downloads (the offline NuGet feed) and build state, kept per architecture.
+      - name: Cache flatpak-builder state
+        uses: actions/cache@v4
+        with:
+          path: WSnip/artifacts/flatpak-${{ matrix.arch }}/.flatpak-builder
+          key: flatpak-builder-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('WSnip/packaging/flatpak/im.hjc.WSnip.yml', 'WSnip/src/**/*.csproj', 'WSnip/Directory.Packages.props', 'WSnip/Makefile', 'LightPlayer/Directory.Packages.props') }}
+          restore-keys: |
+            flatpak-builder-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Stamp release version
+        shell: pwsh
+        run: |
+          $version = & "$env:GITHUB_WORKSPACE/WSnip/packaging/Set-Version.ps1" -Tag $env:RELEASE_TAG
+          Write-Host "Packaging WSnip $version"
+
+      # Installs the SDK and its .NET extension from Flathub, pins the NuGet packages and publishes
+      # the app inside the sandbox, against the Light Player checkout at ../LightPlayer.
+      - name: Build Flatpak bundle
+        working-directory: WSnip
+        run: make flatpak RID=${{ matrix.rid }}
+
+      - name: Upload Linux release asset
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-linux-${{ matrix.arch }}
+          path: WSnip/artifacts/flatpak-${{ matrix.arch }}/im.hjc.WSnip-${{ matrix.arch }}.flatpak
+          if-no-files-found: error
+          retention-days: 1
+
   publish-release:
     name: Publish release
     needs:
       - build-windows
       - build-windows-setup
+      - build-linux
     runs-on: ubuntu-latest
     steps:
       - name: Download release assets
@@ -226,5 +292,6 @@ jobs:
           generate_release_notes: true
           fail_on_unmatched_files: true
           files: |
+            release-assets/*.flatpak
             release-assets/*.zip
             release-assets/*.exe

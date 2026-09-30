@@ -262,10 +262,10 @@ manifest; the release workflow runs it with the release tag.
 
 ## Releases
 
-`.github/workflows/release.yml` builds the MSIX bundle and the setup executables for x64 and ARM64
-and publishes them in a GitHub Release when a `v*` tag is pushed, or when it is run from the
-Actions tab with a tag. It checks out Light Player next to WSnip, as local builds expect. The
-Flatpak is built locally with `make flatpak`.
+`.github/workflows/release.yml` builds the MSIX bundle, the setup executables and the Flatpak
+bundles for x64 and ARM64 and publishes them in a GitHub Release when a `v*` tag is pushed, or when
+it is run from the Actions tab with a tag. It checks out Light Player next to WSnip, as local builds
+expect.
 
 One-time setup of the WSnip repository (**Settings > Secrets and variables > Actions**):
 
@@ -289,7 +289,9 @@ One-time setup of the WSnip repository (**Settings > Secrets and variables > Act
   commit built against; it defaults to `main`, and a manual run can override it.
 
 The Windows jobs use the `windows-2025-vs2026` image, as Light Player does: the .NET 10 SDK needs
-MSBuild 18, and the `.wapproj` builds only with Visual Studio's MSBuild.
+MSBuild 18, and the `.wapproj` builds only with Visual Studio's MSBuild. The Flatpak jobs run
+`make flatpak` on the `ubuntu-26.04` and `ubuntu-26.04-arm` images, so each architecture builds
+natively.
 
 ## Files
 
