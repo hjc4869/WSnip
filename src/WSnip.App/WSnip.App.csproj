@@ -24,5 +24,8 @@
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
     <Compile Include="$(LightPlayerRoot)src\LightStudio.LightPlayer\Controls\Glide.cs" Link="Shared\Glide.cs" />
+    <Compile Include="$(LightPlayerRoot)src\LightStudio.LightPlayer\Controls\BackdropBorder.cs" Link="Shared\BackdropBorder.cs" />
+    <Compile Include="$(LightPlayerRoot)src\LightStudio.LightPlayer\Controls\BackdropForegroundExtension.cs" Link="Shared\BackdropForegroundExtension.cs" />
+    <Compile Include="$(LightPlayerRoot)src\LightStudio.LightPlayer\Models\BackdropStyle.cs" Link="Shared\BackdropStyle.cs" />
   </ItemGroup>
 </Project>

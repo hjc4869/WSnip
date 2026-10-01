@@ -1,0 +1,125 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:LightStudio.LightPlayer.Controls">
+    <!-- The photo viewer's blurred chrome and backdrop-aware foregrounds share the image surface. -->
+    <Style Selector="Border.editorDock">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="#30FFFFFF" />
+        <Setter Property="BoxShadow" Value="0 4 16 0 #60000000" />
+    </Style>
+    <Style Selector="Border.editorDock Button, Border.editorDock ToggleButton">
+        <Setter Property="Width" Value="36" />
+        <Setter Property="Height" Value="36" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="8" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{controls:BackdropForeground}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.editorDock Button /template/ ContentPresenter#PART_ContentPresenter, Border.editorDock ToggleButton /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{controls:BackdropForeground}" />
+    </Style>
+    <Style Selector="Border.editorDock Button:pointerover /template/ ContentPresenter#PART_ContentPresenter, Border.editorDock ToggleButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#28FFFFFF" />
+        <Setter Property="Foreground" Value="{controls:BackdropForeground}" />
+    </Style>
+    <Style Selector="Border.editorDock Button:pressed /template/ ContentPresenter#PART_ContentPresenter, Border.editorDock ToggleButton:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#40FFFFFF" />
+        <Setter Property="Foreground" Value="{controls:BackdropForeground}" />
+    </Style>
+    <Style Selector="Border.editorDock ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter, Border.editorDock Button.dockPrimary /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#40FFFFFF" />
+        <Setter Property="Foreground" Value="{controls:BackdropForeground}" />
+    </Style>
+    <Style Selector="Border.editorDock ToggleButton:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter, Border.editorDock Button.dockPrimary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#58FFFFFF" />
+    </Style>
+    <Style Selector="Border.editorDock ToggleButton:checked:pressed /template/ ContentPresenter#PART_ContentPresenter, Border.editorDock Button.dockPrimary:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="#70FFFFFF" />
+    </Style>
+    <Style Selector="Border.editorDock Button:disabled, Border.editorDock ToggleButton:disabled">
+        <Setter Property="Opacity" Value="0.4" />
+    </Style>
+    <Style Selector="Border.editorDock Button:disabled /template/ ContentPresenter#PART_ContentPresenter, Border.editorDock ToggleButton:disabled /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Foreground" Value="{controls:BackdropForeground}" />
+    </Style>
+    <Style Selector="Border.editorDock Button.dockText">
+        <Setter Property="Width" Value="NaN" />
+        <Setter Property="Padding" Value="12,8" />
+    </Style>
+    <Style Selector="Border.editorDock Path">
+        <Setter Property="Fill" Value="{controls:BackdropForeground}" />
+    </Style>
+    <Style Selector="Border.editorDock TextBlock">
+        <Setter Property="Foreground" Value="{controls:BackdropForeground Color=#D8FFFFFF}" />
+    </Style>
+    <Style Selector="Border.editorDock Border.dockDivider">
+        <Setter Property="Width" Value="1" />
+        <Setter Property="Height" Value="20" />
+        <Setter Property="Margin" Value="4,0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Background" Value="#30FFFFFF" />
+    </Style>
+    <Style Selector="Border.editorDock Border.dockOptions">
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="BorderBrush" Value="#30FFFFFF" />
+        <Setter Property="Padding" Value="0,0,0,6" />
+    </Style>
+    <Style Selector="Border.editorDock RadioButton.swatch:checked /template/ Border#Ring">
+        <Setter Property="BorderBrush" Value="{controls:BackdropForeground}" />
+    </Style>
+    <Style Selector="Border.editorDock RadioButton.swatch:pointerover /template/ Border#Ring">
+        <Setter Property="Background" Value="#28FFFFFF" />
+    </Style>
+    <Style Selector="Slider#SizeSlider:horizontal">
+        <Style Selector="^ /template/ RepeatButton#PART_IncreaseButton /template/ Border#TrackBackground">
+            <Setter Property="Background" Value="{controls:BackdropForeground ResourceKey=SliderTrackFill}" />
+        </Style>
+        <Style Selector="^ /template/ RepeatButton#PART_DecreaseButton /template/ Border#TrackBackground">
+            <Setter Property="Background" Value="{controls:BackdropForeground ResourceKey=SliderTrackValueFill}" />
+        </Style>
+        <Style Selector="^ /template/ Thumb /template/ Border">
+            <Setter Property="Background" Value="{controls:BackdropForeground ResourceKey=SliderThumbBackground}" />
+        </Style>
+        <Style Selector="^:pointerover">
+            <Style Selector="^ /template/ RepeatButton#PART_IncreaseButton /template/ Border#TrackBackground">
+                <Setter Property="Background" Value="{controls:BackdropForeground ResourceKey=SliderTrackFillPointerOver}" />
+            </Style>
+            <Style Selector="^ /template/ RepeatButton#PART_DecreaseButton /template/ Border#TrackBackground">
+                <Setter Property="Background" Value="{controls:BackdropForeground ResourceKey=SliderTrackValueFillPointerOver}" />
+            </Style>
+            <Style Selector="^ /template/ Thumb /template/ Border">
+                <Setter Property="Background" Value="{controls:BackdropForeground ResourceKey=SliderThumbBackgroundPointerOver}" />
+            </Style>
+        </Style>
+        <Style Selector="^:pressed">
+            <Style Selector="^ /template/ RepeatButton#PART_IncreaseButton /template/ Border#TrackBackground">
+                <Setter Property="Background" Value="{controls:BackdropForeground ResourceKey=SliderTrackFillPressed}" />
+            </Style>
+            <Style Selector="^ /template/ RepeatButton#PART_DecreaseButton /template/ Border#TrackBackground">
+                <Setter Property="Background" Value="{controls:BackdropForeground ResourceKey=SliderTrackValueFillPressed}" />
+            </Style>
+            <Style Selector="^ /template/ Thumb /template/ Border">
+                <Setter Property="Background" Value="{controls:BackdropForeground ResourceKey=SliderThumbBackgroundPressed}" />
+            </Style>
+        </Style>
+        <Style Selector="^:disabled">
+            <Style Selector="^ /template/ RepeatButton#PART_IncreaseButton /template/ Border#TrackBackground">
+                <Setter Property="Background" Value="{controls:BackdropForeground ResourceKey=SliderTrackFillDisabled}" />
+            </Style>
+            <Style Selector="^ /template/ RepeatButton#PART_DecreaseButton /template/ Border#TrackBackground">
+                <Setter Property="Background" Value="{controls:BackdropForeground ResourceKey=SliderTrackValueFillDisabled}" />
+            </Style>
+            <Style Selector="^ /template/ Thumb /template/ Border">
+                <Setter Property="Background" Value="{controls:BackdropForeground ResourceKey=SliderThumbBackgroundDisabled}" />
+            </Style>
+        </Style>
+    </Style>
+</Styles>

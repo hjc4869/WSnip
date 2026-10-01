@@ -57,6 +57,9 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
     public static readonly StyledProperty<bool> IsPickingColorProperty =
         AvaloniaProperty.Register<SnipCanvas, bool>(nameof(IsPickingColor));
 
+    public static readonly StyledProperty<double> BottomInsetProperty =
+        AvaloniaProperty.Register<SnipCanvas, double>(nameof(BottomInset));
+
     private const double ViewMargin = 24;
     private const double HandleSize = 8;
     private const double WheelZoomStep = 1.25;
@@ -70,6 +73,7 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
 
     private readonly Glide zoomGlide;
     private double? zoomTarget;
+    private bool zoomTargetIsFit;
     private Vector2 zoomAnchor;
     private Point zoomFocus;
     private double zoom = 1;
@@ -106,7 +110,17 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
         zoomGlide = new Glide(this, ApplyAnimatedZoom) { Completed = () => zoomTarget = null };
         DoubleTapped += OnDoubleTapped;
         PointerTouchPadGestureMagnify += OnTouchpadMagnify;
-        DetachedFromVisualTree += (_, _) => StopZoomAnimation();
+        AttachedToVisualTree += (_, e) =>
+        {
+            if (e.RootVisual is TopLevel root)
+                root.ScalingChanged += OnViewportChanged;
+        };
+        DetachedFromVisualTree += (_, e) =>
+        {
+            if (e.RootVisual is TopLevel root)
+                root.ScalingChanged -= OnViewportChanged;
+            StopZoomAnimation();
+        };
         EffectiveViewportChanged += (_, e) =>
         {
             Rect visible = e.EffectiveViewport.Intersect(new Rect(Bounds.Size));
@@ -177,6 +191,13 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
         set => SetValue(IsPickingColorProperty, value);
     }
 
+    /// <summary>Space occupied by the dock, excluded from fit and pan limits but not from drawing.</summary>
+    public double BottomInset
+    {
+        get => GetValue(BottomInsetProperty);
+        set => SetValue(BottomInsetProperty, value);
+    }
+
     /// <summary>The pixel under the pointer, if the pointer is over the image.</summary>
     public PixelHover? Hover => hover;
 
@@ -236,6 +257,10 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
             SetHover(null);
             OnViewChanged();
         }
+        else if (change.Property == BottomInsetProperty || change.Property == BoundsProperty)
+        {
+            OnViewportChanged(this, EventArgs.Empty);
+        }
         else if (change.Property == ToolProperty || change.Property == IsPickingColorProperty)
         {
             CancelTap();
@@ -249,14 +274,6 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
 
             UpdateCursor();
         }
-    }
-
-    protected override Size ArrangeOverride(Size finalSize)
-    {
-        Size size = base.ArrangeOverride(finalSize);
-        ClampOffset();
-        Dispatcher.UIThread.Post(() => ViewChanged?.Invoke(this, EventArgs.Empty));
-        return size;
     }
 
     public override void Render(DrawingContext context)
@@ -539,6 +556,15 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
 
     private void OnRenditionChanged(object? sender, EventArgs e) => InvalidateVisual();
 
+    private void OnViewportChanged(object? sender, EventArgs e)
+    {
+        if (zoomTarget is not null && zoomTargetIsFit)
+            fit = true;
+        StopZoomAnimation();
+        ClampOffset();
+        OnViewChanged();
+    }
+
     private void OnViewChanged()
     {
         UpdateCursor();
@@ -621,19 +647,22 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
     /// <summary>Device-independent pixels per image pixel.</summary>
     private double ImageScale() => Zoom / Math.Max(0.1, TopLevel.GetTopLevel(this)?.RenderScaling ?? 1);
 
-    private Point Center => new(Bounds.Width / 2, Bounds.Height / 2);
+    private Rect Viewport => new(0, 0, Bounds.Width, Math.Max(0, Bounds.Height - Math.Max(0, BottomInset)));
+
+    private Point Center => Viewport.Center;
 
     private bool CanPan => Document is { } document &&
-        (document.Width * ImageScale() - Bounds.Width > 1 || document.Height * ImageScale() - Bounds.Height > 1);
+        (document.Width * ImageScale() - Viewport.Width > 1 || document.Height * ImageScale() - Viewport.Height > 1);
 
     private double FitZoom()
     {
-        if (Document is not { } document || Bounds.Width <= 0 || Bounds.Height <= 0)
+        Rect viewport = Viewport;
+        if (Document is not { } document || viewport.Width <= 0 || viewport.Height <= 0)
             return 1;
         double scaling = TopLevel.GetTopLevel(this)?.RenderScaling ?? 1;
         double available = Math.Min(
-            Math.Max(1, Bounds.Width - 2 * ViewMargin) * scaling / document.Width,
-            Math.Max(1, Bounds.Height - 2 * ViewMargin) * scaling / document.Height);
+            Math.Max(1, viewport.Width - 2 * ViewMargin) * scaling / document.Width,
+            Math.Max(1, viewport.Height - 2 * ViewMargin) * scaling / document.Height);
         return Math.Min(1, available);
     }
 
@@ -643,7 +672,7 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
             return default;
         double scale = ImageScale();
         var size = new Size(document.Width * scale, document.Height * scale);
-        var center = new Point(Bounds.Width / 2 + offset.X, Bounds.Height / 2 + offset.Y);
+        Point center = Center + offset;
         return new Rect(center.X - size.Width / 2, center.Y - size.Height / 2, size.Width, size.Height);
     }
 
@@ -683,9 +712,13 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
             return;
         }
         if (Math.Abs(value - Zoom) < 1e-6)
+        {
+            ApplyZoom(value, ToImage(anchor), anchor);
             return;
+        }
 
         zoomTarget = value;
+        zoomTargetIsFit = Math.Abs(value - FitZoom()) < 1e-6;
         zoomAnchor = ToImage(anchor);
         zoomFocus = anchor;
         zoomGlide.Start(Zoom, value, ZoomAnimationMs);
@@ -720,19 +753,24 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
         double scale = ImageScale();
         var size = new Size(Document.Width * scale, Document.Height * scale);
         var topLeft = new Point(anchor.X - imagePoint.X * scale, anchor.Y - imagePoint.Y * scale);
-        offset = new Vector(topLeft.X + size.Width / 2 - Bounds.Width / 2, topLeft.Y + size.Height / 2 - Bounds.Height / 2);
+        offset = new Vector(topLeft.X + size.Width / 2 - Center.X, topLeft.Y + size.Height / 2 - Center.Y);
         ClampOffset();
         OnViewChanged();
     }
 
     private void ClampOffset()
     {
+        if (fit)
+        {
+            offset = default;
+            return;
+        }
         if (Document is not { } document)
             return;
         double scale = ImageScale();
         double width = document.Width * scale, height = document.Height * scale;
-        double limitX = Math.Max(0, (width - Bounds.Width) / 2);
-        double limitY = Math.Max(0, (height - Bounds.Height) / 2);
+        double limitX = Math.Max(0, (width - Viewport.Width) / 2);
+        double limitY = Math.Max(0, (height - Viewport.Height) / 2);
         offset = new Vector(
             Math.Clamp(offset.X, -limitX, limitX),
             Math.Clamp(offset.Y, -limitY, limitY));

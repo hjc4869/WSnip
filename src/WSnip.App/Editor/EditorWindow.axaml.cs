@@ -67,7 +67,7 @@ public partial class EditorWindow : Window
         // (a control as item content is shown as a snapshot of it).
         ModeBox.ItemsSource = SnipModeOption.All;
         DelayBox.ItemsSource = DelayOption.All;
-        colorFlyout = new Flyout { Content = colorEditor, Placement = PlacementMode.Bottom };
+        colorFlyout = new Flyout { Content = colorEditor, Placement = PlacementMode.Top };
         colorFlyout.Closed += (_, _) => editingColor = null;
         colorEditor.Applied += (_, color) => ApplyCustomColor(color);
         colorEditor.Cancelled += (_, _) => colorFlyout.Hide();
@@ -122,6 +122,7 @@ public partial class EditorWindow : Window
         Canvas.HoverChanged += (_, hover) => UpdatePixelInfo(hover);
         Canvas.PixelPicked += (_, pixel) => PickColor(pixel);
         AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
+        LayoutUpdated += (_, _) => UpdateCanvasViewport();
         Closed += (_, _) => Clear();
 
         OnSettingsChanged();
@@ -290,7 +291,7 @@ public partial class EditorWindow : Window
 
         CustomColor[] custom = highlighter ? controller.Settings.CustomHighlighterColors : controller.Settings.CustomPenColors;
         if (custom.Length > 0)
-            Swatches.Children.Add(new Border { Classes = { "divider" } });
+            Swatches.Children.Add(new Border { Classes = { "dockDivider" } });
         foreach (CustomColor color in custom)
         {
             ScRgb value = StrokeColor(color, highlighter);
@@ -489,7 +490,7 @@ public partial class EditorWindow : Window
         ToneMapSettings defaults = controller.Settings.DefaultToneMap();
         var window = new ToneMappingWindow(tuned, tuned.ToneMap ?? defaults, Canvas.Surface.ExtendedRange);
         controller.Theme.Attach(window);
-        PlaceBelow(window, ToneMappingButton);
+        PlaceAbove(window, ToneMappingButton);
         window.ShowToneMappedChanged += (_, toneMapped) => Canvas.ShowHdrOverride = !toneMapped;
         toneMappingWindow = window;
         Canvas.ShowHdrOverride = false;
@@ -522,21 +523,33 @@ public partial class EditorWindow : Window
         }
     }
 
-    /// <summary>Places a window just below a control, right-aligned with it and kept on its screen.</summary>
-    private void PlaceBelow(Window window, Control anchor)
+    /// <summary>Keeps a content-sized window above its dock control and within the working area.</summary>
+    private void PlaceAbove(Window window, Control anchor)
     {
-        if (anchor.TranslatePoint(new Point(anchor.Bounds.Width, anchor.Bounds.Height + 6), this) is not { } corner)
-            return;
-
-        double scaling = RenderScaling;
-        PixelPoint screenCorner = this.PointToScreen(corner);
-        int width = (int)Math.Ceiling(window.Width * scaling);
-        int x = screenCorner.X - width;
-        int y = screenCorner.Y;
-        if (Screens.ScreenFromWindow(this)?.WorkingArea is { } area)
-            x = Math.Clamp(x, area.X, Math.Max(area.X, area.Right - width));
         window.WindowStartupLocation = WindowStartupLocation.Manual;
-        window.Position = new PixelPoint(x, y);
+        window.Measure(new Size(window.Width, double.PositiveInfinity));
+        Position();
+        window.Opened += (_, _) => Position();
+        window.SizeChanged += (_, _) => Position();
+
+        void Position()
+        {
+            if (anchor.TranslatePoint(new Point(anchor.Bounds.Width, -8), this) is not { } corner)
+                return;
+
+            PixelPoint screenCorner = this.PointToScreen(corner);
+            Size size = window.IsVisible ? window.FrameSize ?? window.Bounds.Size : window.DesiredSize;
+            int width = (int)Math.Ceiling(size.Width * RenderScaling);
+            int height = (int)Math.Ceiling(size.Height * RenderScaling);
+            int x = screenCorner.X - width;
+            int y = screenCorner.Y - height;
+            if (Screens.ScreenFromWindow(this)?.WorkingArea is { } area)
+            {
+                x = Math.Clamp(x, area.X, Math.Max(area.X, area.Right - width));
+                y = Math.Clamp(y, area.Y, Math.Max(area.Y, area.Bottom - height));
+            }
+            window.Position = new PixelPoint(x, y);
+        }
     }
 
     private void SaveSnipOptions()
@@ -673,6 +686,7 @@ public partial class EditorWindow : Window
         bool has = document is not null;
         EmptyState.IsVisible = !has;
         Canvas.IsVisible = has;
+        EditorDock.IsVisible = has;
         foreach (ToggleButton tool in tools)
             tool.IsEnabled = has;
         UndoButton.IsEnabled = document?.CanUndo == true;
@@ -690,6 +704,15 @@ public partial class EditorWindow : Window
     }
 
     private void UpdateZoomLabel() => ZoomLabel.Text = document is null ? "100%" : $"{Canvas.Zoom * 100:0}%";
+
+    private void UpdateCanvasViewport()
+    {
+        double inset = EditorDock.IsVisible && EditorDock.Bounds.Height > 0 &&
+            EditorDock.TranslatePoint(default, Canvas) is { } position
+            ? Math.Clamp(Canvas.Bounds.Height - position.Y + 8, 0, Canvas.Bounds.Height)
+            : 0;
+        Canvas.BottomInset = inset;
+    }
 
     private void UpdateCropBar()
     {
@@ -715,8 +738,7 @@ public partial class EditorWindow : Window
     {
         // Tone mapping only concerns snips brighter than SDR white, not wide-gamut SDR ones.
         bool hdrContent = document?.Current.Statistics.HasHdr == true;
-        HdrToggle.IsVisible = hdrContent;
-        ToneMappingButton.IsVisible = hdrContent;
+        HdrBar.IsVisible = hdrContent;
         HdrToggle.IsEnabled = Canvas.Surface.ExtendedRange;
         HdrIcon.Data = (Avalonia.Media.Geometry?)this.FindResource(HdrToggle.IsChecked == true && Canvas.Surface.ExtendedRange ? "IconHdrOn" : "IconHdrOff");
         ToolTip.SetTip(HdrToggle, Canvas.Surface.ExtendedRange

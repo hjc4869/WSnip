@@ -31,6 +31,8 @@ only supported on Windows.
   own windows stay open but are left out of the capture.
 - **Editor:**
   - Pen, highlighter, eraser and crop tools, with undo/redo, zoom and pan.
+  - A floating bottom dock with a blurred backdrop and HDR-aware icons. Fit keeps the image
+    above the dock; zoomed images can extend behind it and pan fully into the unobstructed area.
   - On an HDR display it draws into an FP16 scRGB surface, so highlights show at their captured
     brightness, rolled off to the display's headroom. A toggle switches to the SDR rendition that
     SDR files and the clipboard get.
@@ -223,6 +225,7 @@ Shared with Light Player (`..\LightPlayer`, source unchanged):
 
 - `LightStudio.Logging`
 - `LightStudio.FfmpegShim`
+- The photo viewer's blur backdrop, HDR-aware foreground brushes and zoom animation
 - `build\Ffmpeg.targets`, which downloads and bundles the LGPL FFmpeg shared build
 - `packaging/flatpak/nuget-sources.py`, which pins the NuGet packages of the offline Flatpak build
 - The Avalonia fork packages (`12.1.4-lightplayer.*`), including the `ExtendedLinear` color mode of

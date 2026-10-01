@@ -3,6 +3,7 @@
         xmlns:editor="using:WSnip.App.Editor"
         xmlns:capture="using:WSnip.App.Capture"
         xmlns:rendering="using:WSnip.App.Rendering"
+        xmlns:controls="using:LightStudio.LightPlayer.Controls"
         xmlns:strings="using:WSnip.Core.Strings"
         x:Class="WSnip.App.Editor.EditorWindow"
         Title="WSnip"
@@ -10,7 +11,10 @@
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource AppShellBackgroundBrush}"
         Icon="avares://WSnip.App/Assets/wsnip.ico">
-    <Grid RowDefinitions="Auto,Auto,*,Auto">
+    <Window.Styles>
+        <StyleInclude Source="avares://WSnip.App/Themes/EditorDock.axaml" />
+    </Window.Styles>
+    <Grid RowDefinitions="Auto,*,Auto">
         <!-- Toolbar -->
         <Border Grid.Row="0" Background="{DynamicResource AppToolbarSurfaceBrush}"
                 BorderBrush="{DynamicResource AppChromeDividerBrush}" BorderThickness="0,0,0,1" Padding="10,6">
@@ -47,46 +51,7 @@
                     </ComboBox>
                 </StackPanel>
 
-                <StackPanel x:Name="MarkupBar" Grid.Column="1" Orientation="Horizontal" Spacing="2"
-                            HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <ToggleButton x:Name="PenTool" Classes="tool" ToolTip.Tip="{x:Static strings:AppStrings.Pen}" AutomationProperties.Name="{x:Static strings:AppStrings.Pen}">
-                        <Viewbox Width="18" Height="18"><Path Data="{StaticResource IconPen}" /></Viewbox>
-                    </ToggleButton>
-                    <ToggleButton x:Name="HighlighterTool" Classes="tool" ToolTip.Tip="{x:Static strings:AppStrings.Highlighter}" AutomationProperties.Name="{x:Static strings:AppStrings.Highlighter}">
-                        <Viewbox Width="18" Height="18"><Path Data="{StaticResource IconHighlighter}" /></Viewbox>
-                    </ToggleButton>
-                    <ToggleButton x:Name="EraserTool" Classes="tool" ToolTip.Tip="{x:Static strings:AppStrings.Eraser}" AutomationProperties.Name="{x:Static strings:AppStrings.Eraser}">
-                        <Viewbox Width="18" Height="18"><Path Data="{StaticResource IconEraser}" /></Viewbox>
-                    </ToggleButton>
-                    <ToggleButton x:Name="CropTool" Classes="tool" ToolTip.Tip="{x:Static strings:AppStrings.Crop}" AutomationProperties.Name="{x:Static strings:AppStrings.Crop}">
-                        <Viewbox Width="18" Height="18"><Path Data="{StaticResource IconCrop}" /></Viewbox>
-                    </ToggleButton>
-                    <Border Classes="divider" />
-                    <Button x:Name="UndoButton" Classes="icon" ToolTip.Tip="{x:Static strings:AppStrings.UndoTip}" AutomationProperties.Name="{x:Static strings:AppStrings.Undo}">
-                        <Viewbox Width="18" Height="18"><Path Data="{StaticResource IconUndo}" /></Viewbox>
-                    </Button>
-                    <Button x:Name="RedoButton" Classes="icon" ToolTip.Tip="{x:Static strings:AppStrings.RedoTip}" AutomationProperties.Name="{x:Static strings:AppStrings.Redo}">
-                        <Viewbox Width="18" Height="18"><Path Data="{StaticResource IconRedo}" /></Viewbox>
-                    </Button>
-                </StackPanel>
-
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
-                    <Button x:Name="ToneMappingButton" Classes="icon" IsVisible="False" ToolTip.Tip="{x:Static strings:AppStrings.ToneMappingTip}" AutomationProperties.Name="{x:Static strings:AppStrings.ToneMapping}">
-                        <Viewbox Width="18" Height="18"><Path Data="{StaticResource IconTune}" /></Viewbox>
-                    </Button>
-                    <ToggleButton x:Name="HdrToggle" Classes="tool" IsVisible="False" IsChecked="True" ToolTip.Tip="{x:Static strings:AppStrings.ShowHdr}" AutomationProperties.Name="{x:Static strings:AppStrings.ShowHdr}">
-                        <Viewbox Width="27" Height="18"><Path x:Name="HdrIcon" Data="{StaticResource IconHdrOn}" /></Viewbox>
-                    </ToggleButton>
-                    <Button x:Name="ZoomOutButton" Classes="icon" ToolTip.Tip="{x:Static strings:AppStrings.ZoomOutTip}" AutomationProperties.Name="{x:Static strings:AppStrings.ZoomOut}">
-                        <Viewbox Width="18" Height="18"><Path Data="{StaticResource IconZoomOut}" /></Viewbox>
-                    </Button>
-                    <Button x:Name="ZoomButton" Classes="flat" MinWidth="60" HorizontalContentAlignment="Center" ToolTip.Tip="{x:Static strings:AppStrings.ZoomFitTip}">
-                        <TextBlock x:Name="ZoomLabel" Text="100%" />
-                    </Button>
-                    <Button x:Name="ZoomInButton" Classes="icon" ToolTip.Tip="{x:Static strings:AppStrings.ZoomInTip}" AutomationProperties.Name="{x:Static strings:AppStrings.ZoomIn}">
-                        <Viewbox Width="18" Height="18"><Path Data="{StaticResource IconZoomIn}" /></Viewbox>
-                    </Button>
-                    <Border Classes="divider" />
                     <Button x:Name="CopyButton" Classes="icon" ToolTip.Tip="{x:Static strings:AppStrings.CopyTip}" AutomationProperties.Name="{x:Static strings:AppStrings.Copy}">
                         <Viewbox Width="18" Height="18"><Path Data="{StaticResource IconCopy}" /></Viewbox>
                     </Button>
@@ -108,28 +73,8 @@
             </Grid>
         </Border>
 
-        <!-- Pen and highlighter options -->
-        <Border x:Name="ToolOptions" Grid.Row="1" IsVisible="False" Background="{DynamicResource AppToolbarSurfaceBrush}"
-                BorderBrush="{DynamicResource AppChromeDividerBrush}" BorderThickness="0,0,0,1" Padding="10,2">
-            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                <StackPanel x:Name="Swatches" Orientation="Horizontal" VerticalAlignment="Center" />
-                <Button x:Name="AddColorButton" Classes="icon" Padding="6" VerticalAlignment="Center"
-                        ToolTip.Tip="{x:Static strings:AppStrings.AddColor}" AutomationProperties.Name="{x:Static strings:AppStrings.AddColor}">
-                    <Viewbox Width="16" Height="16"><Path Data="{StaticResource IconAdd}" /></Viewbox>
-                </Button>
-                <ToggleButton x:Name="PickColorTool" Classes="tool" Padding="6" VerticalAlignment="Center"
-                              ToolTip.Tip="{x:Static strings:AppStrings.PickColorTip}"
-                              AutomationProperties.Name="{x:Static strings:AppStrings.PickColor}">
-                    <Viewbox Width="16" Height="16"><Path Data="{StaticResource IconEyedropper}" /></Viewbox>
-                </ToggleButton>
-                <Border Classes="divider" />
-                <TextBlock Text="{x:Static strings:AppStrings.Size}" VerticalAlignment="Center" Classes="caption" />
-                <Slider x:Name="SizeSlider" Width="150" Minimum="1" Maximum="40" VerticalAlignment="Center" />
-            </StackPanel>
-        </Border>
-
         <!-- The snip -->
-        <Border Grid.Row="2" Background="{DynamicResource AppCanvasBackgroundBrush}">
+        <Border Grid.Row="1" Background="{DynamicResource AppCanvasBackgroundBrush}">
             <Panel>
                 <editor:SnipCanvas x:Name="Canvas" />
                 <Canvas x:Name="PixelInfoLayer" IsHitTestVisible="False" ClipToBounds="True">
@@ -154,19 +99,108 @@
                     <TextBlock x:Name="EmptyHint" TextWrapping="Wrap" TextAlignment="Center" FontSize="13"
                                Foreground="{DynamicResource AppSecondaryTextBrush}" />
                 </StackPanel>
-                <Border x:Name="CropBar" Classes="overlayBar" IsVisible="False" HorizontalAlignment="Center"
-                        VerticalAlignment="Bottom" Margin="0,0,0,20">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock x:Name="CropSize" VerticalAlignment="Center" Margin="10,0" Foreground="{DynamicResource AppSecondaryTextBrush}" />
-                        <Button x:Name="ApplyCropButton" Classes="accent" Content="{x:Static strings:AppStrings.Apply}" />
-                        <Button x:Name="CancelCropButton" Classes="flat" Content="{x:Static strings:AppStrings.Cancel}" />
-                    </StackPanel>
+                <Border x:Name="EditorDock" Classes="editorDock" IsVisible="False" MaxWidth="640"
+                        HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="12,0,12,16">
+                    <controls:BackdropBorder CornerRadius="7" Padding="6" BackdropStyle="Blur"
+                                             FallbackColor="#E6222222" TintColor="#50000000">
+                        <StackPanel Spacing="6">
+                            <Border x:Name="ToolOptions" Classes="dockOptions" IsVisible="False">
+                                <WrapPanel HorizontalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,4,0">
+                                        <ScrollViewer MaxWidth="280" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                                            <StackPanel x:Name="Swatches" Orientation="Horizontal" VerticalAlignment="Center" />
+                                        </ScrollViewer>
+                                        <Button x:Name="AddColorButton" VerticalAlignment="Center"
+                                                ToolTip.Tip="{x:Static strings:AppStrings.AddColor}" AutomationProperties.Name="{x:Static strings:AppStrings.AddColor}">
+                                            <Viewbox Width="20" Height="20"><Path Data="{StaticResource IconAdd}" /></Viewbox>
+                                        </Button>
+                                        <ToggleButton x:Name="PickColorTool" VerticalAlignment="Center"
+                                                      ToolTip.Tip="{x:Static strings:AppStrings.PickColorTip}" AutomationProperties.Name="{x:Static strings:AppStrings.PickColor}">
+                                            <Viewbox Width="20" Height="20"><Path Data="{StaticResource IconEyedropper}" /></Viewbox>
+                                        </ToggleButton>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="4,0,0,0">
+                                        <Border Classes="dockDivider" />
+                                        <TextBlock Text="{x:Static strings:AppStrings.Size}" VerticalAlignment="Center" FontSize="12" />
+                                        <Slider x:Name="SizeSlider" Width="128" Height="36" Minimum="1" Maximum="40" VerticalAlignment="Center"
+                                                AutomationProperties.Name="{x:Static strings:AppStrings.Size}">
+                                            <Slider.Resources>
+                                                <SolidColorBrush x:Key="SliderTrackFill" Color="#80FFFFFF" />
+                                                <SolidColorBrush x:Key="SliderTrackFillPointerOver" Color="#A0FFFFFF" />
+                                                <SolidColorBrush x:Key="SliderTrackFillPressed" Color="#A0FFFFFF" />
+                                                <SolidColorBrush x:Key="SliderTrackFillDisabled" Color="#40FFFFFF" />
+                                                <SolidColorBrush x:Key="SliderTrackValueFill" Color="White" />
+                                                <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="White" />
+                                                <SolidColorBrush x:Key="SliderTrackValueFillPressed" Color="#D8FFFFFF" />
+                                                <SolidColorBrush x:Key="SliderTrackValueFillDisabled" Color="#60FFFFFF" />
+                                                <SolidColorBrush x:Key="SliderThumbBackground" Color="White" />
+                                                <SolidColorBrush x:Key="SliderThumbBackgroundPointerOver" Color="White" />
+                                                <SolidColorBrush x:Key="SliderThumbBackgroundPressed" Color="#D8FFFFFF" />
+                                                <SolidColorBrush x:Key="SliderThumbBackgroundDisabled" Color="#60FFFFFF" />
+                                            </Slider.Resources>
+                                        </Slider>
+                                    </StackPanel>
+                                </WrapPanel>
+                            </Border>
+                            <Border x:Name="CropBar" Classes="dockOptions" IsVisible="False">
+                                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                    <TextBlock x:Name="CropSize" VerticalAlignment="Center" Margin="10,0" />
+                                    <Button x:Name="ApplyCropButton" Classes="dockText dockPrimary" Content="{x:Static strings:AppStrings.Apply}" />
+                                    <Button x:Name="CancelCropButton" Classes="dockText" Content="{x:Static strings:AppStrings.Cancel}" />
+                                </StackPanel>
+                            </Border>
+                            <WrapPanel HorizontalAlignment="Center">
+                                <StackPanel x:Name="MarkupBar" Orientation="Horizontal" Spacing="2">
+                                    <ToggleButton x:Name="PenTool" ToolTip.Tip="{x:Static strings:AppStrings.Pen}" AutomationProperties.Name="{x:Static strings:AppStrings.Pen}">
+                                        <Viewbox Width="20" Height="20"><Path Data="{StaticResource IconPen}" /></Viewbox>
+                                    </ToggleButton>
+                                    <ToggleButton x:Name="HighlighterTool" ToolTip.Tip="{x:Static strings:AppStrings.Highlighter}" AutomationProperties.Name="{x:Static strings:AppStrings.Highlighter}">
+                                        <Viewbox Width="20" Height="20"><Path Data="{StaticResource IconHighlighter}" /></Viewbox>
+                                    </ToggleButton>
+                                    <ToggleButton x:Name="EraserTool" ToolTip.Tip="{x:Static strings:AppStrings.Eraser}" AutomationProperties.Name="{x:Static strings:AppStrings.Eraser}">
+                                        <Viewbox Width="20" Height="20"><Path Data="{StaticResource IconEraser}" /></Viewbox>
+                                    </ToggleButton>
+                                    <ToggleButton x:Name="CropTool" ToolTip.Tip="{x:Static strings:AppStrings.Crop}" AutomationProperties.Name="{x:Static strings:AppStrings.Crop}">
+                                        <Viewbox Width="20" Height="20"><Path Data="{StaticResource IconCrop}" /></Viewbox>
+                                    </ToggleButton>
+                                    <Border Classes="dockDivider" />
+                                    <Button x:Name="UndoButton" ToolTip.Tip="{x:Static strings:AppStrings.UndoTip}" AutomationProperties.Name="{x:Static strings:AppStrings.Undo}">
+                                        <Viewbox Width="20" Height="20"><Path Data="{StaticResource IconUndo}" /></Viewbox>
+                                    </Button>
+                                    <Button x:Name="RedoButton" ToolTip.Tip="{x:Static strings:AppStrings.RedoTip}" AutomationProperties.Name="{x:Static strings:AppStrings.Redo}">
+                                        <Viewbox Width="20" Height="20"><Path Data="{StaticResource IconRedo}" /></Viewbox>
+                                    </Button>
+                                </StackPanel>
+                                <StackPanel x:Name="HdrBar" Orientation="Horizontal" Spacing="2" IsVisible="False">
+                                    <Border Classes="dockDivider" />
+                                    <Button x:Name="ToneMappingButton" ToolTip.Tip="{x:Static strings:AppStrings.ToneMappingTip}" AutomationProperties.Name="{x:Static strings:AppStrings.ToneMapping}">
+                                        <Viewbox Width="20" Height="20"><Path Data="{StaticResource IconTune}" /></Viewbox>
+                                    </Button>
+                                    <ToggleButton x:Name="HdrToggle" Width="40" Padding="6" IsChecked="True" ToolTip.Tip="{x:Static strings:AppStrings.ShowHdr}" AutomationProperties.Name="{x:Static strings:AppStrings.ShowHdr}">
+                                        <Viewbox Width="27" Height="18"><Path x:Name="HdrIcon" Data="{StaticResource IconHdrOn}" /></Viewbox>
+                                    </ToggleButton>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="2">
+                                    <Border Classes="dockDivider" />
+                                    <Button x:Name="ZoomOutButton" ToolTip.Tip="{x:Static strings:AppStrings.ZoomOutTip}" AutomationProperties.Name="{x:Static strings:AppStrings.ZoomOut}">
+                                        <Viewbox Width="20" Height="20"><Path Data="{StaticResource IconZoomOut}" /></Viewbox>
+                                    </Button>
+                                    <Button x:Name="ZoomButton" Width="64" ToolTip.Tip="{x:Static strings:AppStrings.ZoomFitTip}" AutomationProperties.Name="{x:Static strings:AppStrings.ZoomFitTip}">
+                                        <TextBlock x:Name="ZoomLabel" Text="100%" FontSize="12" />
+                                    </Button>
+                                    <Button x:Name="ZoomInButton" ToolTip.Tip="{x:Static strings:AppStrings.ZoomInTip}" AutomationProperties.Name="{x:Static strings:AppStrings.ZoomIn}">
+                                        <Viewbox Width="20" Height="20"><Path Data="{StaticResource IconZoomIn}" /></Viewbox>
+                                    </Button>
+                                </StackPanel>
+                            </WrapPanel>
+                        </StackPanel>
+                    </controls:BackdropBorder>
                 </Border>
             </Panel>
         </Border>
 
         <!-- Status -->
-        <Border Grid.Row="3" Padding="12,4" Background="{DynamicResource AppToolbarSurfaceBrush}"
+        <Border Grid.Row="2" Padding="12,4" Background="{DynamicResource AppToolbarSurfaceBrush}"
                 BorderBrush="{DynamicResource AppChromeDividerBrush}" BorderThickness="0,1,0,0">
             <Grid ColumnDefinitions="*,Auto">
                 <TextBlock x:Name="StatusText" Classes="caption" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
