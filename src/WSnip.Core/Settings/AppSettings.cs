@@ -45,6 +45,12 @@ public sealed class AppSettings
 
     public SdrToneMapping ToneMapping { get; set; } = SdrToneMapping.Adaptive;
 
+    /// <summary>Curve for the SDR version of HDR snips, unless a snip is tuned in the editor.</summary>
+    public ToneMapCurve ToneMapCurve { get; set; } = ToneMapCurve.Bt2390;
+
+    /// <summary>Tone curve parameters that differ from their defaults, keyed as "Curve.parameter".</summary>
+    public IReadOnlyDictionary<string, float> ToneMapParameters { get; set; } = new Dictionary<string, float>();
+
     public bool OpenEditorAfterCapture { get; set; } = true;
 
     public ThemePreference Theme { get; set; } = ThemePreference.System;
@@ -52,8 +58,6 @@ public sealed class AppSettings
     public bool UseMica { get; set; } = true;
 
     public bool LaunchAtStartup { get; set; }
-
-    public bool ShowHdrInEditor { get; set; } = true;
 
     /// <summary>Shows position, color and luminance of the pixel under the pointer in the editor.</summary>
     public bool ShowPixelInfo { get; set; } = true;
@@ -77,11 +81,19 @@ public sealed class AppSettings
 
     public SnipFormat FormatFor(Snip snip) => snip.Statistics.HasHdr ? HdrFormat : SdrFormat;
 
+    /// <summary>Tone mapping for snips that were not tuned themselves.</summary>
+    public ToneMapSettings DefaultToneMap() => new()
+    {
+        Scope = ToneMapping,
+        Curve = ToneMapCurve,
+        Values = ToneMapParameters,
+    };
+
     public ExportOptions ExportOptions() => new()
     {
         Quality = Quality,
         GainMapQuality = Quality,
-        ToneMapping = ToneMapping,
+        ToneMap = DefaultToneMap(),
     };
 }
 
@@ -101,6 +113,7 @@ public sealed class SettingsStore(string path)
             settings.ModeHotkeys ??= new Dictionary<SnipMode, string>();
             settings.CustomPenColors ??= [];
             settings.CustomHighlighterColors ??= [];
+            settings.ToneMapParameters ??= new Dictionary<string, float>();
             return settings;
         }
         catch (JsonException exception)

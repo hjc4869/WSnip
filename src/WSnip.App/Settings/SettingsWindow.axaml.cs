@@ -15,7 +15,7 @@ namespace WSnip.App.Settings;
 /// <summary>Preferences; every change applies and is saved immediately.</summary>
 public partial class SettingsWindow : Window
 {
-    private static readonly (SdrToneMapping Mode, string Label, string Description)[] ToneMappings =
+    internal static readonly (SdrToneMapping Mode, string Label, string Description)[] ToneMappings =
     [
         (SdrToneMapping.Adaptive, AppStrings.Adaptive, AppStrings.AdaptiveDescription),
         (SdrToneMapping.Global, AppStrings.GlobalToneMapping, AppStrings.GlobalToneMappingDescription),
@@ -51,6 +51,8 @@ public partial class SettingsWindow : Window
 
         foreach ((SdrToneMapping mode, string label, _) in ToneMappings)
             ToneMappingBox.Items.Add(new ComboBoxItem { Content = label, Tag = mode });
+        foreach (ToneMapCurve curve in ToneMapCurves.All)
+            ToneCurveBox.Items.Add(new ComboBoxItem { Content = ToneMapCurves.Name(curve), Tag = curve });
         foreach (ThemePreference theme in Enum.GetValues<ThemePreference>())
             ThemeBox.Items.Add(new ComboBoxItem
             {
@@ -107,6 +109,7 @@ public partial class SettingsWindow : Window
             }
         };
         ToneMappingBox.SelectionChanged += (_, _) => Update(s => s.ToneMapping = Selected<SdrToneMapping>(ToneMappingBox));
+        ToneCurveBox.SelectionChanged += (_, _) => Update(s => s.ToneMapCurve = Selected<ToneMapCurve>(ToneCurveBox));
         ThemeBox.SelectionChanged += (_, _) => Update(s => s.Theme = Selected<ThemePreference>(ThemeBox));
         MicaSwitch.IsCheckedChanged += (_, _) => Update(s => s.UseMica = MicaSwitch.IsChecked == true);
         StartupSwitch.IsCheckedChanged += (_, _) => Update(s => s.LaunchAtStartup = StartupSwitch.IsChecked == true);
@@ -136,6 +139,9 @@ public partial class SettingsWindow : Window
         QualityText.Text = settings.Quality.ToString(System.Globalization.CultureInfo.CurrentCulture);
         Select(ToneMappingBox, settings.ToneMapping);
         ToneMappingInfo.Text = ToneMappings.First(t => t.Mode == settings.ToneMapping).Description;
+        Select(ToneCurveBox, settings.ToneMapCurve);
+        ToneCurveInfo.Text = ToneMapCurves.Description(settings.ToneMapCurve) + " " + AppStrings.ToneCurveCaption;
+        ToneCurveRow.IsEnabled = settings.ToneMapping != SdrToneMapping.Clip;
         Select(ThemeBox, settings.Theme);
         MicaSwitch.IsChecked = settings.UseMica;
         StartupSwitch.IsChecked = settings.LaunchAtStartup;

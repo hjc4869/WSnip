@@ -21,4 +21,7 @@
   <data name="WideBeyondP3" xml:space="preserve"><value>wide colour beyond Display P3</value></data>
   <data name="WideP3Status" xml:space="preserve"><value>wide colour (Display P3)</value></data>
   <data name="WideDisplay" xml:space="preserve"><value>Wide colour display</value></data>
+  <data name="CurveBt2390Description" xml:space="preserve"><value>The ITU-R BT.2390 roll-off, shaped in the perceptual PQ domain. Colours below the knee stay unchanged.</value></data>
+  <data name="CurvePbrNeutralDescription" xml:space="preserve"><value>Keeps colours exact up to where compression starts, then fades the brightest highlights toward white.</value></data>
+  <data name="ToneDesaturationTip" xml:space="preserve"><value>Fades very bright colours toward white, closer to how they look on an HDR display.</value></data>
 </root>

@@ -211,4 +211,35 @@
   <data name="GainMapEncodingFailed" xml:space="preserve"><value>無法將增益圖編碼為 JPEG。</value></data>
   <data name="SdrJpegEncodingFailed" xml:space="preserve"><value>無法將 SDR 影像編碼為 JPEG。</value></data>
   <data name="NoSessionBus" xml:space="preserve"><value>沒有可用的 D-Bus 工作階段匯流排。</value></data>
+  <data name="ToneMapping" xml:space="preserve"><value>色調對應</value></data>
+  <data name="ToneMappingTip" xml:space="preserve"><value>調整此 HDR 擷取的 SDR 版本</value></data>
+  <data name="ShowToneMapped" xml:space="preserve"><value>顯示色調對應結果</value></data>
+  <data name="ShowToneMappedCaption" xml:space="preserve"><value>關閉以與 HDR 擷取比較。</value></data>
+  <data name="ToneMappingMode" xml:space="preserve"><value>模式</value></data>
+  <data name="ToneCurve" xml:space="preserve"><value>色調曲線</value></data>
+  <data name="ToneCurveCaption" xml:space="preserve"><value>可在編輯器中透過 HDR 旁的色調對應按鈕個別調整擷取。</value></data>
+  <data name="ResetToDefaults" xml:space="preserve"><value>還原預設值</value></data>
+  <data name="SetAsDefault" xml:space="preserve"><value>設為預設</value></data>
+  <data name="SetAsDefaultCaption" xml:space="preserve"><value>儲存時也會將這些設定作為新擷取的預設值。</value></data>
+  <data name="CurveBt2390" xml:space="preserve"><value>BT.2390（建議）</value></data>
+  <data name="CurveMobius" xml:space="preserve"><value>Möbius</value></data>
+  <data name="CurveReinhard" xml:space="preserve"><value>Reinhard</value></data>
+  <data name="CurveHable" xml:space="preserve"><value>Hable 電影感</value></data>
+  <data name="CurveAces" xml:space="preserve"><value>ACES 電影感</value></data>
+  <data name="CurvePbrNeutral" xml:space="preserve"><value>Khronos PBR Neutral</value></data>
+  <data name="CurveBt2390Description" xml:space="preserve"><value>ITU-R BT.2390 高光滾降，在感知均勻的 PQ 域中計算。拐點以下的色彩保持不變。</value></data>
+  <data name="CurveMobiusDescription" xml:space="preserve"><value>在固定拐點之上平滑壓縮，保留拐點以下的對比度。</value></data>
+  <data name="CurveReinhardDescription" xml:space="preserve"><value>均勻壓縮整個範圍的經典曲線。對比度越高，中間調越亮。</value></data>
+  <data name="CurveHableDescription" xml:space="preserve"><value>John Hable 為《秘境探險 2》設計的電影感曲線，暗部過渡柔和，高光肩部較長。</value></data>
+  <data name="CurveAcesDescription" xml:space="preserve"><value>ACES 電影感曲線的擬合，對比強烈，中間調飽滿。</value></data>
+  <data name="CurvePbrNeutralDescription" xml:space="preserve"><value>在開始壓縮之前保持色彩準確，隨後讓最亮的高光漸變為白色。</value></data>
+  <data name="ToneKneeOffset" xml:space="preserve"><value>拐點偏移</value></data>
+  <data name="ToneKnee" xml:space="preserve"><value>拐點</value></data>
+  <data name="ToneContrast" xml:space="preserve"><value>對比度</value></data>
+  <data name="ToneExposure" xml:space="preserve"><value>曝光</value></data>
+  <data name="ToneCompressionStart" xml:space="preserve"><value>壓縮起點</value></data>
+  <data name="TonePeak" xml:space="preserve"><value>高光峰值</value></data>
+  <data name="ToneDesaturation" xml:space="preserve"><value>高光去飽和</value></data>
+  <data name="TonePeakTip" xml:space="preserve"><value>為 100% 時，測得的峰值對應為 SDR 白色。數值越低，最亮的高光會被截斷，其餘部分越亮。</value></data>
+  <data name="ToneDesaturationTip" xml:space="preserve"><value>讓非常亮的色彩漸變為白色，更接近其在 HDR 顯示器上的觀感。</value></data>
 </root>

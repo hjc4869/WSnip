@@ -26,6 +26,9 @@ public sealed class Snip
 
     public HdrStatistics Statistics { get; }
 
+    /// <summary>Tone mapping tuned for this snip; null uses the settings' default.</summary>
+    public ToneMapSettings? ToneMap { get; init; }
+
     public int Width => Image.Width;
 
     public int Height => Image.Height;

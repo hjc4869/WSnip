@@ -41,6 +41,7 @@ public partial class EditorWindow : Window
     private readonly ColorEditor colorEditor = new();
     private readonly Flyout colorFlyout;
     private EditorDocument? document;
+    private ToneMappingWindow? toneMappingWindow;
     private string? savedPath;
     private ScRgb penColor = PenColors[2].Color;
     private ScRgb highlighterColor = HighlighterColors[0].Color;
@@ -78,10 +79,13 @@ public partial class EditorWindow : Window
         CropTool.IsCheckedChanged += (_, _) => OnToolToggled(CropTool, EditorTool.Crop);
         UndoButton.Click += (_, _) => document?.Undo();
         RedoButton.Click += (_, _) => document?.Redo();
+        ToneMappingButton.Click += async (_, _) => await TuneToneMappingAsync();
         HdrToggle.IsCheckedChanged += (_, _) =>
         {
-            if (!updating)
-                SetShowHdr(HdrToggle.IsChecked == true);
+            if (updating)
+                return;
+            Canvas.ShowHdr = HdrToggle.IsChecked == true;
+            UpdateStatus();
         };
         ZoomInButton.Click += (_, _) => Canvas.ZoomBy(1.25);
         ZoomOutButton.Click += (_, _) => Canvas.ZoomBy(0.8);
@@ -129,6 +133,10 @@ public partial class EditorWindow : Window
         savedPath = saved;
         document.Changed += OnDocumentChanged;
         SelectTool(EditorTool.Select);
+
+        // Every snip opens in HDR where the display allows; only the tone mapping window switches
+        // to the SDR version on its own, while it is open.
+        SetShowHdr(true);
         Canvas.Document = document;
         UpdateDocumentState();
     }
@@ -151,11 +159,7 @@ public partial class EditorWindow : Window
         ModeBox.SelectedItem = SnipModeOption.For(controller.Settings.Mode);
         DelayBox.SelectedItem = DelayOption.For(controller.Settings.DelaySeconds);
         updating = false;
-        Canvas.SdrMapping = controller.Settings.ToneMapping;
-        Canvas.ShowHdr = controller.Settings.ShowHdrInEditor;
-        updating = true;
-        HdrToggle.IsChecked = controller.Settings.ShowHdrInEditor;
-        updating = false;
+        Canvas.DefaultToneMap = controller.Settings.DefaultToneMap();
         if (ToolOptions.IsVisible)
             BuildToolOptions(Canvas.Tool == EditorTool.Highlighter);
         UpdatePixelInfo(Canvas.Hover);
@@ -165,6 +169,7 @@ public partial class EditorWindow : Window
 
     private void ReleaseDocument()
     {
+        toneMappingWindow?.Close();
         if (document is null)
             return;
         document.Changed -= OnDocumentChanged;
@@ -440,7 +445,72 @@ public partial class EditorWindow : Window
     private void SetShowHdr(bool show)
     {
         Canvas.ShowHdr = show;
-        controller.UpdateSettings(controller.Settings.With(s => s.ShowHdrInEditor = show));
+        bool wasUpdating = updating;
+        updating = true;
+        HdrToggle.IsChecked = show;
+        updating = wasUpdating;
+    }
+
+    /// <summary>
+    /// Opens the tone mapping window beside its button. The editor shows the tone mapped version
+    /// meanwhile, following every change; Save keeps the settings for this snip.
+    /// </summary>
+    private async Task TuneToneMappingAsync()
+    {
+        if (document is not { } tuned || toneMappingWindow is not null)
+            return;
+
+        ToneMapSettings defaults = controller.Settings.DefaultToneMap();
+        var window = new ToneMappingWindow(tuned, tuned.ToneMap ?? defaults, Canvas.Surface.ExtendedRange);
+        controller.Theme.Attach(window);
+        PlaceBelow(window, ToneMappingButton);
+        window.ShowToneMappedChanged += (_, toneMapped) => Canvas.ShowHdrOverride = !toneMapped;
+        toneMappingWindow = window;
+        Canvas.ShowHdrOverride = false;
+        ToneMappingResult? result;
+        try
+        {
+            result = await window.ShowDialog<ToneMappingResult?>(this);
+        }
+        finally
+        {
+            toneMappingWindow = null;
+            Canvas.ShowHdrOverride = null;
+            tuned.Preview(null);
+        }
+
+        // A new snip replaced the tuned one while the window was open.
+        if (result is null || !ReferenceEquals(tuned, document))
+            return;
+
+        tuned.SetToneMap(result.Settings);
+        if (result.SetAsDefault)
+        {
+            ToneMapSettings chosen = result.Settings;
+            controller.UpdateSettings(controller.Settings.With(s =>
+            {
+                s.ToneMapping = chosen.Scope;
+                s.ToneMapCurve = chosen.Curve;
+                s.ToneMapParameters = chosen.Values;
+            }));
+        }
+    }
+
+    /// <summary>Places a window just below a control, right-aligned with it and kept on its screen.</summary>
+    private void PlaceBelow(Window window, Control anchor)
+    {
+        if (anchor.TranslatePoint(new Point(anchor.Bounds.Width, anchor.Bounds.Height + 6), this) is not { } corner)
+            return;
+
+        double scaling = RenderScaling;
+        PixelPoint screenCorner = this.PointToScreen(corner);
+        int width = (int)Math.Ceiling(window.Width * scaling);
+        int x = screenCorner.X - width;
+        int y = screenCorner.Y;
+        if (Screens.ScreenFromWindow(this)?.WorkingArea is { } area)
+            x = Math.Clamp(x, area.X, Math.Max(area.X, area.Right - width));
+        window.WindowStartupLocation = WindowStartupLocation.Manual;
+        window.Position = new PixelPoint(x, y);
     }
 
     private void SaveSnipOptions()
@@ -588,6 +658,10 @@ public partial class EditorWindow : Window
 
     private void UpdateStatus()
     {
+        // Tone mapping only concerns snips brighter than SDR white, not wide-gamut SDR ones.
+        bool hdrContent = document?.Current.Statistics.HasHdr == true;
+        HdrToggle.IsVisible = hdrContent;
+        ToneMappingButton.IsVisible = hdrContent;
         HdrToggle.IsEnabled = Canvas.Surface.ExtendedRange;
         HdrIcon.Data = (Avalonia.Media.Geometry?)this.FindResource(HdrToggle.IsChecked == true && Canvas.Surface.ExtendedRange ? "IconHdrOn" : "IconHdrOff");
         ToolTip.SetTip(HdrToggle, Canvas.Surface.ExtendedRange

@@ -302,8 +302,8 @@ public sealed class AppController : IDisposable
     /// <summary>Places the SDR rendition on the clipboard.</summary>
     public async Task CopyAsync(Snip snip)
     {
-        SdrToneMapping toneMapping = Settings.ToneMapping;
-        ClipboardImage image = await Task.Run(() => ClipboardImage.FromRendition(SnipExporter.BuildSdr(snip, toneMapping, flattenAlpha: false)));
+        ToneMapSettings toneMap = Settings.DefaultToneMap();
+        ClipboardImage image = await Task.Run(() => ClipboardImage.FromRendition(SnipExporter.BuildSdr(snip, toneMap, flattenAlpha: false)));
         if (platform.Clipboard is { } system)
         {
             nint owner = EnsureEditor().TryGetPlatformHandle()?.Handle ?? 0;

@@ -1,0 +1,66 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:strings="using:WSnip.Core.Strings"
+        x:Class="WSnip.App.Editor.ToneMappingWindow"
+        Title="{x:Static strings:AppStrings.ToneMapping}"
+        Width="400" SizeToContent="Height" CanResize="False" ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource AppShellBackgroundBrush}"
+        Icon="avares://WSnip.App/Assets/wsnip.ico">
+    <StackPanel Margin="16,10,16,16">
+        <Border Classes="settingRow">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{x:Static strings:AppStrings.ShowToneMapped}" />
+                    <TextBlock x:Name="ShowToneMappedCaption" Classes="caption" TextWrapping="Wrap"
+                               Text="{x:Static strings:AppStrings.ShowToneMappedCaption}" />
+                </StackPanel>
+                <ToggleSwitch x:Name="ShowToneMappedSwitch" Grid.Column="1" OnContent="" OffContent="" IsChecked="True"
+                              AutomationProperties.Name="{x:Static strings:AppStrings.ShowToneMapped}" />
+            </Grid>
+        </Border>
+
+        <Border Classes="settingRow">
+            <StackPanel Spacing="6">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="{x:Static strings:AppStrings.ToneMappingMode}" VerticalAlignment="Center" />
+                    <ComboBox x:Name="ScopeBox" Grid.Column="1" Width="210" VerticalAlignment="Center"
+                              AutomationProperties.Name="{x:Static strings:AppStrings.ToneMappingMode}" />
+                </Grid>
+                <TextBlock x:Name="ScopeInfo" Classes="caption" TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+
+        <Border x:Name="CurveRow" Classes="settingRow">
+            <StackPanel Spacing="6">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="{x:Static strings:AppStrings.ToneCurve}" VerticalAlignment="Center" />
+                    <ComboBox x:Name="CurveBox" Grid.Column="1" Width="210" VerticalAlignment="Center"
+                              AutomationProperties.Name="{x:Static strings:AppStrings.ToneCurve}" />
+                </Grid>
+                <TextBlock x:Name="CurveInfo" Classes="caption" TextWrapping="Wrap" />
+                <StackPanel x:Name="ParameterRows" Spacing="4" Margin="0,6,0,0" />
+                <Button x:Name="ResetButton" Classes="flat" HorizontalAlignment="Right"
+                        Content="{x:Static strings:AppStrings.ResetToDefaults}" />
+            </StackPanel>
+        </Border>
+
+        <Border Classes="settingRow">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{x:Static strings:AppStrings.SetAsDefault}" />
+                    <TextBlock Classes="caption" TextWrapping="Wrap" Text="{x:Static strings:AppStrings.SetAsDefaultCaption}" />
+                </StackPanel>
+                <ToggleSwitch x:Name="DefaultSwitch" Grid.Column="1" OnContent="" OffContent=""
+                              AutomationProperties.Name="{x:Static strings:AppStrings.SetAsDefault}" />
+            </Grid>
+        </Border>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,14,0,0">
+            <Button x:Name="SaveButton" Classes="accent" MinWidth="88" HorizontalContentAlignment="Center"
+                    Content="{x:Static strings:AppStrings.Save}" />
+            <Button x:Name="CancelButton" Classes="flat" MinWidth="88" HorizontalContentAlignment="Center"
+                    Content="{x:Static strings:AppStrings.Cancel}" IsCancel="True" />
+        </StackPanel>
+    </StackPanel>
+</Window>

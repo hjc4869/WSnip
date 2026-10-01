@@ -211,4 +211,35 @@
   <data name="GainMapEncodingFailed" xml:space="preserve"><value>Impossible d'encoder la carte de gain en JPEG.</value></data>
   <data name="SdrJpegEncodingFailed" xml:space="preserve"><value>Impossible d'encoder l'image SDR en JPEG.</value></data>
   <data name="NoSessionBus" xml:space="preserve"><value>Aucun bus de session D-Bus n'est disponible.</value></data>
+  <data name="ToneMapping" xml:space="preserve"><value>Mappage tonal</value></data>
+  <data name="ToneMappingTip" xml:space="preserve"><value>Ajuster la version SDR de cette capture HDR</value></data>
+  <data name="ShowToneMapped" xml:space="preserve"><value>Afficher le mappage tonal</value></data>
+  <data name="ShowToneMappedCaption" xml:space="preserve"><value>Désactivez pour comparer avec la capture HDR.</value></data>
+  <data name="ToneMappingMode" xml:space="preserve"><value>Mode</value></data>
+  <data name="ToneCurve" xml:space="preserve"><value>Courbe tonale</value></data>
+  <data name="ToneCurveCaption" xml:space="preserve"><value>Ajustez une capture précise avec le bouton de mappage tonal à côté de HDR dans l'éditeur.</value></data>
+  <data name="ResetToDefaults" xml:space="preserve"><value>Rétablir les valeurs par défaut</value></data>
+  <data name="SetAsDefault" xml:space="preserve"><value>Définir par défaut</value></data>
+  <data name="SetAsDefaultCaption" xml:space="preserve"><value>L'enregistrement fait aussi de ces réglages la valeur par défaut des nouvelles captures.</value></data>
+  <data name="CurveBt2390" xml:space="preserve"><value>BT.2390 (recommandé)</value></data>
+  <data name="CurveMobius" xml:space="preserve"><value>Möbius</value></data>
+  <data name="CurveReinhard" xml:space="preserve"><value>Reinhard</value></data>
+  <data name="CurveHable" xml:space="preserve"><value>Hable filmique</value></data>
+  <data name="CurveAces" xml:space="preserve"><value>ACES filmique</value></data>
+  <data name="CurvePbrNeutral" xml:space="preserve"><value>Khronos PBR Neutral</value></data>
+  <data name="CurveBt2390Description" xml:space="preserve"><value>L'atténuation ITU-R BT.2390, calculée dans le domaine perceptuel PQ. Les couleurs sous le coude restent inchangées.</value></data>
+  <data name="CurveMobiusDescription" xml:space="preserve"><value>Un épaulement doux au-dessus d'un coude fixe qui préserve le contraste en dessous.</value></data>
+  <data name="CurveReinhardDescription" xml:space="preserve"><value>Une courbe classique qui compresse toute la plage uniformément. Un contraste plus élevé garde les tons moyens plus clairs.</value></data>
+  <data name="CurveHableDescription" xml:space="preserve"><value>La courbe filmique de John Hable issue d'Uncharted 2, avec un pied doux et un long épaulement.</value></data>
+  <data name="CurveAcesDescription" xml:space="preserve"><value>Une approximation de la courbe filmique ACES au contraste marqué et aux tons moyens riches.</value></data>
+  <data name="CurvePbrNeutralDescription" xml:space="preserve"><value>Conserve les couleurs exactes jusqu'au début de la compression, puis fait tendre les hautes lumières les plus vives vers le blanc.</value></data>
+  <data name="ToneKneeOffset" xml:space="preserve"><value>Décalage du coude</value></data>
+  <data name="ToneKnee" xml:space="preserve"><value>Coude</value></data>
+  <data name="ToneContrast" xml:space="preserve"><value>Contraste</value></data>
+  <data name="ToneExposure" xml:space="preserve"><value>Exposition</value></data>
+  <data name="ToneCompressionStart" xml:space="preserve"><value>Début de compression</value></data>
+  <data name="TonePeak" xml:space="preserve"><value>Pic des hautes lumières</value></data>
+  <data name="ToneDesaturation" xml:space="preserve"><value>Désaturation des hautes lumières</value></data>
+  <data name="TonePeakTip" xml:space="preserve"><value>À 100 %, le pic mesuré devient le blanc SDR. Des valeurs plus faibles écrêtent les hautes lumières les plus vives pour garder le reste plus clair.</value></data>
+  <data name="ToneDesaturationTip" xml:space="preserve"><value>Fait tendre les couleurs très vives vers le blanc, plus proche de leur rendu sur un écran HDR.</value></data>
 </root>

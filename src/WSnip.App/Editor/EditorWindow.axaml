@@ -71,7 +71,10 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
-                    <ToggleButton x:Name="HdrToggle" Classes="tool" ToolTip.Tip="{x:Static strings:AppStrings.ShowHdr}" AutomationProperties.Name="{x:Static strings:AppStrings.ShowHdr}">
+                    <Button x:Name="ToneMappingButton" Classes="icon" IsVisible="False" ToolTip.Tip="{x:Static strings:AppStrings.ToneMappingTip}" AutomationProperties.Name="{x:Static strings:AppStrings.ToneMapping}">
+                        <Viewbox Width="18" Height="18"><Path Data="{StaticResource IconTune}" /></Viewbox>
+                    </Button>
+                    <ToggleButton x:Name="HdrToggle" Classes="tool" IsVisible="False" IsChecked="True" ToolTip.Tip="{x:Static strings:AppStrings.ShowHdr}" AutomationProperties.Name="{x:Static strings:AppStrings.ShowHdr}">
                         <Viewbox Width="27" Height="18"><Path x:Name="HdrIcon" Data="{StaticResource IconHdrOn}" /></Viewbox>
                     </ToggleButton>
                     <Button x:Name="ZoomOutButton" Classes="icon" ToolTip.Tip="{x:Static strings:AppStrings.ZoomOutTip}" AutomationProperties.Name="{x:Static strings:AppStrings.ZoomOut}">

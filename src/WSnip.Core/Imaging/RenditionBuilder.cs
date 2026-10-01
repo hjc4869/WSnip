@@ -18,7 +18,10 @@ public enum SdrToneMapping
 
 public sealed record RenditionOptions
 {
-    public SdrToneMapping ToneMapping { get; init; } = SdrToneMapping.Adaptive;
+    public ToneMapSettings ToneMap { get; init; } = ToneMapSettings.Default;
+
+    /// <summary>Absolute luminance of SDR white in the source, which places the tone curve in the PQ domain.</summary>
+    public double SdrWhiteNits { get; init; } = ColorMath.ReferenceWhiteNits;
 
     /// <summary>Primaries of the SDR base; null picks sRGB unless the image needs a wider gamut.</summary>
     public ColorPrimaries? BasePrimaries { get; init; }
@@ -81,16 +84,10 @@ public static class RenditionBuilder
         bool flatten = options.FlattenAlpha;
         bool hasAlpha = !flatten && image.HasTransparency();
         var context = new PixelContext(primaries, flatten);
-        ToneCurve curve = ToneCurve.Create(statistics.HasHdr ? statistics.RobustPeak : 1);
-        float[]? weights = options.ToneMapping == SdrToneMapping.Adaptive && curve.IsActive
-            ? BuildWeights(image, context)
-            : null;
-        float globalWeight = options.ToneMapping switch
-        {
-            SdrToneMapping.Global => 1,
-            SdrToneMapping.Clip => 0,
-            _ => 0,
-        };
+        ToneMapSettings toneMap = options.ToneMap;
+        ToneCurve curve = ToneCurve.Create(toneMap, statistics.HasHdr ? statistics.RobustPeak : 1, (float)options.SdrWhiteNits);
+        float[]? weights = toneMap.Scope == SdrToneMapping.Adaptive && curve.IsActive ? BuildWeights(image) : null;
+        float globalWeight = toneMap.Scope == SdrToneMapping.Global ? 1 : 0;
 
         int width = image.Width, height = image.Height;
         int blocksX = (width + BlockSize - 1) / BlockSize, blocksY = (height + BlockSize - 1) / BlockSize;
@@ -113,7 +110,7 @@ public static class RenditionBuilder
                 {
                     float alpha = context.Hdr(row, x, out float r, out float g, out float b);
                     float weight = weights is null ? globalWeight : SampleWeight(weights, blocksX, blocksY, x, y);
-                    curve.Map(ref r, ref g, ref b, weight, out float sr, out float sg, out float sb);
+                    curve.Map(r, g, b, weight, out float sr, out float sg, out float sb);
                     byte er = ColorMath.LinearToSrgbByte(sr);
                     byte eg = ColorMath.LinearToSrgbByte(sg);
                     byte eb = ColorMath.LinearToSrgbByte(sb);
@@ -277,7 +274,7 @@ public static class RenditionBuilder
     /// Marks 16-pixel blocks that contain highlights, grows the marked area and feathers it, so
     /// that the highlight roll-off fades out over roughly a hundred pixels around HDR content.
     /// </summary>
-    private static float[] BuildWeights(HdrImage image, PixelContext context)
+    private static float[] BuildWeights(HdrImage image)
     {
         int blocksX = (image.Width + BlockSize - 1) / BlockSize;
         int blocksY = (image.Height + BlockSize - 1) / BlockSize;
@@ -291,8 +288,8 @@ public static class RenditionBuilder
                     ReadOnlySpan<Half> row = image.ReadRow(y);
                     for (int x = 0; x < image.Width; x++)
                     {
-                        context.Hdr(row, x, out float r, out float g, out float b);
-                        if (MathF.Max(r, MathF.Max(g, b)) > HdrStatistics.HdrThreshold)
+                        float level = HdrStatistics.HdrLevel((float)row[x * 4], (float)row[x * 4 + 1], (float)row[x * 4 + 2]);
+                        if (level > HdrStatistics.HdrThreshold)
                             marked[by * blocksX + x / BlockSize] = 1;
                     }
                 }
@@ -436,45 +433,112 @@ public static class RenditionBuilder
     }
 
     /// <summary>
-    /// Maps the largest component through a Mobius shoulder that is the identity up to a knee and
-    /// reaches SDR white at the content peak, scaling all components together to keep hue.
+    /// Maps the largest component through the selected tone curve and scales all components
+    /// together to keep hue, optionally fading compressed highlights toward white. Curves that
+    /// leave values below a knee unchanged skip those pixels entirely.
     /// </summary>
-    internal readonly struct ToneCurve
+    internal sealed class ToneCurve
     {
-        private readonly float knee;
-        private readonly float peak;
-        private readonly float a;
-        private readonly float b;
-        private readonly float scale;
+        private const float HableA = 0.15f, HableB = 0.50f, HableC = 0.10f, HableD = 0.20f, HableE = 0.02f, HableF = 0.30f;
 
-        private ToneCurve(float knee, float peak)
+        private readonly ToneMapCurve kind;
+        private readonly float knee = 1;
+        private readonly float peak = 1;
+        private readonly float desaturation;
+        private readonly float whiteNits;
+
+        // BT.2390
+        private readonly float sourcePq;
+        private readonly float kneeStart;
+        private readonly float maxLum;
+
+        // Möbius
+        private readonly float mobiusA;
+        private readonly float mobiusB;
+        private readonly float mobiusScale;
+
+        // Reinhard
+        private readonly float offset;
+        private readonly float reinhardScale;
+
+        // Hable and ACES
+        private readonly float exposure = 1;
+        private readonly float normalization = 1;
+
+        // PBR Neutral
+        private readonly float start;
+
+        private ToneCurve(ToneMapSettings settings, float contentPeak, float whiteNits)
         {
-            this.knee = knee;
-            this.peak = peak;
-            if (!(peak > 1) || !(knee < 1))
-            {
-                a = b = scale = 0;
+            kind = settings.Curve;
+            this.whiteNits = whiteNits;
+            if (!(contentPeak > 1))
                 return;
-            }
 
-            float j = knee;
-            a = -j * j * (peak - 1) / (j * j - 2 * j + peak);
-            b = (j * j - 2 * j * peak + peak) / MathF.Max(1e-6f, peak - 1);
-            scale = (b * b + 2 * b * j + j * j) / (b - a);
+            peak = MathF.Max(contentPeak * settings.Get(kind, ToneMapCurves.Peak), 1.05f);
+            desaturation = settings.Get(kind, kind == ToneMapCurve.PbrNeutral ? ToneMapCurves.PbrDesaturation : ToneMapCurves.Desaturation);
+            switch (kind)
+            {
+                case ToneMapCurve.Mobius:
+                {
+                    float j = settings.Get(kind, ToneMapCurves.MobiusKnee);
+                    knee = j;
+                    mobiusA = -j * j * (peak - 1) / (j * j - 2 * j + peak);
+                    mobiusB = (j * j - 2 * j * peak + peak) / (peak - 1);
+                    mobiusScale = (mobiusB * mobiusB + 2 * mobiusB * j + j * j) / (mobiusB - mobiusA);
+                    break;
+                }
+
+                case ToneMapCurve.Reinhard:
+                {
+                    float contrast = settings.Get(kind, ToneMapCurves.ReinhardContrast);
+                    offset = (1 - contrast) / contrast;
+                    reinhardScale = (peak + offset) / peak;
+                    knee = 0;
+                    break;
+                }
+
+                case ToneMapCurve.Hable:
+                    exposure = MathF.Pow(2, settings.Get(kind, ToneMapCurves.HableExposure));
+                    normalization = 1 / HableCurve(exposure * peak);
+                    knee = 0;
+                    break;
+
+                case ToneMapCurve.Aces:
+                    exposure = MathF.Pow(2, settings.Get(kind, ToneMapCurves.AcesExposure));
+                    normalization = 1 / AcesCurve(exposure * peak);
+                    knee = 0;
+                    break;
+
+                case ToneMapCurve.PbrNeutral:
+                    start = settings.Get(kind, ToneMapCurves.PbrStart);
+                    knee = start;
+                    break;
+
+                default:
+                {
+                    // Source black and target black are both zero, so the EETF's black-level lift is skipped.
+                    float kneeOffset = settings.Get(kind, ToneMapCurves.KneeOffset);
+                    sourcePq = ColorMath.NitsToPq(peak * whiteNits);
+                    maxLum = ColorMath.NitsToPq(whiteNits) / sourcePq;
+                    kneeStart = Math.Clamp((1 + kneeOffset) * maxLum - kneeOffset, 0, maxLum);
+                    knee = ColorMath.PqToNits(kneeStart * sourcePq) / whiteNits;
+                    break;
+                }
+            }
         }
 
         public bool IsActive => peak > 1;
 
-        public static ToneCurve Create(float peak)
+        public static ToneCurve Create(ToneMapSettings settings, float contentPeak, float sdrWhiteNits)
         {
-            if (!(peak > HdrStatistics.HdrThreshold))
-                return new ToneCurve(1, 1);
+            if (!(sdrWhiteNits > 0))
+                sdrWhiteNits = (float)ColorMath.ReferenceWhiteNits;
 
-            float knee = Math.Clamp(1 - 0.2f * MathF.Log2(peak), 0.6f, 0.9f);
-            return new ToneCurve(knee, peak);
+            return new ToneCurve(settings, contentPeak > HdrStatistics.HdrThreshold ? contentPeak : 1, sdrWhiteNits);
         }
 
-        public void Map(ref float r, ref float g, ref float b, float weight, out float sr, out float sg, out float sb)
+        public void Map(float r, float g, float b, float weight, out float sr, out float sg, out float sb)
         {
             float m = MathF.Max(r, MathF.Max(g, b));
             if (m <= knee || m <= 0)
@@ -488,15 +552,59 @@ public static class RenditionBuilder
             float clipped = MathF.Min(m, 1);
             float target = clipped;
             if (IsActive && weight > 0)
-            {
-                float shoulder = m >= peak ? 1 : MathF.Min(1, scale * (m + a) / (m + this.b));
-                target = clipped + (shoulder - clipped) * weight;
-            }
+                target = clipped + (MathF.Min(1, Shoulder(m)) - clipped) * weight;
 
             float factor = target / m;
             sr = r * factor;
             sg = g * factor;
             sb = b * factor;
+
+            // Fades highlights toward white the more they were compressed, as in Khronos PBR Neutral.
+            if (desaturation > 0 && weight > 0 && m > target)
+            {
+                float amount = 1 - 1 / (desaturation * weight * (m - target) + 1);
+                sr += (target - sr) * amount;
+                sg += (target - sg) * amount;
+                sb += (target - sb) * amount;
+            }
         }
+
+        private float Shoulder(float m)
+        {
+            // Every curve but PBR Neutral reaches SDR white exactly at the peak.
+            if (kind != ToneMapCurve.PbrNeutral && m >= peak)
+                return 1;
+
+            switch (kind)
+            {
+                case ToneMapCurve.Mobius:
+                    return mobiusScale * (m + mobiusA) / (m + mobiusB);
+                case ToneMapCurve.Reinhard:
+                    return reinhardScale * m / (m + offset);
+                case ToneMapCurve.Hable:
+                    return HableCurve(exposure * m) * normalization;
+                case ToneMapCurve.Aces:
+                    return AcesCurve(exposure * m) * normalization;
+                case ToneMapCurve.PbrNeutral:
+                {
+                    float d = 1 - start;
+                    return 1 - d * d / (m + d - start);
+                }
+
+                default:
+                {
+                    float e1 = ColorMath.NitsToPq(m * whiteNits) / sourcePq;
+                    float t = (e1 - kneeStart) / (1 - kneeStart);
+                    float t2 = t * t, t3 = t2 * t;
+                    float e2 = (2 * t3 - 3 * t2 + 1) * kneeStart + (t3 - 2 * t2 + t) * (1 - kneeStart) + (-2 * t3 + 3 * t2) * maxLum;
+                    return ColorMath.PqToNits(e2 * sourcePq) / whiteNits;
+                }
+            }
+        }
+
+        private static float HableCurve(float x) =>
+            (x * (HableA * x + HableC * HableB) + HableD * HableE) / (x * (HableA * x + HableB) + HableD * HableF) - HableE / HableF;
+
+        private static float AcesCurve(float x) => x * (2.51f * x + 0.03f) / (x * (2.43f * x + 0.59f) + 0.14f);
     }
 }

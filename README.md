@@ -86,13 +86,20 @@ is missing is hidden, and automatic saves fall back to PNG or UltraHDR JPEG.
 1. **Relative image.** A capture is converted to linear light relative to SDR white: 1.0 is the
    source display's SDR white and 2.0 is twice as bright. The image then gets robust statistics: a
    percentile peak that ignores isolated hot pixels, and whether it has HDR or wide-gamut content.
-2. **SDR base.** The base keeps everything at or below SDR white unchanged and compresses only the
-   highlights, following the recommended practice for gain-map images. The tone mapping setting
-   chooses how:
+   HDR means brighter than SDR white on BT.2020 primaries, so wide-gamut SDR colors such as
+   Display P3 red don't make a snip HDR, and get no gain map.
+2. **SDR base.** A tone curve compresses the highlights into SDR white. The default is the
+   ITU-R BT.2390 EETF, shaped in the PQ domain above a knee; Möbius, Reinhard, Hable, ACES and
+   Khronos PBR Neutral are alternatives. Each curve has its own parameters, and all scale the
+   color components together to keep hue, optionally fading compressed highlights toward white.
+   The tone mapping setting chooses where the curve applies:
    - **Adaptive** (default): the compression fades out away from HDR regions, so UI and text next
      to an HDR video stay pixel-exact.
    - **Global:** one curve for the whole image.
    - **Clip:** no compression.
+
+   The editor's tone mapping button tunes one snip with a live preview, and can make the result
+   the default.
 3. **Gain map:**
    - ISO 21496-1, with baseline headroom 0 (SDR) and alternate headroom log2(peak).
    - Offsets of 1/64, gamma 1, three channels, full resolution, so sharp HDR edges survive.

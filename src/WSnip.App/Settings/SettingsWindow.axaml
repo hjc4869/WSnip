@@ -115,6 +115,15 @@
                     <ComboBox x:Name="ToneMappingBox" Grid.Column="1" Width="150" VerticalAlignment="Center" />
                 </Grid>
             </Border>
+            <Border x:Name="ToneCurveRow" Classes="settingRow">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{x:Static strings:AppStrings.ToneCurve}" />
+                        <TextBlock x:Name="ToneCurveInfo" Classes="caption" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <ComboBox x:Name="ToneCurveBox" Grid.Column="1" Width="150" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
 
             <TextBlock Classes="sectionTitle" Text="{x:Static strings:AppStrings.Appearance}" />
             <Border Classes="settingRow">

@@ -211,4 +211,35 @@
   <data name="GainMapEncodingFailed" xml:space="preserve"><value>The gain map could not be encoded as JPEG.</value></data>
   <data name="SdrJpegEncodingFailed" xml:space="preserve"><value>The SDR image could not be encoded as JPEG.</value></data>
   <data name="NoSessionBus" xml:space="preserve"><value>No D-Bus session bus is available.</value></data>
+  <data name="ToneMapping" xml:space="preserve"><value>Tone mapping</value></data>
+  <data name="ToneMappingTip" xml:space="preserve"><value>Tune the SDR version of this HDR snip</value></data>
+  <data name="ShowToneMapped" xml:space="preserve"><value>Show tone mapped</value></data>
+  <data name="ShowToneMappedCaption" xml:space="preserve"><value>Turn off to compare with the HDR capture.</value></data>
+  <data name="ToneMappingMode" xml:space="preserve"><value>Mode</value></data>
+  <data name="ToneCurve" xml:space="preserve"><value>Tone curve</value></data>
+  <data name="ToneCurveCaption" xml:space="preserve"><value>Tune a single snip with the tone mapping button next to HDR in the editor.</value></data>
+  <data name="ResetToDefaults" xml:space="preserve"><value>Reset to defaults</value></data>
+  <data name="SetAsDefault" xml:space="preserve"><value>Set as default</value></data>
+  <data name="SetAsDefaultCaption" xml:space="preserve"><value>Saving also makes these settings the default for new snips.</value></data>
+  <data name="CurveBt2390" xml:space="preserve"><value>BT.2390 (recommended)</value></data>
+  <data name="CurveMobius" xml:space="preserve"><value>Möbius</value></data>
+  <data name="CurveReinhard" xml:space="preserve"><value>Reinhard</value></data>
+  <data name="CurveHable" xml:space="preserve"><value>Hable filmic</value></data>
+  <data name="CurveAces" xml:space="preserve"><value>ACES filmic</value></data>
+  <data name="CurvePbrNeutral" xml:space="preserve"><value>Khronos PBR Neutral</value></data>
+  <data name="CurveBt2390Description" xml:space="preserve"><value>The ITU-R BT.2390 roll-off, shaped in the perceptual PQ domain. Colors below the knee stay unchanged.</value></data>
+  <data name="CurveMobiusDescription" xml:space="preserve"><value>A smooth shoulder above a fixed knee that keeps the contrast below it.</value></data>
+  <data name="CurveReinhardDescription" xml:space="preserve"><value>A classic curve that compresses the whole range evenly. Higher contrast keeps mid-tones brighter.</value></data>
+  <data name="CurveHableDescription" xml:space="preserve"><value>John Hable's filmic curve from Uncharted 2, with a gentle toe and a long shoulder.</value></data>
+  <data name="CurveAcesDescription" xml:space="preserve"><value>A fit of the ACES filmic curve with punchy contrast and rich mid-tones.</value></data>
+  <data name="CurvePbrNeutralDescription" xml:space="preserve"><value>Keeps colors exact up to where compression starts, then fades the brightest highlights toward white.</value></data>
+  <data name="ToneKneeOffset" xml:space="preserve"><value>Knee offset</value></data>
+  <data name="ToneKnee" xml:space="preserve"><value>Knee</value></data>
+  <data name="ToneContrast" xml:space="preserve"><value>Contrast</value></data>
+  <data name="ToneExposure" xml:space="preserve"><value>Exposure</value></data>
+  <data name="ToneCompressionStart" xml:space="preserve"><value>Compression start</value></data>
+  <data name="TonePeak" xml:space="preserve"><value>Highlight peak</value></data>
+  <data name="ToneDesaturation" xml:space="preserve"><value>Highlight desaturation</value></data>
+  <data name="TonePeakTip" xml:space="preserve"><value>At 100% the measured peak becomes SDR white. Lower values clip the brightest highlights to keep the rest brighter.</value></data>
+  <data name="ToneDesaturationTip" xml:space="preserve"><value>Fades very bright colors toward white, closer to how they look on an HDR display.</value></data>
 </root>

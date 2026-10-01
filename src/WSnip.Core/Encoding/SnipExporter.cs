@@ -32,7 +32,8 @@ public sealed record ExportOptions
 
     public int GainMapQuality { get; init; } = 90;
 
-    public SdrToneMapping ToneMapping { get; init; } = SdrToneMapping.Adaptive;
+    /// <summary>Tone mapping for snips that were not tuned themselves.</summary>
+    public ToneMapSettings ToneMap { get; init; } = ToneMapSettings.Default;
 
     /// <summary>Whether HDR content is kept through a gain map; otherwise only the SDR rendition is written.</summary>
     public bool PreserveHdr { get; init; } = true;
@@ -98,10 +99,12 @@ public static class SnipExporter
         string.Format(AppStrings.ScreenshotName, capturedAt.ToLocalTime().ToString("yyyy-MM-dd HHmmss", CultureInfo.InvariantCulture)) + Extension(format);
 
     /// <summary>The SDR rendition used for display in SDR, the clipboard and SDR-only formats.</summary>
-    public static Rendition BuildSdr(Snip snip, SdrToneMapping toneMapping, bool flattenAlpha) =>
+    /// <param name="defaultToneMap">Tone mapping unless the snip was tuned itself.</param>
+    public static Rendition BuildSdr(Snip snip, ToneMapSettings defaultToneMap, bool flattenAlpha) =>
         RenditionBuilder.Build(snip.Image, snip.Statistics, new RenditionOptions
         {
-            ToneMapping = toneMapping,
+            ToneMap = snip.ToneMap ?? defaultToneMap,
+            SdrWhiteNits = snip.SourceSdrWhiteNits,
             FlattenAlpha = flattenAlpha,
             BuildGainMap = false,
             BasePrimaries = ColorPrimaries.Bt709,
@@ -162,7 +165,8 @@ public static class SnipExporter
     private static Rendition Build(Snip snip, ExportOptions options, bool flatten, bool gainMap) =>
         RenditionBuilder.Build(snip.Image, snip.Statistics, new RenditionOptions
         {
-            ToneMapping = options.ToneMapping,
+            ToneMap = snip.ToneMap ?? options.ToneMap,
+            SdrWhiteNits = snip.SourceSdrWhiteNits,
             FlattenAlpha = flatten,
             BuildGainMap = gainMap,
         });

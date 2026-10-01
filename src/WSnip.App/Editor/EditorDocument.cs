@@ -17,17 +17,24 @@ public sealed class EditorDocument : IDisposable
     private SharedImage? sdrImage;
     private SharedImage? hdrImage;
     private float hdrHeadroom;
-    private SdrToneMapping sdrMapping;
+    private ToneMapSettings? sdrToneMap;
+    private ToneMapSettings? pendingPreview;
+    private bool buildingPreview;
+    private bool disposed;
 
     public EditorDocument(Snip snip)
     {
         CapturedAt = snip.CapturedAt;
         SourceSdrWhiteNits = snip.SourceSdrWhiteNits;
         SourcePeakNits = snip.SourceDisplayPeakNits;
+        ToneMap = snip.ToneMap;
         history.Add(new EditorState(snip.Image, snip.Statistics, []));
     }
 
     public event EventHandler? Changed;
+
+    /// <summary>Raised when a previewed SDR rendition is ready to be shown.</summary>
+    public event EventHandler? RenditionChanged;
 
     public DateTimeOffset CapturedAt { get; }
 
@@ -47,6 +54,46 @@ public sealed class EditorDocument : IDisposable
 
     /// <summary>Whether the document changed since it was last saved or copied.</summary>
     public bool IsDirty { get; private set; }
+
+    /// <summary>Tone mapping tuned for this snip; null follows the settings' default.</summary>
+    public ToneMapSettings? ToneMap { get; private set; }
+
+    /// <summary>Tone mapping being tried out, shown instead of <see cref="ToneMap"/> until it is committed or dropped.</summary>
+    public ToneMapSettings? PreviewToneMap { get; private set; }
+
+    /// <summary>The tone mapping the SDR rendition is shown with.</summary>
+    public ToneMapSettings EffectiveToneMap(ToneMapSettings defaults) => PreviewToneMap ?? ToneMap ?? defaults;
+
+    public void SetToneMap(ToneMapSettings? toneMap)
+    {
+        if (Equals(toneMap, ToneMap))
+            return;
+        ToneMap = toneMap;
+        IsDirty = true;
+        OnChanged(imageMayChange: false);
+    }
+
+    /// <summary>
+    /// Shows tone mapping without committing it, or stops previewing when null. The rendition is
+    /// built in the background, the newest request winning, and <see cref="RenditionChanged"/>
+    /// is raised when it can be shown; until then the previous rendition stays on screen.
+    /// </summary>
+    public void Preview(ToneMapSettings? toneMap)
+    {
+        if (disposed)
+            return;
+        PreviewToneMap = toneMap;
+        if (toneMap is null || (sdrImage is not null && toneMap.Equals(sdrToneMap)))
+        {
+            pendingPreview = null;
+            RenditionChanged?.Invoke(this, EventArgs.Empty);
+            return;
+        }
+
+        pendingPreview = toneMap;
+        if (!buildingPreview)
+            _ = BuildPreviewsAsync();
+    }
 
     /// <summary>A pixel of the current image: relative scRGB and straight alpha.</summary>
     public (ScRgb Color, float Alpha) PixelAt(int x, int y)
@@ -102,26 +149,22 @@ public sealed class EditorDocument : IDisposable
     {
         EditorState state = Current;
         HdrImage image = AnnotationRenderer.Render(state.Image, state.Strokes);
-        return new Snip(image, CapturedAt, SourceSdrWhiteNits, SourcePeakNits);
+        return new Snip(image, CapturedAt, SourceSdrWhiteNits, SourcePeakNits) { ToneMap = ToneMap };
     }
 
     /// <summary>The image as shown on an SDR surface: the same rendition an SDR file would get.</summary>
-    public SharedImage GetSdrImage(SdrToneMapping mapping)
+    /// <param name="defaults">Tone mapping unless the snip was tuned or a preview is showing.</param>
+    public SharedImage GetSdrImage(ToneMapSettings defaults)
     {
-        if (sdrImage is null || sdrMapping != mapping)
-        {
-            sdrImage?.Release();
-            EditorState state = Current;
-            Rendition rendition = RenditionBuilder.Build(state.Image, state.Statistics, new RenditionOptions
-            {
-                ToneMapping = mapping,
-                BuildGainMap = false,
-                BasePrimaries = ColorPrimaries.Bt709,
-            });
-            sdrImage = SharedImage.FromSdr(rendition);
-            sdrMapping = mapping;
-        }
+        ToneMapSettings toneMap = EffectiveToneMap(defaults);
 
+        // While a preview builds in the background, the previous rendition stays on screen.
+        if (sdrImage is not null && (toneMap.Equals(sdrToneMap) || (buildingPreview && PreviewToneMap is not null)))
+            return sdrImage;
+
+        sdrImage?.Release();
+        sdrImage = SharedImage.FromSdr(BuildSdr(Current, toneMap));
+        sdrToneMap = toneMap;
         return sdrImage;
     }
 
@@ -131,11 +174,13 @@ public sealed class EditorDocument : IDisposable
         headroom = MathF.Max(1, headroom);
         EditorState state = Current;
         float peak = state.Statistics.PeakComponent;
-        float effective = peak <= headroom * 1.02f ? float.PositiveInfinity : headroom;
+
+        // Without HDR content, values above one are wide-gamut colors that need no roll-off.
+        float effective = !state.Statistics.HasHdr || peak <= headroom * 1.02f ? float.PositiveInfinity : headroom;
         if (hdrImage is null || effective != hdrHeadroom)
         {
             hdrImage?.Release();
-            HdrImage fitted = float.IsPositiveInfinity(effective) ? state.Image : DisplayRendition.FitToHeadroom(state.Image, peak, headroom);
+            HdrImage fitted = float.IsPositiveInfinity(effective) ? state.Image : DisplayRendition.FitToHeadroom(state.Image, peak, headroom, (float)SourceSdrWhiteNits);
             hdrImage = SharedImage.FromHdr(fitted);
             hdrHeadroom = effective;
         }
@@ -143,7 +188,67 @@ public sealed class EditorDocument : IDisposable
         return hdrImage;
     }
 
-    public void Dispose() => InvalidateImages();
+    public void Dispose()
+    {
+        disposed = true;
+        pendingPreview = null;
+        InvalidateImages();
+    }
+
+    private Rendition BuildSdr(EditorState state, ToneMapSettings toneMap) =>
+        RenditionBuilder.Build(state.Image, state.Statistics, new RenditionOptions
+        {
+            ToneMap = toneMap,
+            SdrWhiteNits = SourceSdrWhiteNits,
+            BuildGainMap = false,
+            BasePrimaries = ColorPrimaries.Bt709,
+        });
+
+    private async Task BuildPreviewsAsync()
+    {
+        buildingPreview = true;
+        try
+        {
+            while (pendingPreview is { } toneMap && !disposed)
+            {
+                pendingPreview = null;
+                EditorState state = Current;
+                Rendition rendition = await Task.Run(() => BuildSdr(state, toneMap));
+                if (disposed || PreviewToneMap is not { } wanted)
+                    return;
+
+                // A crop or undo meanwhile replaced the image; build the preview for the new one.
+                if (!ReferenceEquals(state.Image, Current.Image))
+                {
+                    pendingPreview ??= wanted;
+                    continue;
+                }
+
+                // Every finished build is shown, even with a newer one pending, so that dragging a
+                // slider updates continuously; one that already shows the wanted settings stays.
+                if (!(sdrImage is not null && wanted.Equals(sdrToneMap)))
+                {
+                    sdrImage?.Release();
+                    sdrImage = SharedImage.FromSdr(rendition);
+                    sdrToneMap = toneMap;
+                }
+
+                if (pendingPreview is null && !wanted.Equals(sdrToneMap))
+                    pendingPreview = wanted;
+                if (pendingPreview is null)
+                    buildingPreview = false;
+                RenditionChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            LightStudio.Logging.AppLog.Error("Editor", "Previewing the tone mapping failed.", exception);
+        }
+        finally
+        {
+            buildingPreview = false;
+        }
+    }
 
     private void Push(EditorState state)
     {

@@ -46,8 +46,12 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
     public static readonly StyledProperty<bool> ShowHdrProperty =
         AvaloniaProperty.Register<SnipCanvas, bool>(nameof(ShowHdr), true);
 
-    public static readonly StyledProperty<SdrToneMapping> SdrMappingProperty =
-        AvaloniaProperty.Register<SnipCanvas, SdrToneMapping>(nameof(SdrMapping));
+    public static readonly StyledProperty<ToneMapSettings> DefaultToneMapProperty =
+        AvaloniaProperty.Register<SnipCanvas, ToneMapSettings>(nameof(DefaultToneMap), ToneMapSettings.Default);
+
+    /// <summary>Shows HDR (true) or the SDR version (false) regardless of <see cref="ShowHdr"/>, as while tuning tone mapping.</summary>
+    public static readonly StyledProperty<bool?> ShowHdrOverrideProperty =
+        AvaloniaProperty.Register<SnipCanvas, bool?>(nameof(ShowHdrOverride));
 
     /// <summary>A click samples the pixel under the pointer instead of using the tool.</summary>
     public static readonly StyledProperty<bool> IsPickingColorProperty =
@@ -92,7 +96,7 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
 
     static SnipCanvas()
     {
-        AffectsRender<SnipCanvas>(ToolProperty, ShowHdrProperty, SdrMappingProperty);
+        AffectsRender<SnipCanvas>(ToolProperty, ShowHdrProperty, DefaultToneMapProperty, ShowHdrOverrideProperty);
         FocusableProperty.OverrideDefaultValue<SnipCanvas>(true);
         ClipToBoundsProperty.OverrideDefaultValue<SnipCanvas>(true);
     }
@@ -154,10 +158,17 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
         set => SetValue(ShowHdrProperty, value);
     }
 
-    public SdrToneMapping SdrMapping
+    /// <summary>Tone mapping of the SDR version for snips that were not tuned themselves.</summary>
+    public ToneMapSettings DefaultToneMap
     {
-        get => GetValue(SdrMappingProperty);
-        set => SetValue(SdrMappingProperty, value);
+        get => GetValue(DefaultToneMapProperty);
+        set => SetValue(DefaultToneMapProperty, value);
+    }
+
+    public bool? ShowHdrOverride
+    {
+        get => GetValue(ShowHdrOverrideProperty);
+        set => SetValue(ShowHdrOverrideProperty, value);
     }
 
     public bool IsPickingColor
@@ -206,9 +217,16 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
             panPointer = null;
             panStart = null;
             if (change.OldValue is EditorDocument old)
+            {
                 old.Changed -= OnDocumentChanged;
+                old.RenditionChanged -= OnRenditionChanged;
+            }
+
             if (change.NewValue is EditorDocument document)
+            {
                 document.Changed += OnDocumentChanged;
+                document.RenditionChanged += OnRenditionChanged;
+            }
             fit = true;
             offset = default;
             crop = null;
@@ -244,9 +262,13 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
             return;
 
         Rect imageRect = ImageRect();
-        SharedImage image = ShowHdr && surface.ExtendedRange
+
+        // Snips without HDR content always show as captured where the surface allows, which keeps
+        // wide-gamut colors; the HDR switch only concerns snips with highlights to tone map.
+        bool showHdr = surface.ExtendedRange && (!document.Current.Statistics.HasHdr || (ShowHdrOverride ?? ShowHdr));
+        SharedImage image = showHdr
             ? document.GetHdrImage((float)surface.Headroom)
-            : document.GetSdrImage(SdrMapping);
+            : document.GetSdrImage(DefaultToneMap);
         IReadOnlyList<AnnotationStroke> strokes = document.Current.Strokes;
         if (erased is { Count: > 0 })
             strokes = strokes.Where(s => !erased.Contains(s)).ToArray();
@@ -511,6 +533,8 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
         ClampOffset();
         OnViewChanged();
     }
+
+    private void OnRenditionChanged(object? sender, EventArgs e) => InvalidateVisual();
 
     private void OnViewChanged()
     {

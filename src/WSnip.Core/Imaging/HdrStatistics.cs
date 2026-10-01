@@ -16,13 +16,29 @@ public sealed record HdrStatistics(
     private const float GamutTolerance = -1f / 256;
     private const int HistogramBins = 1024;
     private const float HistogramStops = 10;
+    private static readonly float[] ToBt2020 = ColorMath.Matrix(ColorPrimaries.Bt709, ColorPrimaries.Bt2020);
 
+    /// <summary>Whether enough pixels are brighter than SDR white, rather than only wider than sRGB.</summary>
     public bool HasHdr => HdrPixels >= 16;
 
     public bool HasWideGamut => OutsideSrgbPixels >= 16;
 
     /// <summary>Primaries wide enough for the SDR base of this image.</summary>
     public ColorPrimaries SuggestedBasePrimaries => HasWideGamut ? ColorPrimaries.DisplayP3 : ColorPrimaries.Bt709;
+
+    /// <summary>
+    /// The largest component of a relative scRGB color on BT.2020 primaries. Every SDR color fits
+    /// BT.2020 within 0 to 1, so only light brighter than SDR white exceeds one, whereas wide-gamut
+    /// SDR colors such as Display P3 red exceed one on BT.709 too.
+    /// </summary>
+    public static float HdrLevel(float r, float g, float b)
+    {
+        float[] m = ToBt2020;
+        float r2 = m[0] * r + m[1] * g + m[2] * b;
+        float g2 = m[3] * r + m[4] * g + m[5] * b;
+        float b2 = m[6] * r + m[7] * g + m[8] * b;
+        return MathF.Max(r2, MathF.Max(g2, b2));
+    }
 
     public static HdrStatistics Measure(HdrImage image)
     {
@@ -53,7 +69,7 @@ public sealed record HdrStatistics(
                     float luminance = lr * r + lg * g + lb * b;
                     if (luminance > local.PeakLuminance)
                         local.PeakLuminance = luminance;
-                    if (m > HdrThreshold)
+                    if (HdrLevel(r, g, b) > HdrThreshold)
                         local.Hdr++;
                     if (m > 1)
                     {

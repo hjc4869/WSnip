@@ -211,4 +211,35 @@
   <data name="GainMapEncodingFailed" xml:space="preserve"><value>ゲインマップを JPEG にエンコードできませんでした。</value></data>
   <data name="SdrJpegEncodingFailed" xml:space="preserve"><value>SDR 画像を JPEG にエンコードできませんでした。</value></data>
   <data name="NoSessionBus" xml:space="preserve"><value>D-Bus セッションバスを利用できません。</value></data>
+  <data name="ToneMapping" xml:space="preserve"><value>トーンマッピング</value></data>
+  <data name="ToneMappingTip" xml:space="preserve"><value>この HDR キャプチャの SDR 表示を調整</value></data>
+  <data name="ShowToneMapped" xml:space="preserve"><value>トーンマッピングを表示</value></data>
+  <data name="ShowToneMappedCaption" xml:space="preserve"><value>オフにすると HDR キャプチャと比較できます。</value></data>
+  <data name="ToneMappingMode" xml:space="preserve"><value>モード</value></data>
+  <data name="ToneCurve" xml:space="preserve"><value>トーンカーブ</value></data>
+  <data name="ToneCurveCaption" xml:space="preserve"><value>個々のキャプチャは、エディターの HDR の隣にあるトーンマッピング ボタンで調整できます。</value></data>
+  <data name="ResetToDefaults" xml:space="preserve"><value>既定値に戻す</value></data>
+  <data name="SetAsDefault" xml:space="preserve"><value>既定に設定</value></data>
+  <data name="SetAsDefaultCaption" xml:space="preserve"><value>保存すると、この設定が新しいキャプチャの既定にもなります。</value></data>
+  <data name="CurveBt2390" xml:space="preserve"><value>BT.2390 (推奨)</value></data>
+  <data name="CurveMobius" xml:space="preserve"><value>Möbius</value></data>
+  <data name="CurveReinhard" xml:space="preserve"><value>Reinhard</value></data>
+  <data name="CurveHable" xml:space="preserve"><value>Hable フィルミック</value></data>
+  <data name="CurveAces" xml:space="preserve"><value>ACES フィルミック</value></data>
+  <data name="CurvePbrNeutral" xml:space="preserve"><value>Khronos PBR Neutral</value></data>
+  <data name="CurveBt2390Description" xml:space="preserve"><value>知覚的な PQ 領域で形成される ITU-R BT.2390 のロールオフ。ニーより下の色は変わりません。</value></data>
+  <data name="CurveMobiusDescription" xml:space="preserve"><value>固定のニーより上をなめらかに圧縮し、その下のコントラストを保ちます。</value></data>
+  <data name="CurveReinhardDescription" xml:space="preserve"><value>全範囲を均等に圧縮する古典的なカーブ。コントラストを上げると中間調が明るく保たれます。</value></data>
+  <data name="CurveHableDescription" xml:space="preserve"><value>Uncharted 2 で使われた John Hable のフィルミック カーブ。穏やかなトウと長いショルダーが特徴です。</value></data>
+  <data name="CurveAcesDescription" xml:space="preserve"><value>ACES フィルミック カーブの近似。力強いコントラストと豊かな中間調が特徴です。</value></data>
+  <data name="CurvePbrNeutralDescription" xml:space="preserve"><value>圧縮が始まるまでは色を正確に保ち、最も明るいハイライトを白へなじませます。</value></data>
+  <data name="ToneKneeOffset" xml:space="preserve"><value>ニー オフセット</value></data>
+  <data name="ToneKnee" xml:space="preserve"><value>ニー</value></data>
+  <data name="ToneContrast" xml:space="preserve"><value>コントラスト</value></data>
+  <data name="ToneExposure" xml:space="preserve"><value>露出</value></data>
+  <data name="ToneCompressionStart" xml:space="preserve"><value>圧縮開始点</value></data>
+  <data name="TonePeak" xml:space="preserve"><value>ハイライトのピーク</value></data>
+  <data name="ToneDesaturation" xml:space="preserve"><value>ハイライトの彩度低下</value></data>
+  <data name="TonePeakTip" xml:space="preserve"><value>100% では測定したピークが SDR の白になります。値を下げると最も明るいハイライトをクリップし、ほかの部分を明るく保ちます。</value></data>
+  <data name="ToneDesaturationTip" xml:space="preserve"><value>非常に明るい色を白へなじませ、HDR ディスプレイでの見え方に近づけます。</value></data>
 </root>

@@ -211,4 +211,35 @@
   <data name="GainMapEncodingFailed" xml:space="preserve"><value>Die Gain Map konnte nicht als JPEG kodiert werden.</value></data>
   <data name="SdrJpegEncodingFailed" xml:space="preserve"><value>Das SDR-Bild konnte nicht als JPEG kodiert werden.</value></data>
   <data name="NoSessionBus" xml:space="preserve"><value>Es ist kein D-Bus-Sitzungsbus verfügbar.</value></data>
+  <data name="ToneMapping" xml:space="preserve"><value>Tone-Mapping</value></data>
+  <data name="ToneMappingTip" xml:space="preserve"><value>SDR-Version dieser HDR-Aufnahme anpassen</value></data>
+  <data name="ShowToneMapped" xml:space="preserve"><value>Tone-Mapping anzeigen</value></data>
+  <data name="ShowToneMappedCaption" xml:space="preserve"><value>Ausschalten, um mit der HDR-Aufnahme zu vergleichen.</value></data>
+  <data name="ToneMappingMode" xml:space="preserve"><value>Modus</value></data>
+  <data name="ToneCurve" xml:space="preserve"><value>Tonkurve</value></data>
+  <data name="ToneCurveCaption" xml:space="preserve"><value>Einzelne Aufnahmen lassen sich im Editor mit der Tone-Mapping-Schaltfläche neben HDR anpassen.</value></data>
+  <data name="ResetToDefaults" xml:space="preserve"><value>Auf Standard zurücksetzen</value></data>
+  <data name="SetAsDefault" xml:space="preserve"><value>Als Standard festlegen</value></data>
+  <data name="SetAsDefaultCaption" xml:space="preserve"><value>Beim Speichern werden diese Einstellungen auch zum Standard für neue Aufnahmen.</value></data>
+  <data name="CurveBt2390" xml:space="preserve"><value>BT.2390 (empfohlen)</value></data>
+  <data name="CurveMobius" xml:space="preserve"><value>Möbius</value></data>
+  <data name="CurveReinhard" xml:space="preserve"><value>Reinhard</value></data>
+  <data name="CurveHable" xml:space="preserve"><value>Hable (filmisch)</value></data>
+  <data name="CurveAces" xml:space="preserve"><value>ACES (filmisch)</value></data>
+  <data name="CurvePbrNeutral" xml:space="preserve"><value>Khronos PBR Neutral</value></data>
+  <data name="CurveBt2390Description" xml:space="preserve"><value>Der Roll-off nach ITU-R BT.2390, geformt im wahrnehmungsbasierten PQ-Bereich. Farben unterhalb des Knies bleiben unverändert.</value></data>
+  <data name="CurveMobiusDescription" xml:space="preserve"><value>Eine weiche Schulter oberhalb eines festen Knies, die den Kontrast darunter erhält.</value></data>
+  <data name="CurveReinhardDescription" xml:space="preserve"><value>Eine klassische Kurve, die den gesamten Bereich gleichmäßig komprimiert. Höherer Kontrast hält Mitteltöne heller.</value></data>
+  <data name="CurveHableDescription" xml:space="preserve"><value>John Hables filmische Kurve aus Uncharted 2 mit sanftem Fuß und langer Schulter.</value></data>
+  <data name="CurveAcesDescription" xml:space="preserve"><value>Eine Näherung der filmischen ACES-Kurve mit kräftigem Kontrast und satten Mitteltönen.</value></data>
+  <data name="CurvePbrNeutralDescription" xml:space="preserve"><value>Erhält Farben exakt bis zum Beginn der Kompression und lässt die hellsten Spitzlichter dann ins Weiß übergehen.</value></data>
+  <data name="ToneKneeOffset" xml:space="preserve"><value>Knie-Versatz</value></data>
+  <data name="ToneKnee" xml:space="preserve"><value>Knie</value></data>
+  <data name="ToneContrast" xml:space="preserve"><value>Kontrast</value></data>
+  <data name="ToneExposure" xml:space="preserve"><value>Belichtung</value></data>
+  <data name="ToneCompressionStart" xml:space="preserve"><value>Kompressionsbeginn</value></data>
+  <data name="TonePeak" xml:space="preserve"><value>Spitzenwert der Spitzlichter</value></data>
+  <data name="ToneDesaturation" xml:space="preserve"><value>Entsättigung der Spitzlichter</value></data>
+  <data name="TonePeakTip" xml:space="preserve"><value>Bei 100 % wird die gemessene Spitze zu SDR-Weiß. Niedrigere Werte begrenzen die hellsten Spitzlichter, damit der Rest heller bleibt.</value></data>
+  <data name="ToneDesaturationTip" xml:space="preserve"><value>Lässt sehr helle Farben ins Weiß übergehen, näher an ihrer Wirkung auf einem HDR-Bildschirm.</value></data>
 </root>
