@@ -31,5 +31,10 @@ public sealed record DelayOption(int Seconds)
 
     public string Label => Seconds == 0 ? AppStrings.NoDelay : string.Format(AppStrings.Seconds, Seconds);
 
+    public bool HasDelay => Seconds > 0;
+
+    /// <summary>Compact seconds badge; the menu retains its localized label.</summary>
+    public string BadgeText => HasDelay ? $"{Seconds}s" : string.Empty;
+
     public static DelayOption For(int seconds) => All.FirstOrDefault(o => o.Seconds == seconds) ?? All[0];
 }

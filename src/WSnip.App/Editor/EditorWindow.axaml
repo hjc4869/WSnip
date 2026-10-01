@@ -13,6 +13,38 @@
         Icon="avares://WSnip.App/Assets/wsnip.ico">
     <Window.Styles>
         <StyleInclude Source="avares://WSnip.App/Themes/EditorDock.axaml" />
+        <!-- Keep the native dropdown behavior and menu templates, with an icon-only face. -->
+        <Style Selector="ComboBox.captureOption">
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Padding" Value="4" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="ComboBox.captureOption /template/ ContentControl#ContentPresenter">
+            <Setter Property="Grid.ColumnSpan" Value="2" />
+        </Style>
+        <Style Selector="ComboBox.captureOption /template/ PathIcon#DropDownGlyph">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector="ComboBox.captureOption /template/ Border#Background">
+            <Setter Property="MinWidth" Value="0" />
+        </Style>
+        <Style Selector="ComboBox.captureOption:focus-visible /template/ Border#HighlightBackground">
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="ComboBox.captureOption:pointerover /template/ Border#Background">
+            <Setter Property="Background" Value="{DynamicResource AppSubtleHoverBrush}" />
+        </Style>
+        <Style Selector="ComboBox.captureOption:pressed /template/ Border#Background, ComboBox.captureOption:dropdownopen /template/ Border#Background">
+            <Setter Property="Background" Value="{DynamicResource AppSubtlePressedBrush}" />
+        </Style>
+        <Style Selector="ComboBox.captureOption:disabled">
+            <Setter Property="Opacity" Value="0.4" />
+        </Style>
     </Window.Styles>
     <Grid RowDefinitions="Auto,*,Auto">
         <!-- Toolbar -->
@@ -20,16 +52,21 @@
                 BorderBrush="{DynamicResource AppChromeDividerBrush}" BorderThickness="0,0,0,1" Padding="10,6">
             <Grid ColumnDefinitions="Auto,*,Auto">
                 <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                    <Button x:Name="NewButton" Classes="accent" ToolTip.Tip="{x:Static strings:AppStrings.NewSnipTip}" AutomationProperties.Name="{x:Static strings:AppStrings.NewSnip}">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <Viewbox Width="14" Height="14">
-                                <Path Data="{StaticResource IconAdd}" />
-                            </Viewbox>
-                            <TextBlock Text="{x:Static strings:AppStrings.New}" VerticalAlignment="Center" />
-                        </StackPanel>
+                    <Button x:Name="NewButton" Classes="accent" Width="36" Height="36" Padding="8"
+                            ToolTip.Tip="{x:Static strings:AppStrings.NewSnipTip}" AutomationProperties.Name="{x:Static strings:AppStrings.NewSnip}">
+                        <Viewbox Width="18" Height="18">
+                            <Path Data="{StaticResource IconAdd}" />
+                        </Viewbox>
                     </Button>
-                    <ComboBox x:Name="ModeBox" MinWidth="150" VerticalAlignment="Center" ToolTip.Tip="{x:Static strings:AppStrings.SnippingMode}"
+                    <ComboBox x:Name="ModeBox" Classes="captureOption" VerticalAlignment="Center" ToolTip.Tip="{x:Static strings:AppStrings.SnippingMode}"
                               AutomationProperties.Name="{x:Static strings:AppStrings.SnippingMode}">
+                        <ComboBox.SelectionBoxItemTemplate>
+                            <DataTemplate x:DataType="capture:SnipModeOption">
+                                <Viewbox Width="20" Height="20">
+                                    <Path Data="{Binding Icon}" Fill="{DynamicResource AppPrimaryTextBrush}" />
+                                </Viewbox>
+                            </DataTemplate>
+                        </ComboBox.SelectionBoxItemTemplate>
                         <ComboBox.ItemTemplate>
                             <DataTemplate x:DataType="capture:SnipModeOption">
                                 <StackPanel Orientation="Horizontal" Spacing="8" ToolTip.Tip="{Binding Description}">
@@ -41,8 +78,27 @@
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
-                    <ComboBox x:Name="DelayBox" MinWidth="112" VerticalAlignment="Center" ToolTip.Tip="{x:Static strings:AppStrings.DelayTip}"
+                    <ComboBox x:Name="DelayBox" Classes="captureOption" VerticalAlignment="Center" ToolTip.Tip="{x:Static strings:AppStrings.DelayTip}"
                               AutomationProperties.Name="{x:Static strings:AppStrings.Delay}">
+                        <ComboBox.SelectionBoxItemTemplate>
+                            <DataTemplate x:DataType="capture:DelayOption">
+                                <Panel Width="28" Height="26">
+                                    <Viewbox Width="20" Height="20" HorizontalAlignment="Left" VerticalAlignment="Top">
+                                        <Path Data="{StaticResource IconClock}" Fill="{DynamicResource AppPrimaryTextBrush}" />
+                                    </Viewbox>
+                                    <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" CornerRadius="3" Padding="2,1"
+                                            Background="{DynamicResource AppPrimaryTextBrush}">
+                                        <Panel>
+                                            <Viewbox Width="10" Height="10" IsVisible="{Binding !HasDelay}">
+                                                <Path Data="{StaticResource IconDisabled}" Fill="{DynamicResource AppPanelBackgroundBrush}" />
+                                            </Viewbox>
+                                            <TextBlock Text="{Binding BadgeText}" IsVisible="{Binding HasDelay}" FontSize="9" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource AppPanelBackgroundBrush}" />
+                                        </Panel>
+                                    </Border>
+                                </Panel>
+                            </DataTemplate>
+                        </ComboBox.SelectionBoxItemTemplate>
                         <ComboBox.ItemTemplate>
                             <DataTemplate x:DataType="capture:DelayOption">
                                 <TextBlock Text="{Binding Label}" Foreground="{DynamicResource AppPrimaryTextBrush}" />
