@@ -122,6 +122,9 @@ flatpak: flatpak-deps $(FLATPAK_NUGET_SOURCES)
 	cp -a "$(LIGHTPLAYER_ROOT)/build" "$(FLATPAK_STAGING)/lightplayer/"
 	for project in $(LIGHTPLAYER_PROJECTS); do cp -a "$(LIGHTPLAYER_ROOT)/src/$$project" "$(FLATPAK_STAGING)/lightplayer/src/"; done
 	install -D -m 644 "$(LIGHTPLAYER_ROOT)/src/LightStudio.LightPlayer/Controls/Glide.cs" "$(FLATPAK_STAGING)/lightplayer/src/LightStudio.LightPlayer/Controls/Glide.cs"
+	install -D -m 644 "$(LIGHTPLAYER_ROOT)/src/LightStudio.LightPlayer/Controls/BackdropBorder.cs" "$(FLATPAK_STAGING)/lightplayer/src/LightStudio.LightPlayer/Controls/BackdropBorder.cs"
+	install -D -m 644 "$(LIGHTPLAYER_ROOT)/src/LightStudio.LightPlayer/Controls/BackdropForegroundExtension.cs" "$(FLATPAK_STAGING)/lightplayer/src/LightStudio.LightPlayer/Controls/BackdropForegroundExtension.cs"
+	install -D -m 644 "$(LIGHTPLAYER_ROOT)/src/LightStudio.LightPlayer/Models/BackdropStyle.cs" "$(FLATPAK_STAGING)/lightplayer/src/LightStudio.LightPlayer/Models/BackdropStyle.cs"
 	find "$(FLATPAK_STAGING)" -type d \( -name bin -o -name obj \) -prune -exec rm -rf {} +
 	cp "$(FLATPAK_MANIFEST)" "$(FLATPAK_NUGET_SOURCES)" LICENSE THIRDPARTY.txt "$(FLATPAK_STAGING)/"
 	cp "packaging/flatpak/$(APP_ID).desktop" "packaging/flatpak/$(APP_ID).metainfo.xml" "$(FLATPAK_STAGING)/"
