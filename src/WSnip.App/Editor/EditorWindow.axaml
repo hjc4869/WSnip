@@ -181,6 +181,9 @@
                                         <Slider x:Name="SizeSlider" Width="128" Height="36" Minimum="1" Maximum="40" VerticalAlignment="Center"
                                                 AutomationProperties.Name="{x:Static strings:AppStrings.Size}">
                                             <Slider.Resources>
+                                                <!-- Center the 20px Fluent thumb within this 36px control. -->
+                                                <GridLength x:Key="SliderPreContentMargin">8</GridLength>
+                                                <GridLength x:Key="SliderPostContentMargin">8</GridLength>
                                                 <SolidColorBrush x:Key="SliderTrackFill" Color="#80FFFFFF" />
                                                 <SolidColorBrush x:Key="SliderTrackFillPointerOver" Color="#A0FFFFFF" />
                                                 <SolidColorBrush x:Key="SliderTrackFillPressed" Color="#A0FFFFFF" />
