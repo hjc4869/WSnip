@@ -1,3 +1,5 @@
+using WSnip.Core.Imaging;
+
 namespace WSnip.Core.Encoding;
 
 /// <summary>YCbCr matrices used when handing RGB pictures to video encoders.</summary>
@@ -11,7 +13,7 @@ internal enum YuvMatrix
 internal static class YuvConverter
 {
     /// <summary>Converts RGBA (alpha ignored) to 4:4:4 or 4:2:0 planes.</summary>
-    public static (byte[][] Planes, int[] Strides) FromRgba(byte[] rgba, int width, int height, bool subsample, YuvMatrix matrix)
+    public static (PixelBuffer<byte>[] Planes, int[] Strides) FromRgba(PixelBuffer<byte> rgba, int width, int height, bool subsample, YuvMatrix matrix)
     {
         (float kr, float kb) = matrix == YuvMatrix.Bt709 ? (0.2126f, 0.0722f) : (0.299f, 0.114f);
         float kg = 1 - kr - kb;
@@ -19,9 +21,9 @@ internal static class YuvConverter
         float crScale = 1 / (2 * (1 - kr));
         int chromaWidth = subsample ? (width + 1) / 2 : width;
         int chromaHeight = subsample ? (height + 1) / 2 : height;
-        var y = new byte[width * height];
-        var cb = new byte[chromaWidth * chromaHeight];
-        var cr = new byte[chromaWidth * chromaHeight];
+        using var y = new PixelBuffer<byte>(checked(width * height));
+        using var cb = new PixelBuffer<byte>(checked(chromaWidth * chromaHeight));
+        using var cr = new PixelBuffer<byte>(checked(chromaWidth * chromaHeight));
 
         Parallel.For(0, height, row =>
         {
@@ -60,15 +62,15 @@ internal static class YuvConverter
             }
         });
 
-        return ([y, cb, cr], [width, chromaWidth, chromaWidth]);
+        return ([y.Share(), cb.Share(), cr.Share()], [width, chromaWidth, chromaWidth]);
     }
 
     /// <summary>Splits interleaved RGB into G, B, R planes for the identity (GBR) matrix.</summary>
-    public static (byte[][] Planes, int[] Strides) GbrFromRgb(byte[] rgb, int width, int height)
+    public static (PixelBuffer<byte>[] Planes, int[] Strides) GbrFromRgb(PixelBuffer<byte> rgb, int width, int height)
     {
-        var g = new byte[width * height];
-        var b = new byte[width * height];
-        var r = new byte[width * height];
+        using var g = new PixelBuffer<byte>(checked(width * height));
+        using var b = new PixelBuffer<byte>(checked(width * height));
+        using var r = new PixelBuffer<byte>(checked(width * height));
         for (int i = 0, p = 0; p < g.Length; i += 3, p++)
         {
             r[p] = rgb[i];
@@ -76,13 +78,13 @@ internal static class YuvConverter
             b[p] = rgb[i + 2];
         }
 
-        return ([g, b, r], [width, width, width]);
+        return ([g.Share(), b.Share(), r.Share()], [width, width, width]);
     }
 
     /// <summary>Expands interleaved RGB or single-channel samples to RGBA.</summary>
-    public static byte[] ToRgba(byte[] samples, int width, int height, int channels)
+    public static PixelBuffer<byte> ToRgba(PixelBuffer<byte> samples, int width, int height, int channels)
     {
-        var rgba = new byte[width * height * 4];
+        using var rgba = new PixelBuffer<byte>(checked(width * height * 4));
         for (int p = 0; p < width * height; p++)
         {
             if (channels == 3)
@@ -99,7 +101,7 @@ internal static class YuvConverter
             rgba[p * 4 + 3] = 255;
         }
 
-        return rgba;
+        return rgba.Share();
     }
 
     private static byte Clamp(float value) => (byte)Math.Clamp((int)(value + 0.5f), 0, 255);

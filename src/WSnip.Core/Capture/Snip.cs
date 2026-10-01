@@ -3,15 +3,30 @@ using WSnip.Core.Imaging;
 namespace WSnip.Core.Capture;
 
 /// <summary>A captured region, normalized so that one unit is diffuse (SDR) white.</summary>
-public sealed class Snip
+public sealed class Snip : IDisposable
 {
+    /// <summary>Takes ownership of <paramref name="image"/>.</summary>
     public Snip(HdrImage image, DateTimeOffset capturedAt, double sdrWhiteNits, double? displayPeakNits)
+        : this(image, capturedAt, sdrWhiteNits, displayPeakNits, null)
+    {
+    }
+
+    public Snip(HdrImage image, DateTimeOffset capturedAt, double sdrWhiteNits, double? displayPeakNits,
+        HdrStatistics? statistics)
     {
         Image = image;
         CapturedAt = capturedAt;
         SourceSdrWhiteNits = sdrWhiteNits;
         SourceDisplayPeakNits = displayPeakNits;
-        Statistics = HdrStatistics.Measure(image);
+        try
+        {
+            Statistics = statistics ?? HdrStatistics.Measure(image);
+        }
+        catch
+        {
+            image.Dispose();
+            throw;
+        }
     }
 
     /// <summary>Relative linear scRGB with straight alpha.</summary>
@@ -32,6 +47,8 @@ public sealed class Snip
     public int Width => Image.Width;
 
     public int Height => Image.Height;
+
+    public void Dispose() => Image.Dispose();
 }
 
 /// <summary>Builds snips from a frozen screen snapshot.</summary>
@@ -48,7 +65,17 @@ public static class SnipComposer
         if (region.IsEmpty)
             throw new ArgumentException("The selected region does not intersect any display.", nameof(region));
 
-        var image = new HdrImage(region.Width, region.Height);
+        // An entire SDR display is already normalized. The snip and snapshot can share its
+        // immutable pixels, each with its own lifetime, rather than copying another full screen.
+        if (outline is not { Count: >= 3 } && snapshot.Monitors.FirstOrDefault(m => m.Bounds == region) is { } whole &&
+            whole.Color.WhiteScale == 1 && !snapshot.Monitors.Any(m => m != whole && !m.Bounds.Intersect(region).IsEmpty))
+        {
+            return new Snip(whole.Image.Share(), snapshot.CapturedAt,
+                whole.Color.HdrActive ? whole.Color.SdrWhiteNits : ColorMath.ReferenceWhiteNits,
+                whole.Color.HdrActive ? whole.Color.MaxLuminanceNits : null);
+        }
+
+        using var image = new HdrImage(region.Width, region.Height);
         image.Fill(0, 0, 0, 0);
 
         MonitorCapture? dominant = null;
@@ -91,28 +118,29 @@ public static class SnipComposer
             ApplyOutline(image, region, outline);
 
         DisplayColorInfo color = dominant?.Color ?? DisplayColorInfo.Sdr;
-        return new Snip(image, snapshot.CapturedAt,
+        return new Snip(image.Share(), snapshot.CapturedAt,
             color.HdrActive ? color.SdrWhiteNits : ColorMath.ReferenceWhiteNits,
             color.HdrActive ? color.MaxLuminanceNits : null);
     }
 
     /// <summary>
     /// Normalizes a captured window to relative light by the SDR white of its display, keeping the
-    /// window's own transparency. The capture's pixels are rescaled in place and become the snip's.
+    /// window's own transparency. The capture's pixels are rescaled in place and shared by the snip;
+    /// the caller disposes both independently. The capture must not have been published for rendering.
     /// </summary>
     public static Snip FromWindow(WindowCapture capture)
     {
         HdrImage image = capture.Image;
         image.ScaleColor((float)(1 / capture.Color.WhiteScale));
         DisplayColorInfo color = capture.Color;
-        return new Snip(image, capture.CapturedAt,
+        return new Snip(image.Share(), capture.CapturedAt,
             color.HdrActive ? color.SdrWhiteNits : ColorMath.ReferenceWhiteNits,
             color.HdrActive ? color.MaxLuminanceNits : null);
     }
 
     private static void ApplyOutline(HdrImage image, PixelRect region, IReadOnlyList<(double X, double Y)> outline)
     {
-        byte[] mask = OutlineMask.Rasterize(region, outline);
+        using PixelBuffer<byte> mask = OutlineMask.Rasterize(region, outline);
         ParallelRows.For(image.Height, y =>
         {
             Span<Half> row = image.Row(y);

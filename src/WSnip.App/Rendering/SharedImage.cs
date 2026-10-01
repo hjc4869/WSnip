@@ -34,8 +34,15 @@ public sealed class SharedImage
 
     public SharedImage AddRef()
     {
-        Interlocked.Increment(ref references);
-        return this;
+        int count = Volatile.Read(ref references);
+        while (true)
+        {
+            ObjectDisposedException.ThrowIf(count == 0, this);
+            int previous = Interlocked.CompareExchange(ref references, checked(count + 1), count);
+            if (previous == count)
+                return this;
+            count = previous;
+        }
     }
 
     public void Release()
@@ -54,23 +61,31 @@ public sealed class SharedImage
     /// Wraps composition pixels as captured, where <paramref name="whiteScale"/> is SDR white. The
     /// scale goes into the color space, so Skia normalizes while drawing and no copy is needed.
     /// </summary>
-    public static unsafe SharedImage FromLinear(HdrImage source, double whiteScale)
+    public static SharedImage FromLinear(HdrImage source, double whiteScale)
     {
         float[] m = SKColorSpaceXyz.Srgb.Values;
         float k = (float)(1 / whiteScale);
         using SKColorSpace space = SKColorSpace.CreateRgb(SKColorSpaceTransferFn.Linear,
             new SKColorSpaceXyz(m[0] * k, m[1] * k, m[2] * k, m[3] * k, m[4] * k, m[5] * k, m[6] * k, m[7] * k, m[8] * k));
         var info = new SKImageInfo(source.Width, source.Height, SKColorType.RgbaF16, SKAlphaType.Unpremul, space);
-        fixed (Half* pixels = source.Pixels)
+        HdrImage retained = source.Share();
+        try
         {
-            SKImage image = SKImage.FromPixelCopy(info, (IntPtr)pixels, source.Width * 8)
+            using var pixmap = new SKPixmap(info, retained.Pointer, source.RowStride * 2);
+            SKImage image = SKImage.FromPixels(pixmap,
+                static (_, context) => ((HdrImage)context).Dispose(), retained)
                 ?? throw new InvalidOperationException("The image could not be prepared for display.");
             return new SharedImage(image, isHdr: true);
+        }
+        catch
+        {
+            retained.Dispose();
+            throw;
         }
     }
 
     /// <summary>Wraps the 8-bit SDR rendition, tagged with its primaries.</summary>
-    public static unsafe SharedImage FromSdr(Rendition rendition)
+    public static SharedImage FromSdr(Rendition rendition)
     {
         using SKColorSpace space = rendition.Primaries switch
         {
@@ -80,11 +95,19 @@ public sealed class SharedImage
         };
         var info = new SKImageInfo(rendition.Width, rendition.Height, SKColorType.Rgba8888,
             rendition.HasAlpha ? SKAlphaType.Unpremul : SKAlphaType.Opaque, space);
-        fixed (byte* pixels = rendition.Sdr)
+        PixelBuffer<byte> retained = rendition.Sdr.Share();
+        try
         {
-            SKImage image = SKImage.FromPixelCopy(info, (IntPtr)pixels, rendition.Width * 4)
+            using var pixmap = new SKPixmap(info, retained.Pointer, rendition.Width * 4);
+            SKImage image = SKImage.FromPixels(pixmap,
+                static (_, context) => ((PixelBuffer<byte>)context).Dispose(), retained)
                 ?? throw new InvalidOperationException("The image could not be prepared for display.");
             return new SharedImage(image, isHdr: false);
+        }
+        catch
+        {
+            retained.Dispose();
+            throw;
         }
     }
 }

@@ -17,10 +17,13 @@ internal static class SkiaImages
     /// <summary>Runs an action with a pixmap over the SDR base of a rendition.</summary>
     public static unsafe T WithSdrPixmap<T>(Rendition rendition, Func<SKPixmap, T> action)
     {
+        // A fixed pointer into native memory does not root its managed owner. Keep an explicit
+        // lease through the entire encoder callback, including calls made with temporary inputs.
+        using PixelBuffer<byte> retained = rendition.Sdr.Share();
         using SKColorSpace colorSpace = ColorSpace(rendition.Primaries);
         var info = new SKImageInfo(rendition.Width, rendition.Height, SKColorType.Rgba8888,
             rendition.HasAlpha ? SKAlphaType.Unpremul : SKAlphaType.Opaque, colorSpace);
-        fixed (byte* pixels = rendition.Sdr)
+        fixed (byte* pixels = retained)
         {
             using var pixmap = new SKPixmap(info, (IntPtr)pixels, rendition.Width * 4);
             return action(pixmap);
@@ -28,14 +31,16 @@ internal static class SkiaImages
     }
 
     /// <summary>Encodes untagged 8-bit samples, one or three channels, as a baseline 4:4:4 JPEG.</summary>
-    public static unsafe byte[] EncodeSamplesJpeg(byte[] samples, int width, int height, int channels, int quality)
+    public static unsafe byte[] EncodeSamplesJpeg(PixelBuffer<byte> samples, int width, int height, int channels, int quality)
     {
-        byte[] pixels = samples;
+        using PixelBuffer<byte> expanded = channels == 3
+            ? new PixelBuffer<byte>(checked(width * height * 4))
+            : samples.Share();
+        PixelBuffer<byte> pixels = expanded;
         SKColorType type = SKColorType.Gray8;
         int rowBytes = width;
         if (channels == 3)
         {
-            pixels = new byte[width * height * 4];
             for (int i = 0, j = 0; i < samples.Length; i += 3, j += 4)
             {
                 pixels[j] = samples[i];

@@ -26,7 +26,7 @@ internal readonly record struct OverlayView(MonitorCapture Monitor, PixelRect So
 /// dimmed outside the selection, with the snip mode bar on the display under the pointer. Where the
 /// compositor places windows, a single full-screen window shows the display it opens on.
 /// </summary>
-public sealed class OverlaySession
+public sealed class OverlaySession : IDisposable
 {
     private readonly ScreenSnapshot snapshot;
     private readonly bool placeWindows;
@@ -122,6 +122,8 @@ public sealed class OverlaySession
     }
 
     public void Cancel() => Finish(null);
+
+    public void Dispose() => Finish(null);
 
     public void PointerPressed(PixelPoint point)
     {
@@ -284,6 +286,7 @@ internal sealed class OverlayWindow : Window
             follow?.Stop();
             session.Changed -= OnSessionChanged;
             frozen.Image = null;
+            session.Cancel();
         };
         KeyDown += (_, e) =>
         {
@@ -362,7 +365,7 @@ internal sealed class OverlayWindow : Window
     private void ShowFrozenImage()
     {
         PixelRect source = Source;
-        HdrImage image = source == new PixelRect(0, 0, Monitor.Image.Width, Monitor.Image.Height) ? Monitor.Image : Monitor.Image.Crop(source);
+        using HdrImage image = Monitor.Image.View(source);
         SharedImage shared = SharedImage.FromLinear(image, Monitor.Color.WhiteScale);
         frozen.Image = shared;
         shared.Release();

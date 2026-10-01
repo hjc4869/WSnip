@@ -1,14 +1,14 @@
 namespace WSnip.Core.Imaging;
 
 /// <summary>16-bit BT.2100 PQ pixels, for formats that store HDR directly rather than as a gain map.</summary>
-public sealed class PqImage
+public sealed class PqImage : IDisposable
 {
     public required int Width { get; init; }
 
     public required int Height { get; init; }
 
     /// <summary>Interleaved R, G, B, A samples; alpha is linear and straight.</summary>
-    public required ushort[] Pixels { get; init; }
+    public required PixelBuffer<ushort> Pixels { get; init; }
 
     public required bool HasAlpha { get; init; }
 
@@ -19,6 +19,8 @@ public sealed class PqImage
 
     /// <summary>Frame average of the largest component, in nits.</summary>
     public required float MaxFrameAverageLightLevel { get; init; }
+
+    public void Dispose() => Pixels.Dispose();
 }
 
 public static class PqImageBuilder
@@ -33,7 +35,7 @@ public static class PqImageBuilder
         float[] matrix = ColorMath.Matrix(ColorPrimaries.Bt709, primaries);
         float white = (float)referenceWhiteNits;
         bool hasAlpha = !flattenAlpha && image.HasTransparency();
-        var pixels = new ushort[image.Width * image.Height * 4];
+        using var pixels = new PixelBuffer<ushort>(checked(image.Width * image.Height * 4));
         var rowPeaks = new float[image.Height];
         var rowSums = new double[image.Height];
 
@@ -75,7 +77,7 @@ public static class PqImageBuilder
         {
             Width = image.Width,
             Height = image.Height,
-            Pixels = pixels,
+            Pixels = pixels.Share(),
             HasAlpha = hasAlpha,
             Primaries = primaries,
             MaxContentLightLevel = MathF.Min(rowPeaks.Max(), (float)ColorMath.PqMaximumNits),

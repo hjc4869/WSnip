@@ -1,12 +1,13 @@
 using FFmpeg.AutoGen.Abstractions;
 using LightStudio.FfmpegShim.Interop;
+using WSnip.Core.Imaging;
 
 using WSnip.Core.Strings;
 
 namespace WSnip.Core.Encoding;
 
 /// <summary>Planes of one picture handed to an FFmpeg encoder.</summary>
-internal sealed class PicturePlanes
+internal sealed class PicturePlanes : IDisposable
 {
     public required int Width { get; init; }
 
@@ -15,7 +16,7 @@ internal sealed class PicturePlanes
     public required AVPixelFormat Format { get; init; }
 
     /// <summary>Packed rows of each plane, in FFmpeg plane order.</summary>
-    public required byte[][] Planes { get; init; }
+    public required PixelBuffer<byte>[] Planes { get; init; }
 
     public required int[] Strides { get; init; }
 
@@ -28,6 +29,12 @@ internal sealed class PicturePlanes
     public AVColorRange Range { get; init; } = AVColorRange.AVCOL_RANGE_JPEG;
 
     public AVChromaLocation ChromaLocation { get; init; } = AVChromaLocation.AVCHROMA_LOC_UNSPECIFIED;
+
+    public void Dispose()
+    {
+        foreach (PixelBuffer<byte> plane in Planes)
+            plane.Dispose();
+    }
 }
 
 /// <summary>Encodes single pictures with FFmpeg's video and image encoders.</summary>
@@ -48,7 +55,7 @@ internal static unsafe class FfmpegStillEncoder
     /// <summary>Returns the first encoder of a list that the loaded FFmpeg provides.</summary>
     public static string? FirstAvailable(IEnumerable<string> encoderNames) => encoderNames.FirstOrDefault(IsAvailable);
 
-    /// <summary>Encodes the picture and returns the concatenated packet payloads.</summary>
+    /// <summary>Encodes the picture, consuming its plane leases, and returns the packet payloads.</summary>
     public static byte[] Encode(string encoderName, PicturePlanes picture, IReadOnlyDictionary<string, string> options)
     {
         AVCodec* codec = ffmpeg.avcodec_find_encoder_by_name(encoderName);
@@ -68,7 +75,8 @@ internal static unsafe class FfmpegStillEncoder
             context->framerate = new AVRational { num = 25, den = 1 };
             context->gop_size = 1;
             context->max_b_frames = 0;
-            context->thread_count = 0;
+            // Still encoders can otherwise create one large working set for every logical CPU.
+            context->thread_count = Math.Min(Environment.ProcessorCount, 4);
             context->color_primaries = picture.Primaries;
             context->color_trc = picture.Transfer;
             context->colorspace = picture.Matrix;
@@ -93,7 +101,7 @@ internal static unsafe class FfmpegStillEncoder
             FfmpegError.ThrowIfError(ffmpeg.av_frame_make_writable(frame), "av_frame_make_writable");
             for (uint plane = 0; plane < (uint)picture.Planes.Length; plane++)
             {
-                byte[] source = picture.Planes[plane];
+                PixelBuffer<byte> source = picture.Planes[plane];
                 int stride = picture.Strides[plane];
                 int rows = source.Length / stride;
                 byte* target = frame->data[plane];
@@ -104,6 +112,10 @@ internal static unsafe class FfmpegStillEncoder
                         Buffer.MemoryCopy(data + (long)row * stride, target + (long)row * targetStride, targetStride, stride);
                 }
             }
+
+            // AVFrame owns a copy now. Release conversion/packing buffers before the codec
+            // allocates its working surfaces, rather than retaining both through encoding.
+            picture.Dispose();
 
             packet = ffmpeg.av_packet_alloc();
             using var output = new MemoryStream();

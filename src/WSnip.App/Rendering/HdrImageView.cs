@@ -14,8 +14,11 @@ public sealed class HdrImageView : Control
         get => image;
         set
         {
+            if (ReferenceEquals(image, value))
+                return;
+            SharedImage? next = value?.AddRef();
             image?.Release();
-            image = value?.AddRef();
+            image = next;
             InvalidateVisual();
         }
     }

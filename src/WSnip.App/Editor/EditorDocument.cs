@@ -13,6 +13,7 @@ public sealed record EditorState(HdrImage Image, HdrStatistics Statistics, IRead
 public sealed class EditorDocument : IDisposable
 {
     private readonly List<EditorState> history = [];
+    private readonly CancellationTokenSource previewCancellation = new();
     private int position;
     private SharedImage? sdrImage;
     private SharedImage? hdrImage;
@@ -28,7 +29,7 @@ public sealed class EditorDocument : IDisposable
         SourceSdrWhiteNits = snip.SourceSdrWhiteNits;
         SourcePeakNits = snip.SourceDisplayPeakNits;
         ToneMap = snip.ToneMap;
-        history.Add(new EditorState(snip.Image, snip.Statistics, []));
+        history.Add(new EditorState(snip.Image.Share(), snip.Statistics, []));
     }
 
     public event EventHandler? Changed;
@@ -42,15 +43,22 @@ public sealed class EditorDocument : IDisposable
 
     public double? SourcePeakNits { get; }
 
-    public EditorState Current => history[position];
+    public EditorState Current
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(disposed, this);
+            return history[position];
+        }
+    }
 
     public int Width => Current.Image.Width;
 
     public int Height => Current.Image.Height;
 
-    public bool CanUndo => position > 0;
+    public bool CanUndo => !disposed && position > 0;
 
-    public bool CanRedo => position < history.Count - 1;
+    public bool CanRedo => !disposed && position < history.Count - 1;
 
     /// <summary>Whether the document changed since it was last saved or copied.</summary>
     public bool IsDirty { get; private set; }
@@ -117,9 +125,11 @@ public sealed class EditorDocument : IDisposable
         region = region.Intersect(new PixelRect(0, 0, Width, Height));
         if (region.IsEmpty || region == new PixelRect(0, 0, Width, Height))
             return;
-        HdrImage cropped = Current.Image.Crop(region);
+        using HdrImage cropped = Current.Image.View(region);
         var delta = new System.Numerics.Vector2(-region.X, -region.Y);
-        Push(new EditorState(cropped, HdrStatistics.Measure(cropped), Current.Strokes.Select(s => s.Offset(delta)).ToArray()));
+        HdrStatistics statistics = HdrStatistics.Measure(cropped);
+        AnnotationStroke[] strokes = Current.Strokes.Select(s => s.Offset(delta)).ToArray();
+        Push(new EditorState(cropped.Share(), statistics, strokes));
     }
 
     public void Undo()
@@ -145,25 +155,42 @@ public sealed class EditorDocument : IDisposable
     public void MarkClean() => IsDirty = false;
 
     /// <summary>The snip with its annotations burnt in, ready to export.</summary>
-    public Snip Flatten()
+    public async Task<Snip> FlattenAsync()
     {
+        // Acquire on the UI thread, before queuing any work. Closing/replacing the document
+        // immediately disposes history, while this operation retains only the image it needs.
         EditorState state = Current;
-        HdrImage image = AnnotationRenderer.Render(state.Image, state.Strokes);
-        return new Snip(image, CapturedAt, SourceSdrWhiteNits, SourcePeakNits) { ToneMap = ToneMap };
+        using HdrImage source = state.Image.Share();
+        ToneMapSettings? toneMap = ToneMap;
+        return await Task.Run(() =>
+        {
+            using HdrImage image = AnnotationRenderer.Render(source, state.Strokes);
+            return new Snip(image.Share(), CapturedAt, SourceSdrWhiteNits, SourcePeakNits,
+                state.Strokes.Count == 0 ? state.Statistics : null) { ToneMap = toneMap };
+        });
     }
 
     /// <summary>The image as shown on an SDR surface: the same rendition an SDR file would get.</summary>
     /// <param name="defaults">Tone mapping unless the snip was tuned or a preview is showing.</param>
     public SharedImage GetSdrImage(ToneMapSettings defaults)
     {
+        ObjectDisposedException.ThrowIf(disposed, this);
+        // Opening tone mapping from HDR already started a background build. Keep the previous
+        // frame until it arrives, rather than allocating/processing a second rendition on the UI thread.
+        if (sdrImage is null && buildingPreview && PreviewToneMap is not null && hdrImage is not null)
+            return hdrImage;
+        hdrImage?.Release();
+        hdrImage = null;
         ToneMapSettings toneMap = EffectiveToneMap(defaults);
 
         // While a preview builds in the background, the previous rendition stays on screen.
         if (sdrImage is not null && (toneMap.Equals(sdrToneMap) || (buildingPreview && PreviewToneMap is not null)))
             return sdrImage;
 
+        using Rendition rendition = BuildSdr(Current, toneMap, previewCancellation.Token);
+        SharedImage next = SharedImage.FromSdr(rendition);
         sdrImage?.Release();
-        sdrImage = SharedImage.FromSdr(BuildSdr(Current, toneMap));
+        sdrImage = next;
         sdrToneMap = toneMap;
         return sdrImage;
     }
@@ -171,6 +198,9 @@ public sealed class EditorDocument : IDisposable
     /// <summary>The relative image for an extended-range surface, rolled off to fit the given headroom.</summary>
     public SharedImage GetHdrImage(float headroom)
     {
+        ObjectDisposedException.ThrowIf(disposed, this);
+        sdrImage?.Release();
+        sdrImage = null;
         headroom = MathF.Max(1, headroom);
         EditorState state = Current;
         float peak = state.Statistics.PeakComponent;
@@ -179,9 +209,10 @@ public sealed class EditorDocument : IDisposable
         float effective = !state.Statistics.HasHdr || peak <= headroom * 1.02f ? float.PositiveInfinity : headroom;
         if (hdrImage is null || effective != hdrHeadroom)
         {
+            using HdrImage fitted = float.IsPositiveInfinity(effective) ? state.Image.Share() : DisplayRendition.FitToHeadroom(state.Image, peak, headroom, (float)SourceSdrWhiteNits);
+            SharedImage next = SharedImage.FromHdr(fitted);
             hdrImage?.Release();
-            HdrImage fitted = float.IsPositiveInfinity(effective) ? state.Image : DisplayRendition.FitToHeadroom(state.Image, peak, headroom, (float)SourceSdrWhiteNits);
-            hdrImage = SharedImage.FromHdr(fitted);
+            hdrImage = next;
             hdrHeadroom = effective;
         }
 
@@ -190,19 +221,30 @@ public sealed class EditorDocument : IDisposable
 
     public void Dispose()
     {
+        if (disposed)
+            return;
         disposed = true;
+        previewCancellation.Cancel();
         pendingPreview = null;
         InvalidateImages();
+        foreach (HdrImage image in history.Select(state => state.Image).Distinct())
+            image.Dispose();
+        history.Clear();
+        position = 0;
+        Changed = null;
+        RenditionChanged = null;
+        if (!buildingPreview)
+            previewCancellation.Dispose();
     }
 
-    private Rendition BuildSdr(EditorState state, ToneMapSettings toneMap) =>
+    private Rendition BuildSdr(EditorState state, ToneMapSettings toneMap, CancellationToken cancellationToken) =>
         RenditionBuilder.Build(state.Image, state.Statistics, new RenditionOptions
         {
             ToneMap = toneMap,
             SdrWhiteNits = SourceSdrWhiteNits,
             BuildGainMap = false,
             BasePrimaries = ColorPrimaries.Bt709,
-        });
+        }, cancellationToken);
 
     private async Task BuildPreviewsAsync()
     {
@@ -213,7 +255,9 @@ public sealed class EditorDocument : IDisposable
             {
                 pendingPreview = null;
                 EditorState state = Current;
-                Rendition rendition = await Task.Run(() => BuildSdr(state, toneMap));
+                using HdrImage source = state.Image.Share();
+                CancellationToken cancellationToken = previewCancellation.Token;
+                using Rendition rendition = await Task.Run(() => BuildSdr(state with { Image = source }, toneMap, cancellationToken), cancellationToken);
                 if (disposed || PreviewToneMap is not { } wanted)
                     return;
 
@@ -240,6 +284,10 @@ public sealed class EditorDocument : IDisposable
                 RenditionChanged?.Invoke(this, EventArgs.Empty);
             }
         }
+        catch (OperationCanceledException) when (disposed)
+        {
+            // Closing a snip cancels row processing and releases the worker's last image lease.
+        }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
             LightStudio.Logging.AppLog.Error("Editor", "Previewing the tone mapping failed.", exception);
@@ -247,14 +295,22 @@ public sealed class EditorDocument : IDisposable
         finally
         {
             buildingPreview = false;
+            if (disposed)
+                previewCancellation.Dispose();
         }
     }
 
     private void Push(EditorState state)
     {
         bool imageChanged = !ReferenceEquals(state.Image, Current.Image);
+        HdrImage[] abandoned = history.Skip(position + 1).Select(entry => entry.Image).Distinct().ToArray();
         history.RemoveRange(position + 1, history.Count - position - 1);
         history.Add(state);
+        foreach (HdrImage image in abandoned)
+        {
+            if (!history.Any(entry => ReferenceEquals(entry.Image, image)))
+                image.Dispose();
+        }
         position = history.Count - 1;
         IsDirty = true;
         OnChanged(imageChanged);

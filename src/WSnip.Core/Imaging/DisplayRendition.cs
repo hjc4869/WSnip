@@ -6,17 +6,17 @@ public static class DisplayRendition
     private static readonly ToneMapSettings HeadroomCurve = new() { Curve = ToneMapCurve.Bt2390 };
 
     /// <summary>
-    /// Returns the image unchanged when its peak fits the display headroom, or a copy whose
-    /// highlights roll off hue-preservingly into it. Values stay relative to SDR white.
+    /// Returns an owned reference when the peak fits the display headroom, or a copy whose
+    /// highlights roll off hue-preservingly into it. The caller disposes either result.
     /// </summary>
     public static HdrImage FitToHeadroom(HdrImage image, float peak, float headroom, float sdrWhiteNits)
     {
         headroom = MathF.Max(1, headroom);
         if (peak <= headroom * 1.02f)
-            return image;
+            return image.Share();
 
         var curve = RenditionBuilder.ToneCurve.Create(HeadroomCurve, peak / headroom, sdrWhiteNits * headroom);
-        var result = new HdrImage(image.Width, image.Height);
+        using var result = new HdrImage(image.Width, image.Height);
         float inverse = 1 / headroom;
         ParallelRows.For(image.Height, y =>
         {
@@ -32,6 +32,6 @@ public static class DisplayRendition
                 target[i + 3] = source[i + 3];
             }
         });
-        return result;
+        return result.Share();
     }
 }

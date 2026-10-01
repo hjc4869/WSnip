@@ -6,10 +6,10 @@ namespace WSnip.Core.Capture;
 /// <summary>Rasterizes a freeform outline into an antialiased coverage mask.</summary>
 internal static class OutlineMask
 {
-    public static byte[] Rasterize(PixelRect region, IReadOnlyList<(double X, double Y)> outline)
+    public static PixelBuffer<byte> Rasterize(PixelRect region, IReadOnlyList<(double X, double Y)> outline)
     {
         var info = new SKImageInfo(region.Width, region.Height, SKColorType.Alpha8, SKAlphaType.Premul);
-        var mask = new byte[region.Width * region.Height];
+        using var mask = new PixelBuffer<byte>(checked(region.Width * region.Height));
         unsafe
         {
             fixed (byte* pixels = mask)
@@ -31,6 +31,6 @@ internal static class OutlineMask
             }
         }
 
-        return mask;
+        return mask.Share();
     }
 }

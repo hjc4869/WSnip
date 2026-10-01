@@ -90,32 +90,33 @@ public sealed record AnnotationStroke(AnnotationTool Tool, ScRgb Color, float Wi
 /// <summary>Burns annotations into a relative HDR image, blending in linear light.</summary>
 public static class AnnotationRenderer
 {
+    /// <summary>Returns an owned image, sharing the source when there is nothing to draw.</summary>
     public static HdrImage Render(HdrImage image, IReadOnlyList<AnnotationStroke> strokes)
     {
         if (strokes.Count == 0)
-            return image;
+            return image.Share();
 
         using SKColorSpace linear = SKColorSpace.CreateSrgbLinear();
         var info = new SKImageInfo(image.Width, image.Height, SKColorType.RgbaF16, SKAlphaType.Premul, linear);
-        using var bitmap = new SKBitmap(info);
-        Span<Half> pixels = bitmap.GetPixelSpan().Length == image.Pixels.Length * 2
-            ? System.Runtime.InteropServices.MemoryMarshal.Cast<byte, Half>(bitmap.GetPixelSpan())
-            : throw new InvalidOperationException("Unexpected bitmap layout.");
-        Premultiply(image.Pixels, pixels);
+        using var result = new HdrImage(image.Width, image.Height);
+        ParallelRows.For(image.Height, y => Premultiply(image.ReadRow(y), result.Row(y)));
 
-        using (var canvas = new SKCanvas(bitmap))
+        // Draw straight into the result, temporarily premultiplied. There is no second full-size
+        // Skia bitmap to copy back, and the source remains immutable for the editor/render thread.
+        using (var surface = SKSurface.Create(info, result.Pointer, image.Width * 8)
+            ?? throw new InvalidOperationException("The annotation surface could not be created."))
         {
             foreach (AnnotationStroke stroke in strokes)
             {
                 using SKPath path = stroke.ToPath();
                 using SKPaint paint = stroke.CreatePaint(linear);
-                canvas.DrawPath(path, paint);
+                surface.Canvas.DrawPath(path, paint);
             }
+            surface.Canvas.Flush();
         }
 
-        var result = new HdrImage(image.Width, image.Height);
-        Unpremultiply(System.Runtime.InteropServices.MemoryMarshal.Cast<byte, Half>(bitmap.GetPixelSpan()), result.Pixels);
-        return result;
+        Unpremultiply(result.Pixels, result.Pixels);
+        return result.Share();
     }
 
     private static void Premultiply(ReadOnlySpan<Half> source, Span<Half> target)

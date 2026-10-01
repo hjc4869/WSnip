@@ -4,6 +4,7 @@ using LightStudio.Logging;
 using Windows.Graphics;
 using Windows.Graphics.Capture;
 using Windows.Graphics.DirectX;
+using Windows.Graphics.DirectX.Direct3D11;
 using WSnip.Core.Capture;
 using WSnip.Core.Imaging;
 using WSnip.Core.Platform;
@@ -46,18 +47,30 @@ public sealed class WindowsScreenCaptureService : IScreenCaptureService, IDispos
             bool allowBorderless = await EnsureBorderlessAsync().ConfigureAwait(false);
 
             MonitorCapture[] monitors;
+            Task<MonitorCapture>[] pending = [];
             try
             {
                 device ??= Direct3DDevice.Create();
-                monitors = await Task.WhenAll(displays.Select(display =>
-                    Task.Run(() => CaptureMonitor(device, display, options, allowBorderless, cancellationToken), cancellationToken)))
-                    .ConfigureAwait(false);
+                Direct3DDevice current = device;
+                pending = displays.Select(display =>
+                    Task.Run(() => CaptureMonitor(current, display, options, allowBorderless, cancellationToken), cancellationToken)).ToArray();
+                monitors = await Task.WhenAll(pending).ConfigureAwait(false);
             }
-            catch (Exception exception) when (exception is not OperationCanceledException)
+            catch (Exception exception)
             {
+                // WhenAll waits for every task. Successful captures must also be released if
+                // a different monitor fails or cancellation interrupts the multi-display shot.
+                foreach (Task<MonitorCapture> task in pending)
+                {
+                    if (task.IsCompletedSuccessfully)
+                        task.Result.Dispose();
+                }
                 // A removed or reset device fails every later call, so the next capture starts afresh.
-                device?.Dispose();
-                device = null;
+                if (exception is not OperationCanceledException)
+                {
+                    device?.Dispose();
+                    device = null;
+                }
                 throw;
             }
 
@@ -148,7 +161,8 @@ public sealed class WindowsScreenCaptureService : IScreenCaptureService, IDispos
                     continue;
                 }
 
-                return device.Read(frame.Surface, Math.Min(content.Width, size.Width), Math.Min(content.Height, size.Height), keepAlpha: true);
+                using IDirect3DSurface surface = frame.Surface;
+                return device.Read(surface, Math.Min(content.Width, size.Width), Math.Min(content.Height, size.Height), keepAlpha: true);
             }
 
             if (watch.Elapsed > FrameTimeout)
@@ -176,7 +190,8 @@ public sealed class WindowsScreenCaptureService : IScreenCaptureService, IDispos
             using Direct3D11CaptureFrame? frame = pool.TryGetNextFrame();
             if (frame is not null)
             {
-                HdrImage image = device.Read(frame.Surface, display.Bounds.Width, display.Bounds.Height);
+                using IDirect3DSurface surface = frame.Surface;
+                HdrImage image = device.Read(surface, display.Bounds.Width, display.Bounds.Height);
                 return new MonitorCapture
                 {
                     DeviceName = display.DeviceName,

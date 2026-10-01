@@ -6,6 +6,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Avalonia.VisualTree;
 using LightStudio.Logging;
 using WSnip.App.Capture;
 using WSnip.App.Rendering;
@@ -49,6 +50,7 @@ public partial class EditorWindow : Window
     private double penSize = 4;
     private double highlighterSize = 18;
     private bool updating;
+    private bool exporting;
 
     public EditorWindow()
         : this(App.Controller ?? throw new InvalidOperationException("The app has not started."))
@@ -120,6 +122,7 @@ public partial class EditorWindow : Window
         Canvas.HoverChanged += (_, hover) => UpdatePixelInfo(hover);
         Canvas.PixelPicked += (_, pixel) => PickColor(pixel);
         AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
+        Closed += (_, _) => Clear();
 
         OnSettingsChanged();
         UpdateDocumentState();
@@ -128,7 +131,9 @@ public partial class EditorWindow : Window
     /// <summary>Shows a new snip, replacing the current one.</summary>
     public void Load(EditorDocument next, string? saved)
     {
+        Canvas.Document = null;
         ReleaseDocument();
+        RetireCanvasDrawing();
         document = next;
         savedPath = saved;
         document.Changed += OnDocumentChanged;
@@ -148,8 +153,22 @@ public partial class EditorWindow : Window
         SelectTool(EditorTool.Select);
         Canvas.Document = null;
         ReleaseDocument();
+        RetireCanvasDrawing();
         savedPath = null;
         UpdateDocumentState();
+    }
+
+    private void RetireCanvasDrawing()
+    {
+        // A hidden/minimized window stops recording draw lists. Invalidating alone leaves the
+        // last custom draw operation (and its image lease) alive until the window opens again.
+        // Detaching retires that list in a compositor batch even while rendering is stopped.
+        if (Canvas.GetVisualParent() is Panel host)
+        {
+            int index = host.Children.IndexOf(Canvas);
+            host.Children.RemoveAt(index);
+            host.Children.Insert(index, Canvas);
+        }
     }
 
     /// <summary>Picks up preferences that affect the editor.</summary>
@@ -175,6 +194,13 @@ public partial class EditorWindow : Window
         document.Changed -= OnDocumentChanged;
         document.Dispose();
         document = null;
+    }
+
+    /// <summary>Ends modal preview/flyout lifetimes before the owner is hidden for a capture.</summary>
+    public void PrepareForCapture()
+    {
+        colorFlyout.Hide();
+        toneMappingWindow?.Close();
     }
 
     private void OnKeyDown(object? sender, KeyEventArgs e)
@@ -546,70 +572,99 @@ public partial class EditorWindow : Window
 
     private async Task CopyAsync()
     {
-        if (document is null)
+        if (document is not { } source || exporting)
             return;
+        using IDisposable operation = controller.BeginEditorOperation();
+        exporting = true;
+        UpdateDocumentState();
         try
         {
-            Snip snip = await Task.Run(document.Flatten);
+            using Snip snip = await source.FlattenAsync();
             await controller.CopyAsync(snip);
-            ShowStatusMessage(AppStrings.Copied);
+            if (ReferenceEquals(document, source))
+                ShowStatusMessage(AppStrings.Copied);
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
             AppLog.Error("Editor", "Copying failed.", exception);
-            MessageDialog.Show(this, "WSnip", string.Format(AppStrings.CopyFailed, exception.Message));
+            MessageDialog.Show(IsVisible ? this : null, "WSnip", string.Format(AppStrings.CopyFailed, exception.Message));
+        }
+        finally
+        {
+            exporting = false;
+            CopyButton.IsEnabled = document is not null;
+            SaveButton.IsEnabled = document is not null;
         }
     }
 
     private async Task SaveAsAsync()
     {
-        if (document is null)
+        if (document is not { } source || exporting)
             return;
 
-        Snip snip = await Task.Run(document.Flatten);
-        SnipFormat preferred = controller.Settings.FormatFor(snip);
-        var formats = SnipExporter.AllFormats.Where(SnipExporter.IsAvailable).OrderBy(f => f == preferred ? 0 : 1).ToList();
-        var choices = formats.Select(f => new FilePickerFileType(SnipExporter.DisplayName(f))
-        {
-            Patterns = [$"*{SnipExporter.Extension(f)}"],
-            MimeTypes = [SnipExporter.MimeType(f)],
-        }).ToList();
-
-        IStorageFolder? start = await StorageProvider.TryGetFolderFromPathAsync(
-            savedPath is not null ? Path.GetDirectoryName(savedPath)! : controller.SaveFolder);
-        SaveFilePickerResult result = await StorageProvider.SaveFilePickerWithResultAsync(new FilePickerSaveOptions
-        {
-            Title = AppStrings.SaveSnip,
-            SuggestedFileName = Path.GetFileNameWithoutExtension(SnipExporter.DefaultFileName(document.CapturedAt, preferred)),
-            DefaultExtension = SnipExporter.Extension(preferred).TrimStart('.'),
-            FileTypeChoices = choices,
-            SuggestedStartLocation = start,
-            ShowOverwritePrompt = true,
-        });
-        if (result.File?.TryGetLocalPath() is not { } path)
-            return;
-
-        int chosen = result.SelectedFileType is { } type ? choices.IndexOf(type) : -1;
-        SnipFormat format = chosen >= 0 ? formats[chosen] : SnipExporter.FromExtension(path) ?? preferred;
-        if (SnipExporter.FromExtension(path) is { } byExtension && byExtension != format &&
-            !(byExtension == SnipFormat.Png && format == SnipFormat.PngHdr))
-        {
-            format = byExtension;
-        }
-
+        using IDisposable operation = controller.BeginEditorOperation();
+        exporting = true;
+        UpdateDocumentState();
+        string? path = null;
         try
         {
+            // Pick a destination first: a dialog should not keep a flattened full-resolution copy.
+            bool hdr = source.Current.Statistics.HasHdr || source.Current.Strokes.Any(stroke =>
+                HdrStatistics.HdrLevel(stroke.PaintColor.R, stroke.PaintColor.G, stroke.PaintColor.B) > HdrStatistics.HdrThreshold);
+            SnipFormat preferred = hdr ? controller.Settings.HdrFormat : controller.Settings.SdrFormat;
+            var formats = SnipExporter.AllFormats.Where(SnipExporter.IsAvailable).OrderBy(f => f == preferred ? 0 : 1).ToList();
+            var choices = formats.Select(f => new FilePickerFileType(SnipExporter.DisplayName(f))
+            {
+                Patterns = [$"*{SnipExporter.Extension(f)}"],
+                MimeTypes = [SnipExporter.MimeType(f)],
+            }).ToList();
+
+            IStorageFolder? start = await StorageProvider.TryGetFolderFromPathAsync(
+                savedPath is not null ? Path.GetDirectoryName(savedPath)! : controller.SaveFolder);
+            SaveFilePickerResult result = await StorageProvider.SaveFilePickerWithResultAsync(new FilePickerSaveOptions
+            {
+                Title = AppStrings.SaveSnip,
+                SuggestedFileName = Path.GetFileNameWithoutExtension(SnipExporter.DefaultFileName(source.CapturedAt, preferred)),
+                DefaultExtension = SnipExporter.Extension(preferred).TrimStart('.'),
+                FileTypeChoices = choices,
+                SuggestedStartLocation = start,
+                ShowOverwritePrompt = true,
+            });
+            path = result.File?.TryGetLocalPath();
+            if (path is null || !ReferenceEquals(document, source))
+                return;
+
+            int chosen = result.SelectedFileType is { } type ? choices.IndexOf(type) : -1;
+            SnipFormat format = chosen >= 0 ? formats[chosen] : SnipExporter.FromExtension(path) ?? preferred;
+            if (SnipExporter.FromExtension(path) is { } byExtension && byExtension != format &&
+                !(byExtension == SnipFormat.Png && format == SnipFormat.PngHdr))
+            {
+                format = byExtension;
+            }
+
             ShowStatusMessage(AppStrings.Saving);
+            EditorState exportedState = source.Current;
+            ToneMapSettings? exportedToneMap = source.ToneMap;
+            using Snip snip = await source.FlattenAsync();
             await controller.SaveAsync(snip, path, format);
-            savedPath = path;
-            document.MarkClean();
-            UpdateDocumentState();
+            if (ReferenceEquals(document, source))
+            {
+                savedPath = path;
+                if (ReferenceEquals(source.Current, exportedState) && Equals(source.ToneMap, exportedToneMap))
+                    source.MarkClean();
+                UpdateDocumentState();
+            }
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException or NotSupportedException or InvalidOperationException)
         {
             AppLog.Error("Editor", $"Saving {path} failed.", exception);
-            MessageDialog.Show(this, "WSnip", string.Format(AppStrings.SaveFailed, exception.Message));
+            MessageDialog.Show(IsVisible ? this : null, "WSnip", string.Format(AppStrings.SaveFailed, exception.Message));
             UpdateStatus();
+        }
+        finally
+        {
+            exporting = false;
+            UpdateDocumentState();
         }
     }
 
@@ -622,8 +677,8 @@ public partial class EditorWindow : Window
             tool.IsEnabled = has;
         UndoButton.IsEnabled = document?.CanUndo == true;
         RedoButton.IsEnabled = document?.CanRedo == true;
-        CopyButton.IsEnabled = has;
-        SaveButton.IsEnabled = has;
+        CopyButton.IsEnabled = has && !exporting;
+        SaveButton.IsEnabled = has && !exporting;
         ZoomInButton.IsEnabled = has;
         ZoomOutButton.IsEnabled = has;
         ZoomButton.IsEnabled = has;

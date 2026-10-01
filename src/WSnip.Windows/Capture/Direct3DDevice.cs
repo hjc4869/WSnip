@@ -108,7 +108,7 @@ internal sealed unsafe class Direct3DDevice : IDisposable
                     "ID3D11DeviceContext.Map");
                 try
                 {
-                    var image = new HdrImage(width, height);
+                    using var image = new HdrImage(width, height);
                     nint source = (nint)mapped.Data;
                     uint pitch = mapped.RowPitch;
                     ParallelFor(height, y =>
@@ -124,7 +124,7 @@ internal sealed unsafe class Direct3DDevice : IDisposable
                                 target[x] = Half.One;
                         }
                     });
-                    return image;
+                    return image.Share();
                 }
                 finally
                 {

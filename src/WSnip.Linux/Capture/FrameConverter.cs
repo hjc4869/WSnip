@@ -19,8 +19,8 @@ internal static class FrameConverter
         if (!keepAlpha)
             alpha = -1;
         int width = frame.Info.Width;
-        byte[] pixels = frame.Pixels;
-        var image = new HdrImage(width, frame.Info.Height);
+        PixelBuffer<byte> pixels = frame.Pixels;
+        using var image = new HdrImage(width, frame.Info.Height);
         Parallel.For(0, image.Height, y =>
         {
             ReadOnlySpan<byte> source = pixels.AsSpan(y * width * 4, width * 4);
@@ -50,7 +50,7 @@ internal static class FrameConverter
                 }
             }
         });
-        return image;
+        return image.Share();
     }
 
     private static int Unpremultiply(int code, int alpha) => Math.Min(255, (code * 255 + alpha / 2) / alpha);

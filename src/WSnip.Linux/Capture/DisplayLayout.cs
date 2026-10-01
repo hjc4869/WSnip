@@ -40,21 +40,31 @@ internal static class DisplayLayout
 
         double layout = scales.Max();
         var monitors = new MonitorCapture[displays.Count];
-        for (int i = 0; i < displays.Count; i++)
+        try
         {
-            SpaVideoInfo info = frames[i].Info;
-            monitors[i] = new MonitorCapture
+            for (int i = 0; i < displays.Count; i++)
             {
-                DeviceName = displays[i].DeviceName,
-                FriendlyName = displays[i].FriendlyName,
-                Bounds = new PixelRect((int)Math.Round(logical[i].X * layout), (int)Math.Round(logical[i].Y * layout), info.Width, info.Height),
-                LogicalBounds = logical[i],
-                Scaling = scales[i],
-                Color = DisplayColorInfo.Sdr,
-                Image = FrameConverter.ToLinear(frames[i], keepAlpha: false),
-            };
-        }
+                using PipeWireFrame frame = frames[i];
+                SpaVideoInfo info = frame.Info;
+                monitors[i] = new MonitorCapture
+                {
+                    DeviceName = displays[i].DeviceName,
+                    FriendlyName = displays[i].FriendlyName,
+                    Bounds = new PixelRect((int)Math.Round(logical[i].X * layout), (int)Math.Round(logical[i].Y * layout), info.Width, info.Height),
+                    LogicalBounds = logical[i],
+                    Scaling = scales[i],
+                    Color = DisplayColorInfo.Sdr,
+                    Image = FrameConverter.ToLinear(frame, keepAlpha: false),
+                };
+            }
 
-        return monitors;
+            return monitors;
+        }
+        catch
+        {
+            foreach (MonitorCapture? monitor in monitors)
+                monitor?.Dispose();
+            throw;
+        }
     }
 }

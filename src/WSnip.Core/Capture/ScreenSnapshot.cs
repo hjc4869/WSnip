@@ -27,7 +27,7 @@ public sealed record DisplayColorInfo(
 }
 
 /// <summary>One display captured in its native pixels.</summary>
-public sealed class MonitorCapture
+public sealed class MonitorCapture : IDisposable
 {
     public required string DeviceName { get; init; }
 
@@ -51,6 +51,8 @@ public sealed class MonitorCapture
 
     /// <summary>Composition pixels as captured: scRGB, where <see cref="DisplayColorInfo.WhiteScale"/> is SDR white.</summary>
     public required HdrImage Image { get; init; }
+
+    public void Dispose() => Image.Dispose();
 }
 
 /// <summary>A top-level window visible when the screen was captured.</summary>
@@ -59,7 +61,7 @@ public sealed class MonitorCapture
 public sealed record CapturedWindow(nint Handle, string Title, string? ProcessName, PixelRect Bounds);
 
 /// <summary>Everything captured at the moment a snip starts.</summary>
-public sealed class ScreenSnapshot
+public sealed class ScreenSnapshot : IDisposable
 {
     public required IReadOnlyList<MonitorCapture> Monitors { get; init; }
 
@@ -75,10 +77,16 @@ public sealed class ScreenSnapshot
 
     public CapturedWindow? WindowAt(int x, int y) =>
         Windows.FirstOrDefault(window => window.Bounds.Contains(x, y));
+
+    public void Dispose()
+    {
+        foreach (MonitorCapture monitor in Monitors)
+            monitor.Dispose();
+    }
 }
 
 /// <summary>A single window as the compositor holds it, independent of what covers it on screen.</summary>
-public sealed class WindowCapture
+public sealed class WindowCapture : IDisposable
 {
     public required CapturedWindow Window { get; init; }
 
@@ -89,4 +97,6 @@ public sealed class WindowCapture
     public required HdrImage Image { get; init; }
 
     public DateTimeOffset CapturedAt { get; init; } = DateTimeOffset.Now;
+
+    public void Dispose() => Image.Dispose();
 }

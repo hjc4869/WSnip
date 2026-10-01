@@ -38,7 +38,7 @@ public sealed record RenditionOptions
 }
 
 /// <summary>An 8-bit gain map image with its metadata.</summary>
-public sealed class GainMapImage
+public sealed class GainMapImage : IDisposable
 {
     public required int Width { get; init; }
 
@@ -47,13 +47,15 @@ public sealed class GainMapImage
     /// <summary>1 for a luminance gain map, 3 for RGB.</summary>
     public required int Channels { get; init; }
 
-    public required byte[] Pixels { get; init; }
+    public required PixelBuffer<byte> Pixels { get; init; }
 
     public required GainMapMetadata Metadata { get; init; }
+
+    public void Dispose() => Pixels.Dispose();
 }
 
 /// <summary>The SDR base of a snip and, when it holds HDR content, the gain map recovering it.</summary>
-public sealed class Rendition
+public sealed class Rendition : IDisposable
 {
     public required int Width { get; init; }
 
@@ -62,7 +64,7 @@ public sealed class Rendition
     public required ColorPrimaries Primaries { get; init; }
 
     /// <summary>Straight-alpha RGBA with the sRGB transfer function on <see cref="Primaries"/>.</summary>
-    public required byte[] Sdr { get; init; }
+    public required PixelBuffer<byte> Sdr { get; init; }
 
     public required bool HasAlpha { get; init; }
 
@@ -70,6 +72,12 @@ public sealed class Rendition
 
     /// <summary>Content peak relative to SDR white.</summary>
     public required float Peak { get; init; }
+
+    public void Dispose()
+    {
+        Sdr.Dispose();
+        GainMap?.Dispose();
+    }
 }
 
 /// <summary>Builds SDR renditions and ISO 21496-1 gain maps from relative HDR images.</summary>
@@ -78,20 +86,22 @@ public static class RenditionBuilder
     private const float GainOffset = 1f / 64;
     private const int BlockSize = 16;
 
-    public static Rendition Build(HdrImage image, HdrStatistics statistics, RenditionOptions options)
+    public static Rendition Build(HdrImage image, HdrStatistics statistics, RenditionOptions options,
+        CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         ColorPrimaries primaries = options.BasePrimaries ?? statistics.SuggestedBasePrimaries;
         bool flatten = options.FlattenAlpha;
         bool hasAlpha = !flatten && image.HasTransparency();
         var context = new PixelContext(primaries, flatten);
         ToneMapSettings toneMap = options.ToneMap;
         ToneCurve curve = ToneCurve.Create(toneMap, statistics.HasHdr ? statistics.RobustPeak : 1, (float)options.SdrWhiteNits);
-        float[]? weights = toneMap.Scope == SdrToneMapping.Adaptive && curve.IsActive ? BuildWeights(image) : null;
+        float[]? weights = toneMap.Scope == SdrToneMapping.Adaptive && curve.IsActive ? BuildWeights(image, cancellationToken) : null;
         float globalWeight = toneMap.Scope == SdrToneMapping.Global ? 1 : 0;
 
         int width = image.Width, height = image.Height;
         int blocksX = (width + BlockSize - 1) / BlockSize, blocksY = (height + BlockSize - 1) / BlockSize;
-        var sdr = new byte[width * height * 4];
+        using var sdr = new PixelBuffer<byte>(checked(width * height * 4));
         bool gainMap = options.BuildGainMap && statistics.HasHdr;
         int channels = options.MultichannelGainMap ? 3 : 1;
         var minimum = new float[] { float.MaxValue, float.MaxValue, float.MaxValue };
@@ -104,6 +114,7 @@ public static class RenditionBuilder
             Span<float> localMax = [float.MinValue, float.MinValue, float.MinValue];
             for (int y = first; y < last; y++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 ReadOnlySpan<Half> row = image.ReadRow(y);
                 Span<byte> target = sdr.AsSpan(y * width * 4, width * 4);
                 for (int x = 0; x < width; x++)
@@ -142,7 +153,7 @@ public static class RenditionBuilder
                     maximum[c] = MathF.Max(maximum[c], localMax[c]);
                 }
             }
-        });
+        }, cancellationToken);
 
         GainMapImage? map = null;
         if (gainMap)
@@ -166,7 +177,7 @@ public static class RenditionBuilder
                 var metadata = new GainMapMetadata(minimum, maximum, [1, 1, 1],
                     [GainOffset, GainOffset, GainOffset], [GainOffset, GainOffset, GainOffset],
                     0, headroom);
-                map = EncodeGainMap(image, context, sdr, metadata, channels, Math.Clamp(options.GainMapScale, 1, 8));
+                map = EncodeGainMap(image, context, sdr, metadata, channels, Math.Clamp(options.GainMapScale, 1, 8), cancellationToken);
             }
         }
 
@@ -175,26 +186,27 @@ public static class RenditionBuilder
             Width = width,
             Height = height,
             Primaries = primaries,
-            Sdr = sdr,
+            Sdr = sdr.Share(),
             HasAlpha = hasAlpha,
             GainMap = map,
             Peak = statistics.PeakComponent,
         };
     }
 
-    private static GainMapImage EncodeGainMap(HdrImage image, PixelContext context, byte[] sdr,
-        GainMapMetadata metadata, int channels, int scale)
+    private static GainMapImage EncodeGainMap(HdrImage image, PixelContext context, PixelBuffer<byte> sdr,
+        GainMapMetadata metadata, int channels, int scale, CancellationToken cancellationToken)
     {
         int width = image.Width, height = image.Height;
         int mapWidth = Math.Max(1, (width + scale - 1) / scale);
         int mapHeight = Math.Max(1, (height + scale - 1) / scale);
-        var pixels = new byte[mapWidth * mapHeight * channels];
+        using var pixels = new PixelBuffer<byte>(checked(mapWidth * mapHeight * channels));
         float[] min = metadata.GainMapMin, max = metadata.GainMapMax;
 
         ParallelBands(mapHeight, (first, last) =>
         {
             for (int my = first; my < last; my++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 for (int mx = 0; mx < mapWidth; mx++)
                 {
                     float hr = 0, hg = 0, hb = 0, sr = 0, sg = 0, sb = 0;
@@ -231,14 +243,14 @@ public static class RenditionBuilder
                     }
                 }
             }
-        });
+        }, cancellationToken);
 
         return new GainMapImage
         {
             Width = mapWidth,
             Height = mapHeight,
             Channels = channels,
-            Pixels = pixels,
+            Pixels = pixels.Share(),
             Metadata = metadata,
         };
     }
@@ -274,7 +286,7 @@ public static class RenditionBuilder
     /// Marks 16-pixel blocks that contain highlights, grows the marked area and feathers it, so
     /// that the highlight roll-off fades out over roughly a hundred pixels around HDR content.
     /// </summary>
-    private static float[] BuildWeights(HdrImage image)
+    private static float[] BuildWeights(HdrImage image, CancellationToken cancellationToken)
     {
         int blocksX = (image.Width + BlockSize - 1) / BlockSize;
         int blocksY = (image.Height + BlockSize - 1) / BlockSize;
@@ -283,6 +295,7 @@ public static class RenditionBuilder
         {
             for (int by = first; by < last; by++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 for (int y = by * BlockSize; y < Math.Min(image.Height, (by + 1) * BlockSize); y++)
                 {
                     ReadOnlySpan<Half> row = image.ReadRow(y);
@@ -294,7 +307,7 @@ public static class RenditionBuilder
                     }
                 }
             }
-        });
+        }, cancellationToken);
 
         float[] grown = Dilate(marked, blocksX, blocksY, 3);
         float[] blurred = BoxBlur(BoxBlur(grown, blocksX, blocksY, 3), blocksX, blocksY, 3);
@@ -375,8 +388,9 @@ public static class RenditionBuilder
         return result;
     }
 
-    private static void ParallelBands(int count, Action<int, int> band)
+    private static void ParallelBands(int count, Action<int, int> band, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         int workers = Math.Min(Environment.ProcessorCount, Math.Max(1, count / 16));
         if (workers <= 1)
         {
@@ -384,7 +398,7 @@ public static class RenditionBuilder
             return;
         }
 
-        Parallel.For(0, workers, new ParallelOptions { MaxDegreeOfParallelism = workers },
+        Parallel.For(0, workers, new ParallelOptions { MaxDegreeOfParallelism = workers, CancellationToken = cancellationToken },
             worker => band((int)((long)count * worker / workers), (int)((long)count * (worker + 1) / workers)));
     }
 

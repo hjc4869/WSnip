@@ -14,10 +14,11 @@ public static class JxlEncoder
     public static void WriteHdr(Stream output, PqImage image, int quality, int effort)
     {
         int channels = image.HasAlpha ? 4 : 3;
-        var samples = new ushort[image.Width * image.Height * channels];
+        using var packed = new PixelBuffer<byte>(checked(image.Width * image.Height * channels * 2));
+        Span<ushort> samples = MemoryMarshal.Cast<byte, ushort>(packed.Span);
         if (channels == 4)
         {
-            image.Pixels.CopyTo(samples, 0);
+            image.Pixels.Span.CopyTo(samples);
         }
         else
         {
@@ -29,30 +30,28 @@ public static class JxlEncoder
             }
         }
 
-        var picture = new PicturePlanes
+        using var picture = new PicturePlanes
         {
             Width = image.Width,
             Height = image.Height,
             Format = image.HasAlpha ? AVPixelFormat.AV_PIX_FMT_RGBA64LE : AVPixelFormat.AV_PIX_FMT_RGB48LE,
-            Planes = [MemoryMarshal.AsBytes(samples.AsSpan()).ToArray()],
+            Planes = [packed.Share()],
             Strides = [image.Width * channels * 2],
             Primaries = (AVColorPrimaries)ColorMath.CicpPrimaries(image.Primaries),
             Transfer = AVColorTransferCharacteristic.AVCOL_TRC_SMPTE2084,
             Matrix = AVColorSpace.AVCOL_SPC_RGB,
         };
+        packed.Dispose();
         output.Write(FfmpegStillEncoder.Encode(EncoderName, picture, Options(quality, effort)));
     }
 
     public static void WriteSdr(Stream output, Rendition rendition, int quality, int effort)
     {
-        byte[] samples;
-        if (rendition.HasAlpha)
+        using PixelBuffer<byte> samples = rendition.HasAlpha
+            ? rendition.Sdr.Share()
+            : new PixelBuffer<byte>(checked(rendition.Width * rendition.Height * 3));
+        if (!rendition.HasAlpha)
         {
-            samples = rendition.Sdr;
-        }
-        else
-        {
-            samples = new byte[rendition.Width * rendition.Height * 3];
             for (int p = 0; p < rendition.Width * rendition.Height; p++)
             {
                 samples[p * 3] = rendition.Sdr[p * 4];
@@ -61,17 +60,18 @@ public static class JxlEncoder
             }
         }
 
-        var picture = new PicturePlanes
+        using var picture = new PicturePlanes
         {
             Width = rendition.Width,
             Height = rendition.Height,
             Format = rendition.HasAlpha ? AVPixelFormat.AV_PIX_FMT_RGBA : AVPixelFormat.AV_PIX_FMT_RGB24,
-            Planes = [samples],
+            Planes = [samples.Share()],
             Strides = [rendition.Width * (rendition.HasAlpha ? 4 : 3)],
             Primaries = (AVColorPrimaries)ColorMath.CicpPrimaries(rendition.Primaries),
             Transfer = AVColorTransferCharacteristic.AVCOL_TRC_IEC61966_2_1,
             Matrix = AVColorSpace.AVCOL_SPC_RGB,
         };
+        samples.Dispose();
         output.Write(FfmpegStillEncoder.Encode(EncoderName, picture, Options(quality, effort)));
     }
 

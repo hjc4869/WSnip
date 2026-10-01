@@ -12,13 +12,14 @@ public interface IScreenCaptureService
 
     /// <summary>
     /// Captures all displays at the same moment, keeping HDR and wide color content. Windows that
-    /// belong to this process are left out of the window list.
+    /// belong to this process are left out of the window list. The caller disposes the snapshot.
     /// </summary>
     Task<ScreenSnapshot> CaptureAsync(CaptureOptions options, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Captures one window as the compositor holds it: the whole window even where other windows
     /// cover it, with its own transparency (such as rounded corners) instead of what lies behind.
+    /// The caller disposes the capture.
     /// </summary>
     Task<WindowCapture> CaptureWindowAsync(CapturedWindow window, CaptureOptions options, CancellationToken cancellationToken = default);
 }
@@ -165,35 +166,50 @@ public interface IClipboardService
 }
 
 /// <summary>An SDR image in the forms other apps paste.</summary>
-public sealed class ClipboardImage
+public sealed class ClipboardImage : IDisposable
 {
     public required int Width { get; init; }
 
     public required int Height { get; init; }
 
     /// <summary>Straight-alpha RGBA in sRGB.</summary>
-    public required byte[] Rgba { get; init; }
+    public required PixelBuffer<byte> Rgba { get; init; }
 
     public required bool HasAlpha { get; init; }
 
     /// <summary>The same image as PNG, which keeps transparency.</summary>
-    public required byte[] Png { get; init; }
+    public required SkiaSharp.SKData Png { get; init; }
 
     /// <summary>Prepares an sRGB rendition, encoding the PNG form.</summary>
     public static ClipboardImage FromRendition(Rendition rendition)
     {
         if (rendition.Primaries != ColorPrimaries.Bt709)
             throw new ArgumentException("The clipboard takes sRGB images.", nameof(rendition));
-        using var png = new MemoryStream();
-        PngWriter.WriteSdr(png, rendition);
-        return new ClipboardImage
+        SkiaSharp.SKData png = SkiaImages.WithSdrPixmap(rendition, pixmap =>
+            pixmap.Encode(new SkiaSharp.SKPngEncoderOptions(SkiaSharp.SKPngEncoderFilterFlags.AllFilters, 6))
+            ?? throw new InvalidOperationException(WSnip.Core.Strings.AppStrings.PngEncodingFailed));
+        try
         {
-            Width = rendition.Width,
-            Height = rendition.Height,
-            Rgba = rendition.Sdr,
-            HasAlpha = rendition.HasAlpha,
-            Png = png.ToArray(),
-        };
+            return new ClipboardImage
+            {
+                Width = rendition.Width,
+                Height = rendition.Height,
+                Rgba = rendition.Sdr.Share(),
+                HasAlpha = rendition.HasAlpha,
+                Png = png,
+            };
+        }
+        catch
+        {
+            png.Dispose();
+            throw;
+        }
+    }
+
+    public void Dispose()
+    {
+        Rgba.Dispose();
+        Png.Dispose();
     }
 }
 

@@ -1,5 +1,3 @@
-using System.Runtime.InteropServices;
-
 namespace WSnip.Core.Imaging;
 
 /// <summary>
@@ -10,36 +8,63 @@ namespace WSnip.Core.Imaging;
 /// one unit is diffuse white or 80 nits depends on the producer; see <see cref="Snip"/> and
 /// <see cref="Capture.MonitorCapture"/>. Alpha is straight (not premultiplied).
 /// </remarks>
-public sealed class HdrImage
+public sealed class HdrImage : IDisposable
 {
     public const int Channels = 4;
+    private readonly PixelBuffer<Half> pixels;
+    private readonly int offset;
 
     public HdrImage(int width, int height)
     {
         if (width <= 0 || height <= 0)
             throw new ArgumentOutOfRangeException(nameof(width), "Image dimensions must be positive.");
-        if ((long)width * height * Channels > Array.MaxLength)
+        if ((long)width * height > int.MaxValue / (Channels * 2))
             throw new ArgumentOutOfRangeException(nameof(width), "The image is too large.");
 
         Width = width;
         Height = height;
-        Pixels = GC.AllocateUninitializedArray<Half>(width * height * Channels);
+        RowStride = width * Channels;
+        pixels = new PixelBuffer<Half>(width * height * Channels);
     }
+
+    private HdrImage(int width, int height, int rowStride, int offset, PixelBuffer<Half> pixels) =>
+        (Width, Height, RowStride, this.offset, this.pixels) = (width, height, rowStride, offset, pixels);
 
     public int Width { get; }
 
     public int Height { get; }
 
-    /// <summary>Interleaved R, G, B, A samples, row by row without padding.</summary>
-    public Half[] Pixels { get; }
+    /// <summary>Interleaved samples of a tightly packed image. Use <see cref="Row"/> for cropped views.</summary>
+    public Span<Half> Pixels => RowStride == RowLength
+        ? pixels.AsSpan(offset, checked(RowLength * Height))
+        : throw new InvalidOperationException("A cropped view must be accessed row by row.");
+
+    public nint Pointer => pixels.Pointer + offset * 2;
+
+    public int ByteLength => checked(RowLength * Height * 2);
+
+    public bool IsDisposed => pixels.IsDisposed;
 
     public int RowLength => Width * Channels;
 
-    public Span<Half> Row(int y) => Pixels.AsSpan(y * RowLength, RowLength);
+    /// <summary>Distance between rows, in half-float samples; a view keeps its parent's stride.</summary>
+    public int RowStride { get; }
 
-    public ReadOnlySpan<Half> ReadRow(int y) => Pixels.AsSpan(y * RowLength, RowLength);
+    public Span<Half> Row(int y)
+    {
+        if ((uint)y >= (uint)Height)
+            throw new ArgumentOutOfRangeException(nameof(y));
+        return pixels.AsSpan(checked(offset + y * RowStride), RowLength);
+    }
 
-    public Span<byte> AsBytes() => MemoryMarshal.AsBytes(Pixels.AsSpan());
+    public ReadOnlySpan<Half> ReadRow(int y) => Row(y);
+
+    public Span<byte> AsBytes() => System.Runtime.InteropServices.MemoryMarshal.AsBytes(Pixels);
+
+    /// <summary>A separately disposable reference to the same pixels; no pixel copy is made.</summary>
+    public HdrImage Share() => new(Width, Height, RowStride, offset, pixels.Share());
+
+    public void Dispose() => pixels.Dispose();
 
     public void Fill(float red, float green, float blue, float alpha)
     {
@@ -58,22 +83,38 @@ public sealed class HdrImage
 
     public HdrImage Clone()
     {
-        var copy = new HdrImage(Width, Height);
-        Pixels.AsSpan().CopyTo(copy.Pixels);
-        return copy;
+        using var copy = new HdrImage(Width, Height);
+        for (int y = 0; y < Height; y++)
+            ReadRow(y).CopyTo(copy.Row(y));
+        return copy.Share();
+    }
+
+    /// <summary>
+    /// A separately owned view without copying pixels. Used for immutable editor crop history;
+    /// undo keeps the same backing allocation, not a full image for every crop.
+    /// </summary>
+    public HdrImage View(PixelRect rect)
+    {
+        ValidateCrop(rect);
+        return new HdrImage(rect.Width, rect.Height, RowStride,
+            checked(offset + rect.Y * RowStride + rect.X * Channels), pixels.Share());
     }
 
     /// <summary>Copies a rectangle that must lie within the image.</summary>
     public HdrImage Crop(PixelRect rect)
     {
-        if (rect.X < 0 || rect.Y < 0 || rect.Width <= 0 || rect.Height <= 0 ||
-            rect.Right > Width || rect.Bottom > Height)
-            throw new ArgumentOutOfRangeException(nameof(rect));
-
-        var result = new HdrImage(rect.Width, rect.Height);
+        ValidateCrop(rect);
+        using var result = new HdrImage(rect.Width, rect.Height);
         for (int y = 0; y < rect.Height; y++)
-            Pixels.AsSpan(((rect.Y + y) * Width + rect.X) * Channels, rect.Width * Channels).CopyTo(result.Row(y));
-        return result;
+            ReadRow(rect.Y + y).Slice(rect.X * Channels, rect.Width * Channels).CopyTo(result.Row(y));
+        return result.Share();
+    }
+
+    private void ValidateCrop(PixelRect rect)
+    {
+        if (rect.X < 0 || rect.Y < 0 || rect.Width <= 0 || rect.Height <= 0 ||
+            rect.X > Width - rect.Width || rect.Y > Height - rect.Height)
+            throw new ArgumentOutOfRangeException(nameof(rect));
     }
 
     /// <summary>Multiplies the color channels by a constant, leaving alpha untouched.</summary>

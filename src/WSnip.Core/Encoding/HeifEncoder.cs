@@ -91,10 +91,10 @@ public static class HeifEncoder
         public HeifItem EncodeColor(ushort id, Rendition rendition, int quality, int primariesCode)
         {
             (int codedWidth, int codedHeight) = CodedSize(rendition.Width, rendition.Height);
-            byte[] rgba = Pad(rendition.Sdr, rendition.Width, rendition.Height, 4, codedWidth, codedHeight);
+            using PixelBuffer<byte> rgba = Pad(rendition.Sdr, rendition.Width, rendition.Height, 4, codedWidth, codedHeight);
             bool subsample = !FullChroma;
-            (byte[][] planes, int[] strides) = YuvConverter.FromRgba(rgba, codedWidth, codedHeight, subsample, YuvMatrix.Bt709);
-            var picture = new PicturePlanes
+            (PixelBuffer<byte>[] planes, int[] strides) = YuvConverter.FromRgba(rgba, codedWidth, codedHeight, subsample, YuvMatrix.Bt709);
+            using var picture = new PicturePlanes
             {
                 Width = codedWidth,
                 Height = codedHeight,
@@ -106,6 +106,7 @@ public static class HeifEncoder
                 Matrix = AVColorSpace.AVCOL_SPC_BT709,
                 Range = AVColorRange.AVCOL_RANGE_JPEG,
             };
+            rgba.Dispose();
 
             HeifItem item = Encode(id, picture, quality, "Color", hidden: false);
             item.Properties.Add(new HeifProperty(HeifWriter.Pixi(3, 8), false));
@@ -117,12 +118,12 @@ public static class HeifEncoder
         public HeifItem EncodeGainMap(ushort id, GainMapImage gainMap, int quality)
         {
             (int codedWidth, int codedHeight) = CodedSize(gainMap.Width, gainMap.Height);
-            byte[] samples = Pad(gainMap.Pixels, gainMap.Width, gainMap.Height, gainMap.Channels, codedWidth, codedHeight);
+            using PixelBuffer<byte> samples = Pad(gainMap.Pixels, gainMap.Width, gainMap.Height, gainMap.Channels, codedWidth, codedHeight);
             PicturePlanes picture;
             int matrix;
             if (gainMap.Channels == 3 && FullChroma)
             {
-                (byte[][] planes, int[] strides) = YuvConverter.GbrFromRgb(samples, codedWidth, codedHeight);
+                (PixelBuffer<byte>[] planes, int[] strides) = YuvConverter.GbrFromRgb(samples, codedWidth, codedHeight);
                 picture = new PicturePlanes
                 {
                     Width = codedWidth,
@@ -141,7 +142,7 @@ public static class HeifEncoder
                     Width = codedWidth,
                     Height = codedHeight,
                     Format = AVPixelFormat.AV_PIX_FMT_GRAY8,
-                    Planes = [samples],
+                    Planes = [samples.Share()],
                     Strides = [codedWidth],
                     Matrix = AVColorSpace.AVCOL_SPC_BT470BG,
                 };
@@ -149,8 +150,8 @@ public static class HeifEncoder
             }
             else
             {
-                byte[] rgba = YuvConverter.ToRgba(samples, codedWidth, codedHeight, gainMap.Channels);
-                (byte[][] planes, int[] strides) = YuvConverter.FromRgba(rgba, codedWidth, codedHeight, true, YuvMatrix.Bt601);
+                using PixelBuffer<byte> rgba = YuvConverter.ToRgba(samples, codedWidth, codedHeight, gainMap.Channels);
+                (PixelBuffer<byte>[] planes, int[] strides) = YuvConverter.FromRgba(rgba, codedWidth, codedHeight, true, YuvMatrix.Bt601);
                 picture = new PicturePlanes
                 {
                     Width = codedWidth,
@@ -163,6 +164,8 @@ public static class HeifEncoder
                 matrix = ColorMath.CicpMatrixBt601;
             }
 
+            using PicturePlanes ownedPicture = picture;
+            samples.Dispose();
             HeifItem item = Encode(id, picture, quality, "GMap", hidden: true);
             int channels = picture.Format == AVPixelFormat.AV_PIX_FMT_GRAY8 ? 1 : 3;
             item.Properties.Add(new HeifProperty(HeifWriter.Pixi(channels, 8), false));
@@ -277,20 +280,20 @@ public static class HeifEncoder
         private static int Av1Quantizer(int quality) => ((100 - quality) * 63 + 50) / 100;
     }
 
-    private static byte[] Pad(byte[] samples, int width, int height, int channels, int codedWidth, int codedHeight)
+    private static PixelBuffer<byte> Pad(PixelBuffer<byte> samples, int width, int height, int channels, int codedWidth, int codedHeight)
     {
         if (width == codedWidth && height == codedHeight)
-            return samples;
-        var padded = new byte[codedWidth * codedHeight * channels];
+            return samples.Share();
+        using var padded = new PixelBuffer<byte>(checked(codedWidth * codedHeight * channels));
         for (int y = 0; y < codedHeight; y++)
         {
             int sourceRow = Math.Min(y, height - 1) * width * channels;
             int targetRow = y * codedWidth * channels;
-            Buffer.BlockCopy(samples, sourceRow, padded, targetRow, width * channels);
+            samples.AsSpan(sourceRow, width * channels).CopyTo(padded.AsSpan(targetRow, width * channels));
             for (int x = width; x < codedWidth; x++)
-                Buffer.BlockCopy(samples, sourceRow + (width - 1) * channels, padded, targetRow + x * channels, channels);
+                samples.AsSpan(sourceRow + (width - 1) * channels, channels).CopyTo(padded.AsSpan(targetRow + x * channels, channels));
         }
 
-        return padded;
+        return padded.Share();
     }
 }

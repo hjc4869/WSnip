@@ -113,28 +113,34 @@ public static class SnipExporter
     public static void Export(Stream output, Snip snip, SnipFormat format, ExportOptions options)
     {
         bool hdr = options.PreserveHdr && snip.Statistics.HasHdr;
+        if (format == SnipFormat.PngHdr || (format == SnipFormat.JpegXl && hdr))
+        {
+            using PqImage pq = PqImageBuilder.Build(snip.Image, flattenAlpha: false);
+            if (format == SnipFormat.PngHdr)
+                PngWriter.WriteHdr(output, pq);
+            else
+                JxlEncoder.WriteHdr(output, pq, options.Quality, options.JpegXlEffort);
+            return;
+        }
+
+        bool flatten = format is SnipFormat.Jpeg or SnipFormat.Heic or SnipFormat.Avif;
+        using Rendition rendition = Build(snip, options, flatten, gainMap: flatten && hdr);
         switch (format)
         {
             case SnipFormat.Png:
-                PngWriter.WriteSdr(output, Build(snip, options, flatten: false, gainMap: false));
-                break;
-            case SnipFormat.PngHdr:
-                PngWriter.WriteHdr(output, PqImageBuilder.Build(snip.Image, flattenAlpha: false));
+                PngWriter.WriteSdr(output, rendition);
                 break;
             case SnipFormat.Jpeg:
-                UltraHdrJpegWriter.Write(output, Build(snip, options, flatten: true, gainMap: hdr), options.Quality, options.GainMapQuality);
+                UltraHdrJpegWriter.Write(output, rendition, options.Quality, options.GainMapQuality);
                 break;
             case SnipFormat.Heic:
-                HeifEncoder.Write(output, Build(snip, options, flatten: true, gainMap: hdr), HeifCodec.Hevc, options.Quality, options.GainMapQuality);
+                HeifEncoder.Write(output, rendition, HeifCodec.Hevc, options.Quality, options.GainMapQuality);
                 break;
             case SnipFormat.Avif:
-                HeifEncoder.Write(output, Build(snip, options, flatten: true, gainMap: hdr), HeifCodec.Av1, options.Quality, options.GainMapQuality);
+                HeifEncoder.Write(output, rendition, HeifCodec.Av1, options.Quality, options.GainMapQuality);
                 break;
             case SnipFormat.JpegXl:
-                if (hdr)
-                    JxlEncoder.WriteHdr(output, PqImageBuilder.Build(snip.Image, flattenAlpha: false), options.Quality, options.JpegXlEffort);
-                else
-                    JxlEncoder.WriteSdr(output, Build(snip, options, flatten: false, gainMap: false), options.Quality, options.JpegXlEffort);
+                JxlEncoder.WriteSdr(output, rendition, options.Quality, options.JpegXlEffort);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(format), format, null);

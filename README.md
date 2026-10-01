@@ -43,7 +43,8 @@ only supported on Windows.
     plus linear scRGB), and luminance in multiples of SDR white and in nits at the capturing
     display's SDR white. It can be turned off in settings.
   - On Windows, closing the window returns WSnip to the tray and discards the snip, which was
-    already copied or saved as the settings ask.
+    already copied or saved as the settings ask. Its pixels, undo history and window surfaces are
+    released; reopening creates an empty editor in the previous position.
 - **Delivery:**
   - Snips are copied to the clipboard and saved to `Pictures\Screenshots` automatically, using
     Snipping Tool file names ("Screenshot 2026-09-30 101530.png").
@@ -114,6 +115,20 @@ is missing is hidden, and automatic saves fall back to PNG or UltraHDR JPEG.
 
 The gain-map output has been checked against libavif and FFmpeg decoders, and against Light
 Player's decoders.
+
+### Image memory
+
+Uncompressed capture, rendition and encoder pixels use disposable, reference-counted native
+buffers rather than large managed arrays. Display images share that storage with Skia; crop undo
+states are views of the same pixels. A reference retained by an active render or export operation
+keeps its pixels valid until that operation finishes, even if the editor closes meanwhile.
+
+Snapshots are released before clipboard/export delivery. Confirming a new selection retires the
+previous document before composing the replacement; cancelling keeps it. Successfully delivered
+background snips are not retained in a hidden editor. Closing to the tray releases the real editor
+window as well as its image; screenshot cleanup does not depend on a forced garbage collection.
+GPU/driver caches and OS-owned clipboard data have separate lifetimes, so process working set
+need not fall by exactly the released pixel byte count.
 
 ## Linux
 

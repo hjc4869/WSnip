@@ -60,11 +60,19 @@ public sealed class KWinScreenCaptureService : IScreenCaptureService, IDisposabl
             DateTimeOffset capturedAt = DateTimeOffset.Now;
             IReadOnlyList<PipeWireFrame> frames =
                 await PipeWireFrameReader.ReadAsync(null, streams.Select(stream => stream.Node).ToArray(), alpha: false, Timeout, cancellationToken).ConfigureAwait(false);
-            SharedDisplay[] displays = streams.Select(stream => stream.Display).ToArray();
-            MonitorCapture[] monitors = await Task.Run(() => DisplayLayout.CreateMonitors(displays, frames), cancellationToken).ConfigureAwait(false);
-            AppLog.Information("Capture", $"Captured {monitors.Length} display(s) through KWin in {watch.ElapsedMilliseconds} ms: " +
-                string.Join("; ", monitors.Select((m, i) => $"{m.DeviceName} {m.Bounds} logical {m.LogicalBounds} {frames[i].Info.Format}")));
-            return new ScreenSnapshot { Monitors = monitors, CapturedAt = capturedAt };
+            try
+            {
+                SharedDisplay[] displays = streams.Select(stream => stream.Display).ToArray();
+                MonitorCapture[] monitors = await Task.Run(() => DisplayLayout.CreateMonitors(displays, frames), cancellationToken).ConfigureAwait(false);
+                AppLog.Information("Capture", $"Captured {monitors.Length} display(s) through KWin in {watch.ElapsedMilliseconds} ms: " +
+                    string.Join("; ", monitors.Select((m, i) => $"{m.DeviceName} {m.Bounds} logical {m.LogicalBounds} {frames[i].Info.Format}")));
+                return new ScreenSnapshot { Monitors = monitors, CapturedAt = capturedAt };
+            }
+            finally
+            {
+                foreach (PipeWireFrame frame in frames)
+                    frame.Dispose();
+            }
         }
     }
 
@@ -78,7 +86,7 @@ public sealed class KWinScreenCaptureService : IScreenCaptureService, IDisposabl
             ?? throw new InvalidOperationException(string.Format(AppStrings.KWinUnavailable, KWinScreencast.Interface));
         uint node = await Task.Run(() => kwin.StreamWindow(uuid, options.IncludeCursor, Timeout), cancellationToken).ConfigureAwait(false);
         DateTimeOffset capturedAt = DateTimeOffset.Now;
-        PipeWireFrame frame = (await PipeWireFrameReader.ReadAsync(null, [node], alpha: true, Timeout, cancellationToken).ConfigureAwait(false))[0];
+        using PipeWireFrame frame = (await PipeWireFrameReader.ReadAsync(null, [node], alpha: true, Timeout, cancellationToken).ConfigureAwait(false))[0];
         HdrImage image = await Task.Run(() => FrameConverter.ToLinear(frame, keepAlpha: true), cancellationToken).ConfigureAwait(false);
         AppLog.Information("Capture", $"Captured the window '{window.Title}' through KWin: {image.Width}x{image.Height} ({frame.Info.Format}) in {watch.ElapsedMilliseconds} ms.");
         return new WindowCapture

@@ -67,7 +67,9 @@ internal static class Program
     {
         AppBuilder builder = AppBuilder.Configure<App.App>()
             .UsePlatformDetect()
-            .With(new SkiaOptions { MaxGpuResourceSizeBytes = 512 * 1024 * 1024 })
+            // A 4K FP16 texture with mipmaps plus window surfaces fits without upload churn,
+            // while avoiding the old half-GiB cache of retired screenshot textures.
+            .With(new SkiaOptions { MaxGpuResourceSizeBytes = 128 * 1024 * 1024 })
             .WithInterFont()
             .LogToTrace();
 #if WINDOWS

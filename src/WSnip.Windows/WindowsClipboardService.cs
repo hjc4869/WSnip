@@ -26,7 +26,7 @@ public sealed unsafe class WindowsClipboardService : IClipboardService
         try
         {
             dib = CreateDib(image);
-            png = CreateGlobal(image.Png);
+            png = CreateGlobal(image.Png.AsSpan());
             Open(ownerWindow);
             try
             {
@@ -80,6 +80,11 @@ public sealed unsafe class WindowsClipboardService : IClipboardService
         long stride = (long)width * 4;
         nint memory = Allocate((nuint)(sizeof(BitmapInfoHeader) + stride * height));
         byte* target = (byte*)Native.GlobalLock(memory);
+        if (target == null)
+        {
+            Native.GlobalFree(memory);
+            throw new Win32Exception();
+        }
         try
         {
             *(BitmapInfoHeader*)target = new BitmapInfoHeader
@@ -93,7 +98,8 @@ public sealed unsafe class WindowsClipboardService : IClipboardService
             };
 
             byte* pixels = target + sizeof(BitmapInfoHeader);
-            fixed (byte* source = image.Rgba)
+            using var retained = image.Rgba.Share();
+            fixed (byte* source = retained)
             {
                 for (int y = 0; y < height; y++)
                 {
@@ -110,19 +116,32 @@ public sealed unsafe class WindowsClipboardService : IClipboardService
                     }
                 }
             }
+            return memory;
+        }
+        catch
+        {
+            Native.GlobalUnlock(memory);
+            Native.GlobalFree(memory);
+            memory = 0;
+            throw;
         }
         finally
         {
-            Native.GlobalUnlock(memory);
+            if (memory != 0)
+                Native.GlobalUnlock(memory);
         }
-
-        return memory;
     }
 
     private static nint CreateGlobal(ReadOnlySpan<byte> data)
     {
         nint memory = Allocate((nuint)data.Length);
-        data.CopyTo(new Span<byte>(Native.GlobalLock(memory), data.Length));
+        void* target = Native.GlobalLock(memory);
+        if (target == null)
+        {
+            Native.GlobalFree(memory);
+            throw new Win32Exception();
+        }
+        data.CopyTo(new Span<byte>(target, data.Length));
         Native.GlobalUnlock(memory);
         return memory;
     }

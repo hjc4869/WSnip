@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using LightStudio.Logging;
 using Microsoft.Win32.SafeHandles;
+using WSnip.Core.Imaging;
 using WSnip.Core.Strings;
 using WSnip.Linux.Interop;
 using static WSnip.Linux.Interop.PipeWire;
@@ -9,7 +10,10 @@ using static WSnip.Linux.Interop.PipeWire;
 namespace WSnip.Linux.Capture;
 
 /// <summary>One frame read from a stream: tightly packed rows of 8-bit pixels.</summary>
-internal sealed record PipeWireFrame(uint NodeId, SpaVideoInfo Info, byte[] Pixels);
+internal sealed record PipeWireFrame(uint NodeId, SpaVideoInfo Info, PixelBuffer<byte> Pixels) : IDisposable
+{
+    public void Dispose() => Pixels.Dispose();
+}
 
 /// <summary>
 /// Reads the first complete frame of each of a set of PipeWire streams, over a connection the
@@ -30,6 +34,7 @@ internal static class PipeWireFrameReader
         (nint loop, nint context) = StartLoop();
         var streams = new List<CaptureStream>(nodes.Count);
         nint core = 0;
+        bool delivered = false;
         try
         {
             pw_thread_loop_lock(loop);
@@ -82,13 +87,19 @@ internal static class PipeWireFrameReader
                 await done.ConfigureAwait(false);
             }
 
-            return frames.Select(frame => frame.Result).ToArray();
+            PipeWireFrame[] result = frames.Select(frame => frame.Result).ToArray();
+            delivered = true;
+            return result;
         }
         finally
         {
             pw_thread_loop_lock(loop);
             foreach (CaptureStream stream in streams)
+            {
                 stream.Destroy();
+                if (!delivered && stream.Frame.Task.IsCompletedSuccessfully)
+                    stream.Frame.Task.Result.Dispose();
+            }
             if (core != 0)
                 pw_core_disconnect(core);
             pw_thread_loop_unlock(loop);
@@ -166,7 +177,10 @@ internal static class PipeWireFrameReader
         try
         {
             if (!stream.Frame.Task.IsCompleted && stream.Info is { } info && TryCopy(buffer->Buffer, info) is { } pixels)
-                stream.Frame.TrySetResult(new PipeWireFrame(stream.Node, info, pixels));
+            {
+                if (!stream.Frame.TrySetResult(new PipeWireFrame(stream.Node, info, pixels)))
+                    pixels.Dispose();
+            }
         }
         catch (Exception exception)
         {
@@ -180,7 +194,7 @@ internal static class PipeWireFrameReader
     }
 
     /// <summary>Copies a buffer that holds a whole frame; buffers that carry only a pointer update are skipped.</summary>
-    private static unsafe byte[]? TryCopy(SpaBuffer* buffer, SpaVideoInfo info)
+    private static unsafe PixelBuffer<byte>? TryCopy(SpaBuffer* buffer, SpaVideoInfo info)
     {
         if (buffer == null || buffer->DataCount < 1)
             return null;
@@ -203,7 +217,7 @@ internal static class PipeWireFrameReader
         if (stride < row || offset + stride * (info.Height - 1) + row > plane->MaxSize)
             return null;
 
-        byte[] pixels = GC.AllocateUninitializedArray<byte>(row * info.Height);
+        using var pixels = new PixelBuffer<byte>(checked(row * info.Height));
         byte* source = (byte*)plane->Data + offset;
         fixed (byte* target = pixels)
         {
@@ -211,7 +225,7 @@ internal static class PipeWireFrameReader
                 Buffer.MemoryCopy(source + y * stride, target + (long)y * row, row, row);
         }
 
-        return pixels;
+        return pixels.Share();
     }
 
     /// <summary>A stream and the native memory PipeWire keeps a reference to while it exists.</summary>

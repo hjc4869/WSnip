@@ -38,6 +38,8 @@ public sealed class AppController : IDisposable
     /// <summary>The shortcuts of the settings, with why any of them is not in effect.</summary>
     private readonly List<(SnipMode? Mode, HotkeyGesture Gesture, string? Error)> hotkeys = [];
     private EditorWindow? editor;
+    private (PixelPoint Position, Size Size)? editorBounds;
+    private WindowState editorState;
     private SettingsWindow? settingsWindow;
     private TrayIcon? tray;
     private IDisposable? windowClosedSubscription;
@@ -45,6 +47,8 @@ public sealed class AppController : IDisposable
     private bool capturing;
     private bool exiting;
     private bool hotkeysPaused;
+    private int editorOperations;
+    private bool disposed;
 
     public AppController(Application app, PlatformServices platform, SettingsStore store, IClassicDesktopStyleApplicationLifetime lifetime)
     {
@@ -116,7 +120,7 @@ public sealed class AppController : IDisposable
     /// <remarks>Whole-window snips leave the screen live and wait for a click on a window instead.</remarks>
     public async Task StartSnipAsync(SnipMode? mode = null, int? delaySeconds = null)
     {
-        if (capturing)
+        if (capturing || exiting)
             return;
         capturing = true;
         var excluded = new List<nint>();
@@ -156,9 +160,9 @@ public sealed class AppController : IDisposable
             else if (hidden is { Count: > 0 })
                 await Task.Delay(HiddenWindowsSettle);
 
-            ScreenSnapshot snapshot = await platform.Capture.CaptureAsync(new CaptureOptions { IncludeCursor = Settings.IncludeCursor });
+            using ScreenSnapshot snapshot = await platform.Capture.CaptureAsync(new CaptureOptions { IncludeCursor = Settings.IncludeCursor });
             platform.Windows.TryGetCursorPosition(out int x, out int y);
-            var session = new OverlaySession(snapshot, initialMode, placeWindows: platform.Windows.CanPlaceWindows);
+            using var session = new OverlaySession(snapshot, initialMode, placeWindows: platform.Windows.CanPlaceWindows);
             SnipSelection? selection = await session.ShowAsync(new PixelPoint(x, y));
 
             // A mode picked on the overlay's own bar becomes the default for the next snip.
@@ -166,15 +170,20 @@ public sealed class AppController : IDisposable
                 UpdateSettings(Settings.With(s => s.Mode = session.Mode));
             if (selection is null)
             {
+                snapshot.Dispose();
                 // Choosing a whole window on the bar leaves the frozen screen for the live picker.
                 if (session.Mode == SnipMode.WholeWindow)
                     await SnipWholeWindowAsync(delaySeconds: 0);
                 return;
             }
 
-            Snip snip = await Task.Run(() => SnipComposer.Compose(snapshot, selection.Region, selection.Outline));
+            // A confirmed selection replaces the old document before composition and encoding.
+            // Cancellation still preserves it, but its pixels never overlap a new delivery.
+            editor?.Clear();
+            using Snip snip = await Task.Run(() => SnipComposer.Compose(snapshot, selection.Region, selection.Outline));
+            snapshot.Dispose();
             AppLog.Information("Snip", $"{selection.Mode} snip {snip.Width}x{snip.Height}: {snip.Statistics}");
-            await DeliverAsync(snip);
+            await DeliverAsync(snip, restoreEditor: hidden?.Any(entry => ReferenceEquals(entry.Window, editor)) == true);
         }
         catch (OperationCanceledException exception)
         {
@@ -193,6 +202,8 @@ public sealed class AppController : IDisposable
             if (hidden is not null)
                 RestoreWindows(hidden);
             capturing = false;
+            if (exiting)
+                (platform.Capture as IDisposable)?.Dispose();
             ExitIfIdle();
         }
     }
@@ -303,7 +314,11 @@ public sealed class AppController : IDisposable
     public async Task CopyAsync(Snip snip)
     {
         ToneMapSettings toneMap = Settings.DefaultToneMap();
-        ClipboardImage image = await Task.Run(() => ClipboardImage.FromRendition(SnipExporter.BuildSdr(snip, toneMap, flattenAlpha: false)));
+        using ClipboardImage image = await Task.Run(() =>
+        {
+            using Rendition rendition = SnipExporter.BuildSdr(snip, toneMap, flattenAlpha: false);
+            return ClipboardImage.FromRendition(rendition);
+        });
         if (platform.Clipboard is { } system)
         {
             nint owner = EnsureEditor().TryGetPlatformHandle()?.Handle ?? 0;
@@ -313,7 +328,8 @@ public sealed class AppController : IDisposable
 
         // The windowing backend serves the image as PNG to apps that paste, so it stays alive while it is on the clipboard.
         IClipboard clipboard = EnsureEditor().Clipboard ?? throw new InvalidOperationException(AppStrings.ClipboardUnavailable);
-        var bitmap = new Bitmap(new MemoryStream(image.Png));
+        using Stream png = image.Png.AsStream();
+        var bitmap = new Bitmap(png);
         try
         {
             await clipboard.SetBitmapAsync(bitmap);
@@ -350,6 +366,8 @@ public sealed class AppController : IDisposable
 
     public void Exit()
     {
+        if (exiting)
+            return;
         exiting = true;
         Dispose();
         lifetime.Shutdown();
@@ -357,6 +375,11 @@ public sealed class AppController : IDisposable
 
     public void Dispose()
     {
+        if (disposed)
+            return;
+        disposed = true;
+        editor?.Clear();
+        settingsWindow?.Close();
         windowClosedSubscription?.Dispose();
         windowClosedSubscription = null;
         tray?.Dispose();
@@ -365,12 +388,35 @@ public sealed class AppController : IDisposable
         clipboardBitmap = null;
         platform.Hotkeys.Dispose();
         platform.SingleInstance.Dispose();
-        (platform.Capture as IDisposable)?.Dispose();
+        // Do not tear down a D3D/PipeWire device or its semaphore while a capture owns it.
+        // The capture's finally releases it if shutdown interrupts an operation.
+        if (!capturing)
+            (platform.Capture as IDisposable)?.Dispose();
+    }
+
+    /// <summary>Keeps Linux alive until an accepted copy/save finishes, even after its window closes.</summary>
+    internal IDisposable BeginEditorOperation()
+    {
+        editorOperations++;
+        return new EditorOperation(this);
+    }
+
+    private sealed class EditorOperation(AppController controller) : IDisposable
+    {
+        private AppController? owner = controller;
+
+        public void Dispose()
+        {
+            if (Interlocked.Exchange(ref owner, null) is not { } current)
+                return;
+            current.editorOperations--;
+            current.ExitIfIdle();
+        }
     }
 
     private void ExitIfIdle()
     {
-        if (!OperatingSystem.IsWindows() && !exiting && !capturing && !lifetime.Windows.Any(window => window.IsVisible))
+        if (!OperatingSystem.IsWindows() && !exiting && !capturing && editorOperations == 0 && !lifetime.Windows.Any(window => window.IsVisible))
             Exit();
     }
 
@@ -404,7 +450,12 @@ public sealed class AppController : IDisposable
             RestoreWindows(hidden);
         }
 
-        Snip snip = await Task.Run(() => SnipComposer.FromWindow(capture));
+        using WindowCapture ownedCapture = capture;
+        // The portal asks for the window during CaptureWindowAsync, not PickAsync. Only retire
+        // the old snip after capture succeeds so declining that prompt never loses edits.
+        editor?.Clear();
+        using Snip snip = await Task.Run(() => SnipComposer.FromWindow(capture));
+        capture.Dispose();
         AppLog.Information("Snip", $"Whole window snip of '{window.Title}' {snip.Width}x{snip.Height}: {snip.Statistics}");
         await DeliverAsync(snip);
     }
@@ -412,6 +463,7 @@ public sealed class AppController : IDisposable
     /// <summary>Hides the app's visible windows, returning them in opening order with their owners.</summary>
     private List<(Window Window, Window? Owner)> HideWindows()
     {
+        editor?.PrepareForCapture();
         List<(Window Window, Window? Owner)> hidden = lifetime.Windows
             .Where(w => w.IsVisible)
             .Select(w => (w, w.Owner as Window))
@@ -432,16 +484,15 @@ public sealed class AppController : IDisposable
         {
             if (window.IsVisible || !lifetime.Windows.Contains(window))
                 continue;
-            if (owner is { IsVisible: true })
+            if (owner is { IsVisible: true } && lifetime.Windows.Contains(owner))
                 window.Show(owner);
             else
                 window.Show();
         }
     }
 
-    private async Task DeliverAsync(Snip snip)
+    private async Task DeliverAsync(Snip snip, bool restoreEditor = false)
     {
-        var document = new EditorDocument(snip);
         string? saved = null;
         string? problem = null;
         if (Settings.CopyToClipboard)
@@ -471,12 +522,24 @@ public sealed class AppController : IDisposable
         }
 
         // The editor keeps the snip when it could not be delivered.
-        if (Settings.OpenEditorAfterCapture || editor is { IsVisible: true } || problem is not null)
-            ShowEditor(document, saved);
-        else
-            EnsureEditor().Load(document, saved);
+        if (exiting)
+            return;
+        if (Settings.OpenEditorAfterCapture || editor is { IsVisible: true } || (restoreEditor && editor is not null) || problem is not null ||
+            (!Settings.CopyToClipboard && !Settings.AutoSave))
+        {
+            var document = new EditorDocument(snip);
+            try
+            {
+                ShowEditor(document, saved);
+            }
+            catch
+            {
+                document.Dispose();
+                throw;
+            }
+        }
         if (problem is not null)
-            MessageDialog.Show(editor, "WSnip", problem);
+            MessageDialog.Show(editor is { IsVisible: true } ? editor : null, "WSnip", problem);
     }
 
     private EditorWindow EnsureEditor()
@@ -484,28 +547,44 @@ public sealed class AppController : IDisposable
         if (editor is not null)
             return editor;
 
-        editor = new EditorWindow(this);
-        Theme.Attach(editor);
-        editor.Closing += (_, e) =>
+        var window = new EditorWindow(this);
+        editor = window;
+        if (editorBounds is { } bounds)
         {
-            // The app lives on in the tray; closing the window hides it and lets go of the snip,
-            // which was already copied or saved as the settings ask.
-            if (OperatingSystem.IsWindows() && !exiting)
-            {
-                e.Cancel = true;
-                editor.Hide();
-                editor.Clear();
-                ReleaseMemory();
-            }
+            window.WindowStartupLocation = WindowStartupLocation.Manual;
+            window.Position = bounds.Position;
+            window.Width = bounds.Size.Width;
+            window.Height = bounds.Size.Height;
+        }
+        window.WindowState = editorState;
+        Theme.Attach(window);
+        void RememberBounds()
+        {
+            if (window.IsVisible && window.WindowState == WindowState.Normal)
+                editorBounds = (window.Position, window.ClientSize);
+        }
+        window.PositionChanged += (_, _) => RememberBounds();
+        window.Opened += (_, _) => RememberBounds();
+        window.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == TopLevel.ClientSizeProperty)
+                RememberBounds();
         };
-        editor.Closed += (_, _) => editor = null;
-        return editor;
+        window.Closing += (_, _) =>
+        {
+            editorState = window.WindowState == WindowState.Maximized ? WindowState.Maximized : WindowState.Normal;
+        };
+        window.Closed += (_, _) =>
+        {
+            // Explicit shutdown keeps the tray alive. Really closing (rather than hiding) also
+            // releases full-resolution composition layers and swapchain buffers held by Windows.
+            if (ReferenceEquals(editor, window))
+                editor = null;
+            if (ReferenceEquals(lifetime.MainWindow, window))
+                lifetime.MainWindow = null;
+        };
+        return window;
     }
-
-    /// <summary>Returns the pixels of a closed snip to the system rather than holding them while in the tray.</summary>
-    private static void ReleaseMemory() => Dispatcher.UIThread.Post(
-        () => GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true),
-        DispatcherPriority.Background);
 
     /// <summary>
     /// Registers the shortcuts of the settings, the snipping mode setting's first. One that repeats

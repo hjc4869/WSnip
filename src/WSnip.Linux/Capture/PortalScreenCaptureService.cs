@@ -51,11 +51,19 @@ public sealed class PortalScreenCaptureService : IScreenCaptureService, IDisposa
 
             DateTimeOffset capturedAt = DateTimeOffset.Now;
             IReadOnlyList<PipeWireFrame> frames = await GrabAsync(session, alpha: false, cancellationToken).ConfigureAwait(false);
-            SharedDisplay[] displays = session.Streams.Select(stream => new SharedDisplay($"node {stream.NodeId}", null, stream.Position, stream.Size)).ToArray();
-            MonitorCapture[] monitors = await Task.Run(() => DisplayLayout.CreateMonitors(displays, frames), cancellationToken).ConfigureAwait(false);
-            AppLog.Information("Capture", $"Captured {monitors.Length} display(s) in {watch.ElapsedMilliseconds} ms: " +
-                string.Join("; ", monitors.Select((m, i) => $"{m.DeviceName} {m.Bounds} logical {m.LogicalBounds} {frames[i].Info.Format}")));
-            return new ScreenSnapshot { Monitors = monitors, CapturedAt = capturedAt };
+            try
+            {
+                SharedDisplay[] displays = session.Streams.Select(stream => new SharedDisplay($"node {stream.NodeId}", null, stream.Position, stream.Size)).ToArray();
+                MonitorCapture[] monitors = await Task.Run(() => DisplayLayout.CreateMonitors(displays, frames), cancellationToken).ConfigureAwait(false);
+                AppLog.Information("Capture", $"Captured {monitors.Length} display(s) in {watch.ElapsedMilliseconds} ms: " +
+                    string.Join("; ", monitors.Select((m, i) => $"{m.DeviceName} {m.Bounds} logical {m.LogicalBounds} {frames[i].Info.Format}")));
+                return new ScreenSnapshot { Monitors = monitors, CapturedAt = capturedAt };
+            }
+            finally
+            {
+                foreach (PipeWireFrame frame in frames)
+                    frame.Dispose();
+            }
         }
         finally
         {
@@ -77,7 +85,7 @@ public sealed class PortalScreenCaptureService : IScreenCaptureService, IDisposa
             }, cancellationToken).ConfigureAwait(false);
 
             DateTimeOffset capturedAt = DateTimeOffset.Now;
-            PipeWireFrame frame = (await GrabAsync(session, alpha: true, cancellationToken).ConfigureAwait(false))[0];
+            using PipeWireFrame frame = (await GrabAsync(session, alpha: true, cancellationToken).ConfigureAwait(false))[0];
             HdrImage image = await Task.Run(() => FrameConverter.ToLinear(frame, keepAlpha: true), cancellationToken).ConfigureAwait(false);
             AppLog.Information("Capture", $"Captured a window {image.Width}x{image.Height} ({frame.Info.Format}) in {watch.ElapsedMilliseconds} ms.");
             return new WindowCapture

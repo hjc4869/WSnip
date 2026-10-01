@@ -38,6 +38,7 @@ public static class PngWriter
         BinaryPrimitives.WriteUInt32BigEndian(header[4..], (uint)image.Height);
         header[8] = 16;
         header[9] = (byte)(image.HasAlpha ? 6 : 2);
+        header[10..].Clear();
         WriteChunk(output, "IHDR"u8, header);
         WriteChunk(output, "cICP"u8, [(byte)ColorMath.CicpPrimaries(image.Primaries), ColorMath.CicpTransferPq, 0, 1]);
 
@@ -46,30 +47,26 @@ public static class PngWriter
         BinaryPrimitives.WriteUInt32BigEndian(light[4..], (uint)Math.Round(image.MaxFrameAverageLightLevel * 10000));
         WriteChunk(output, "cLLI"u8, light);
 
-        byte[] filtered = FilterRows(image, channels, rowBytes);
         using (var idat = new ChunkStream(output, "IDAT"u8.ToArray()))
         using (var zlib = new ZLibStream(idat, level, leaveOpen: true))
-            zlib.Write(filtered);
+            WriteFilteredRows(zlib, image, channels, rowBytes);
 
         WriteChunk(output, "IEND"u8, []);
     }
 
-    private static byte[] FilterRows(PqImage image, int channels, int rowBytes)
+    private static void WriteFilteredRows(Stream output, PqImage image, int channels, int rowBytes)
     {
-        var filtered = new byte[(long)image.Height * (rowBytes + 1) > Array.MaxLength
-            ? throw new InvalidDataException(AppStrings.PngImageTooLarge)
-            : image.Height * (rowBytes + 1)];
-
-        ParallelRows.For(image.Height, y =>
+        // Only four rows of scratch space, independent of image height. Previously a full
+        // filtered image and three new arrays per row survived until compression completed.
+        using var scratch = new PixelBuffer<byte>(checked(rowBytes * 4 + 1));
+        Span<byte> current = scratch.AsSpan(0, rowBytes);
+        Span<byte> previous = scratch.AsSpan(rowBytes, rowBytes);
+        Span<byte> candidate = scratch.AsSpan(rowBytes * 2, rowBytes);
+        Span<byte> bestRow = scratch.AsSpan(rowBytes * 3, rowBytes + 1);
+        previous.Clear();
+        for (int y = 0; y < image.Height; y++)
         {
-            Span<byte> current = new byte[rowBytes];
-            Span<byte> previous = new byte[rowBytes];
             Pack(image, y, channels, current);
-            if (y > 0)
-                Pack(image, y - 1, channels, previous);
-
-            Span<byte> output = filtered.AsSpan(y * (rowBytes + 1), rowBytes + 1);
-            Span<byte> candidate = new byte[rowBytes];
             long best = long.MaxValue;
             int bpp = channels * 2;
             for (byte filter = 0; filter <= 4; filter++)
@@ -95,13 +92,15 @@ public static class PngWriter
                 if (cost < best)
                 {
                     best = cost;
-                    output[0] = filter;
-                    candidate.CopyTo(output[1..]);
+                    bestRow[0] = filter;
+                    candidate.CopyTo(bestRow[1..]);
                 }
             }
-        });
-
-        return filtered;
+            output.Write(bestRow);
+            Span<byte> swap = previous;
+            previous = current;
+            current = swap;
+        }
     }
 
     private static void Pack(PqImage image, int y, int channels, Span<byte> row)
@@ -161,7 +160,7 @@ public static class PngWriter
     /// <summary>Buffers written data into PNG chunks of a fixed type.</summary>
     private sealed class ChunkStream(Stream output, byte[] chunkType) : Stream
     {
-        private const int ChunkSize = 1 << 20;
+        private const int ChunkSize = 1 << 16;
         private readonly MemoryStream buffer = new();
 
         public override bool CanRead => false;
@@ -187,6 +186,8 @@ public static class PngWriter
         {
             if (disposing && buffer.Length > 0)
                 Emit();
+            if (disposing)
+                buffer.Dispose();
             base.Dispose(disposing);
         }
 

@@ -216,6 +216,9 @@ public sealed class SnipCanvas : Control, Avalonia.Rendering.ICustomHitTest
             panPointer?.Capture(null);
             panPointer = null;
             panStart = null;
+            activePoints = null;
+            erased = null;
+            cropDrag = default;
             if (change.OldValue is EditorDocument old)
             {
                 old.Changed -= OnDocumentChanged;
