@@ -18,11 +18,12 @@ internal static class OutlineMask
                 if (surface is null)
                     throw new InvalidOperationException("The outline mask could not be allocated.");
 
-                using var path = new SKPath { FillType = SKPathFillType.Winding };
-                path.MoveTo((float)(outline[0].X - region.X), (float)(outline[0].Y - region.Y));
+                using var builder = new SKPathBuilder { FillType = SKPathFillType.Winding };
+                builder.MoveTo((float)(outline[0].X - region.X), (float)(outline[0].Y - region.Y));
                 for (int i = 1; i < outline.Count; i++)
-                    path.LineTo((float)(outline[i].X - region.X), (float)(outline[i].Y - region.Y));
-                path.Close();
+                    builder.LineTo((float)(outline[i].X - region.X), (float)(outline[i].Y - region.Y));
+                builder.Close();
+                using var path = builder.Detach();
 
                 using var paint = new SKPaint { IsAntialias = true, Color = SKColors.White, Style = SKPaintStyle.Fill };
                 surface.Canvas.Clear(SKColors.Transparent);

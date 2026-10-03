@@ -4,7 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
-using LightStudio.LightPlayer.Controls;
+using LightMediaRenderer.Avalonia.Controls;
 using WSnip.App.Rendering;
 using WSnip.Core.Editing;
 using WSnip.Core.Imaging;

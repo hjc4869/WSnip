@@ -3,7 +3,7 @@
         xmlns:editor="using:WSnip.App.Editor"
         xmlns:capture="using:WSnip.App.Capture"
         xmlns:rendering="using:WSnip.App.Rendering"
-        xmlns:controls="using:LightStudio.LightPlayer.Controls"
+        xmlns:controls="using:LightMediaRenderer.Avalonia.Controls"
         xmlns:strings="using:WSnip.Core.Strings"
         x:Class="WSnip.App.Editor.EditorWindow"
         Title="WSnip"

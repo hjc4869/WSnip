@@ -38,24 +38,24 @@ public sealed record AnnotationStroke(AnnotationTool Tool, ScRgb Color, float Wi
     /// <summary>A smoothed path through the points, using midpoints as quadratic anchors.</summary>
     public SKPath ToPath()
     {
-        var path = new SKPath();
+        using var builder = new SKPathBuilder();
         if (Points.Count == 0)
-            return path;
-        path.MoveTo(Points[0].X, Points[0].Y);
+            return builder.Detach();
+        builder.MoveTo(Points[0].X, Points[0].Y);
         if (Points.Count == 1)
         {
-            path.LineTo(Points[0].X + 0.01f, Points[0].Y);
-            return path;
+            builder.LineTo(Points[0].X + 0.01f, Points[0].Y);
+            return builder.Detach();
         }
 
         for (int i = 1; i < Points.Count - 1; i++)
         {
             Vector2 middle = (Points[i] + Points[i + 1]) / 2;
-            path.QuadTo(Points[i].X, Points[i].Y, middle.X, middle.Y);
+            builder.QuadTo(Points[i].X, Points[i].Y, middle.X, middle.Y);
         }
 
-        path.LineTo(Points[^1].X, Points[^1].Y);
-        return path;
+        builder.LineTo(Points[^1].X, Points[^1].Y);
+        return builder.Detach();
     }
 
     /// <summary>The stroke color as drawn, in linear sRGB; highlighters are clipped to SDR.</summary>

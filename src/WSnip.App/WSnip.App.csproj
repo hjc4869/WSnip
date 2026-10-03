@@ -15,17 +15,17 @@
     <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="Avalonia.Fonts.Inter" />
     <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" />
+    <PackageReference Include="HarfBuzzSharp" />
+    <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\WSnip.Core\WSnip.Core.csproj" />
+    <ProjectReference Include="$(LightPlayerRoot)src\LightMediaRenderer.Avalonia\LightMediaRenderer.Avalonia.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
-    <Compile Include="$(LightPlayerRoot)src\LightStudio.LightPlayer\Controls\Glide.cs" Link="Shared\Glide.cs" />
-    <Compile Include="$(LightPlayerRoot)src\LightStudio.LightPlayer\Controls\BackdropBorder.cs" Link="Shared\BackdropBorder.cs" />
-    <Compile Include="$(LightPlayerRoot)src\LightStudio.LightPlayer\Controls\BackdropForegroundExtension.cs" Link="Shared\BackdropForegroundExtension.cs" />
-    <Compile Include="$(LightPlayerRoot)src\LightStudio.LightPlayer\Models\BackdropStyle.cs" Link="Shared\BackdropStyle.cs" />
   </ItemGroup>
 </Project>

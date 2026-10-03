@@ -1,6 +1,6 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="using:LightStudio.LightPlayer.Controls">
+        xmlns:controls="using:LightMediaRenderer.Avalonia.Controls">
     <!-- The photo viewer's blurred chrome and backdrop-aware foregrounds share the image surface. -->
     <Style Selector="Border.editorDock">
         <Setter Property="Background" Value="Transparent" />

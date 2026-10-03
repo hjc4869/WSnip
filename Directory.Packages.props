@@ -3,7 +3,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <!-- Keep these in sync with Light Player, whose renderer and FFmpeg interop are shared. -->
     <AvaloniaVersion>12.1.3</AvaloniaVersion>
-    <AvaloniaForkVersion>12.1.4-lightplayer.10</AvaloniaForkVersion>
+    <AvaloniaForkVersion>12.1.4-lightplayer.12</AvaloniaForkVersion>
     <!-- The Flatpak build binds to the FFmpeg 8.1 of org.freedesktop.Platform 26.08. -->
     <Flatpak Condition="'$(Flatpak)' == ''">false</Flatpak>
     <FFmpegAutoGenVersion Condition="'$(FFmpegAutoGenVersion)' == '' And '$(Flatpak)' == 'true'">8.1.0</FFmpegAutoGenVersion>
@@ -27,8 +27,10 @@
     <PackageVersion Include="Avalonia.Wayland" Version="$(AvaloniaForkVersion)" />
     <PackageVersion Include="Avalonia.Win32" Version="$(AvaloniaForkVersion)" />
     <!-- Must match the SkiaSharp/HarfBuzzSharp that Avalonia.Skia binds to. -->
-    <PackageVersion Include="SkiaSharp" Version="3.119.4" />
-    <PackageVersion Include="HarfBuzzSharp" Version="8.3.1.3" />
+    <PackageVersion Include="SkiaSharp" Version="4.153.1" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="4.153.1" />
+    <PackageVersion Include="HarfBuzzSharp" Version="14.2.1.301" />
+    <PackageVersion Include="HarfBuzzSharp.NativeAssets.Linux" Version="14.2.1.301" />
   </ItemGroup>
 
   <ItemGroup>
