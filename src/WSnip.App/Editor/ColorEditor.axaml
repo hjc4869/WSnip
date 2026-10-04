@@ -4,16 +4,22 @@
              xmlns:strings="using:WSnip.Core.Strings"
              x:Class="WSnip.App.Editor.ColorEditor"
              Width="320">
-    <StackPanel Spacing="10">
-        <Grid ColumnDefinitions="Auto,*">
-            <rendering:ColorSwatch x:Name="Preview" Width="44" Height="44" VerticalAlignment="Center" />
-            <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center" Spacing="2">
-                <TextBlock x:Name="TitleText" FontWeight="SemiBold" Foreground="{DynamicResource AppPrimaryTextBrush}" />
+    <UserControl.Resources>
+        <!-- Fluent reserves tick bar room above and below the thumb; these sliders have no ticks. -->
+        <GridLength x:Key="SliderPreContentMargin">6</GridLength>
+        <GridLength x:Key="SliderPostContentMargin">6</GridLength>
+    </UserControl.Resources>
+
+    <StackPanel Spacing="16">
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+            <rendering:ColorSwatch x:Name="Preview" Width="48" Height="48" VerticalAlignment="Center" />
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                <TextBlock x:Name="TitleText" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource AppPrimaryTextBrush}" />
                 <TextBlock x:Name="SummaryText" Classes="caption" TextWrapping="Wrap" />
             </StackPanel>
         </Grid>
 
-        <Grid ColumnDefinitions="84,*,44" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="6">
+        <Grid ColumnDefinitions="Auto,*,36" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="6">
             <TextBlock x:Name="GamutLabel" Text="{x:Static strings:AppStrings.ColorSpace}" VerticalAlignment="Center" Classes="caption" />
             <ComboBox x:Name="GamutBox" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" />
 
@@ -38,9 +44,10 @@
             <TextBlock x:Name="BrightnessText" Grid.Row="5" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Classes="caption" />
         </Grid>
 
-        <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right">
-            <Button x:Name="CancelButton" Classes="flat" Content="{x:Static strings:AppStrings.Cancel}" />
-            <Button x:Name="ApplyButton" Classes="accent" Content="{x:Static strings:AppStrings.Add}" />
+        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+            <Button x:Name="CancelButton" Classes="flat" MinWidth="88" HorizontalContentAlignment="Center"
+                    Content="{x:Static strings:AppStrings.Cancel}" />
+            <Button x:Name="ApplyButton" Classes="accent" MinWidth="88" Content="{x:Static strings:AppStrings.Add}" />
         </StackPanel>
     </StackPanel>
 </UserControl>

@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="using:LightMediaRenderer.Avalonia.Controls">
     <!-- The photo viewer's blurred chrome and backdrop-aware foregrounds share the image surface. -->
+    <!-- Flyouts, menus and tooltips anchored in the dock are its logical descendants; :not(Popup …) keeps them on app styles. -->
     <Style Selector="Border.editorDock">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="CornerRadius" Value="8" />
@@ -9,7 +10,7 @@
         <Setter Property="BorderBrush" Value="#30FFFFFF" />
         <Setter Property="BoxShadow" Value="0 4 16 0 #60000000" />
     </Style>
-    <Style Selector="Border.editorDock Button, Border.editorDock ToggleButton">
+    <Style Selector="Border.editorDock Button:not(Popup Button), Border.editorDock ToggleButton:not(Popup ToggleButton)">
         <Setter Property="Width" Value="36" />
         <Setter Property="Height" Value="36" />
         <Setter Property="MinWidth" Value="0" />
@@ -22,42 +23,42 @@
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
-    <Style Selector="Border.editorDock Button /template/ ContentPresenter#PART_ContentPresenter, Border.editorDock ToggleButton /template/ ContentPresenter#PART_ContentPresenter">
+    <Style Selector="Border.editorDock Button:not(Popup Button) /template/ ContentPresenter#PART_ContentPresenter, Border.editorDock ToggleButton:not(Popup ToggleButton) /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{controls:BackdropForeground}" />
     </Style>
-    <Style Selector="Border.editorDock Button:pointerover /template/ ContentPresenter#PART_ContentPresenter, Border.editorDock ToggleButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Style Selector="Border.editorDock Button:not(Popup Button):pointerover /template/ ContentPresenter#PART_ContentPresenter, Border.editorDock ToggleButton:not(Popup ToggleButton):pointerover /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="#28FFFFFF" />
         <Setter Property="Foreground" Value="{controls:BackdropForeground}" />
     </Style>
-    <Style Selector="Border.editorDock Button:pressed /template/ ContentPresenter#PART_ContentPresenter, Border.editorDock ToggleButton:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Style Selector="Border.editorDock Button:not(Popup Button):pressed /template/ ContentPresenter#PART_ContentPresenter, Border.editorDock ToggleButton:not(Popup ToggleButton):pressed /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="#40FFFFFF" />
         <Setter Property="Foreground" Value="{controls:BackdropForeground}" />
     </Style>
-    <Style Selector="Border.editorDock ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter, Border.editorDock Button.dockPrimary /template/ ContentPresenter#PART_ContentPresenter">
+    <Style Selector="Border.editorDock ToggleButton:not(Popup ToggleButton):checked /template/ ContentPresenter#PART_ContentPresenter, Border.editorDock Button.dockPrimary /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="#40FFFFFF" />
         <Setter Property="Foreground" Value="{controls:BackdropForeground}" />
     </Style>
-    <Style Selector="Border.editorDock ToggleButton:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter, Border.editorDock Button.dockPrimary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Style Selector="Border.editorDock ToggleButton:not(Popup ToggleButton):checked:pointerover /template/ ContentPresenter#PART_ContentPresenter, Border.editorDock Button.dockPrimary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="#58FFFFFF" />
     </Style>
-    <Style Selector="Border.editorDock ToggleButton:checked:pressed /template/ ContentPresenter#PART_ContentPresenter, Border.editorDock Button.dockPrimary:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Style Selector="Border.editorDock ToggleButton:not(Popup ToggleButton):checked:pressed /template/ ContentPresenter#PART_ContentPresenter, Border.editorDock Button.dockPrimary:pressed /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="#70FFFFFF" />
     </Style>
-    <Style Selector="Border.editorDock Button:disabled, Border.editorDock ToggleButton:disabled">
+    <Style Selector="Border.editorDock Button:not(Popup Button):disabled, Border.editorDock ToggleButton:not(Popup ToggleButton):disabled">
         <Setter Property="Opacity" Value="0.4" />
     </Style>
-    <Style Selector="Border.editorDock Button:disabled /template/ ContentPresenter#PART_ContentPresenter, Border.editorDock ToggleButton:disabled /template/ ContentPresenter#PART_ContentPresenter">
+    <Style Selector="Border.editorDock Button:not(Popup Button):disabled /template/ ContentPresenter#PART_ContentPresenter, Border.editorDock ToggleButton:not(Popup ToggleButton):disabled /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Foreground" Value="{controls:BackdropForeground}" />
     </Style>
     <Style Selector="Border.editorDock Button.dockText">
         <Setter Property="Width" Value="NaN" />
         <Setter Property="Padding" Value="12,8" />
     </Style>
-    <Style Selector="Border.editorDock Path">
+    <Style Selector="Border.editorDock Path:not(Popup Path)">
         <Setter Property="Fill" Value="{controls:BackdropForeground}" />
     </Style>
-    <Style Selector="Border.editorDock TextBlock">
+    <Style Selector="Border.editorDock TextBlock:not(Popup TextBlock)">
         <Setter Property="Foreground" Value="{controls:BackdropForeground Color=#D8FFFFFF}" />
     </Style>
     <Style Selector="Border.editorDock Border.dockDivider">
