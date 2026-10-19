@@ -4,8 +4,7 @@ name: Release
 # setup executables, then publishes them in one GitHub Release. Triggered by pushing a version tag
 # (e.g. v0.2.0) or run manually from the Actions tab.
 #
-# WSnip builds against a Light Player checkout (shared sources, build/Ffmpeg.targets), which is
-# private: the LIGHTPLAYER_DEPLOY_KEY secret holds a read-only deploy key of that repository.
+# WSnip builds against a Light Player checkout (shared sources, build/Ffmpeg.targets)
 # Windows packages are signed with the same Light Studio certificate as Light Player. See README.md
 # ("Releases") for the secrets and repository settings this workflow needs.
 on:
@@ -21,7 +20,7 @@ on:
       lightplayer_ref:
         description: 'Light Player branch, tag or commit to build against.'
         required: false
-        default: 'main'
+        default: 'v2.0.0'
         type: string
 
 # Required so the release step can create the release and upload the packages.
@@ -29,7 +28,7 @@ permissions:
   contents: write
 
 env:
-  LIGHTPLAYER_REPOSITORY: hjc4869/LightPlayer-Internal
+  LIGHTPLAYER_REPOSITORY: hjc4869/LightPlayer
   LIGHTPLAYER_REF: ${{ github.event.inputs.lightplayer_ref || vars.LIGHTPLAYER_REF || 'main' }}
   RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
 
@@ -50,7 +49,6 @@ jobs:
           repository: ${{ env.LIGHTPLAYER_REPOSITORY }}
           ref: ${{ env.LIGHTPLAYER_REF }}
           path: LightPlayer
-          ssh-key: ${{ secrets.LIGHTPLAYER_DEPLOY_KEY }}
           persist-credentials: false
 
       - name: Set up .NET SDK
@@ -62,6 +60,9 @@ jobs:
         uses: microsoft/setup-msbuild@v3
         with:
           msbuild-architecture: x64
+
+      - name: Install LLVM for native binding generation
+        run: choco install llvm --yes --no-progress
 
       - name: Stamp release version
         shell: pwsh
@@ -177,7 +178,6 @@ jobs:
           repository: ${{ env.LIGHTPLAYER_REPOSITORY }}
           ref: ${{ env.LIGHTPLAYER_REF }}
           path: LightPlayer
-          ssh-key: ${{ secrets.LIGHTPLAYER_DEPLOY_KEY }}
           persist-credentials: false
 
       - name: Set up .NET SDK
@@ -192,6 +192,9 @@ jobs:
           Write-Host "Packaging WSnip $version"
 
       # NativeAOT publishes for x64 and ARM64; WiX is restored through its MSBuild SDK.
+      - name: Install LLVM for native binding generation
+        run: choco install llvm --yes --no-progress
+
       - name: Build x64 and ARM64 setup executables
         shell: pwsh
         run: ./WSnip/packaging/WSnipSetup/build.ps1
@@ -228,7 +231,6 @@ jobs:
           repository: ${{ env.LIGHTPLAYER_REPOSITORY }}
           ref: ${{ env.LIGHTPLAYER_REF }}
           path: LightPlayer
-          ssh-key: ${{ secrets.LIGHTPLAYER_DEPLOY_KEY }}
           persist-credentials: false
 
       - name: Install flatpak and flatpak-builder
@@ -255,7 +257,7 @@ jobs:
           $version = & "$env:GITHUB_WORKSPACE/WSnip/packaging/Set-Version.ps1" -Tag $env:RELEASE_TAG
           Write-Host "Packaging WSnip $version"
 
-      # Installs the SDK and its .NET extension from Flathub, pins the NuGet packages and publishes
+      # Installs the SDK and its .NET/LLVM extensions from Flathub, pins the NuGet packages and publishes
       # the app inside the sandbox, against the Light Player checkout at ../LightPlayer.
       - name: Build Flatpak bundle
         working-directory: WSnip

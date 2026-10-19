@@ -1,5 +1,4 @@
 using Avalonia;
-using FFmpeg.AutoGen.Bindings.DynamicallyLoaded;
 using LightStudio.FfmpegShim;
 using LightStudio.Logging;
 using WSnip.Core.Platform;
@@ -37,7 +36,6 @@ internal static class Program
             }
         }
 
-        DynamicallyLoadedBindings.Initialize();
         FfmpegLog.Attach();
 
         App.App.Platform = platform;

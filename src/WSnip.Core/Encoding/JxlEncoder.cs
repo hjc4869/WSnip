@@ -1,5 +1,5 @@
 using System.Runtime.InteropServices;
-using FFmpeg.AutoGen.Abstractions;
+using LightStudio.NativeBindings.Types;
 using WSnip.Core.Imaging;
 
 namespace WSnip.Core.Encoding;

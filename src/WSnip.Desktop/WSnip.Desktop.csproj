@@ -56,7 +56,8 @@
     <PackageReference Include="Avalonia.FreeDesktop" />
     <PackageReference Include="Avalonia.HarfBuzz" />
     <PackageReference Condition="'$(IsLinuxTarget)' == 'true'" Include="Avalonia.Wayland" />
-    <PackageReference Include="FFmpeg.AutoGen.Bindings.DynamicallyLoaded" />
+    <!-- Use the package's binding profile, but keep BtbN's software encoders in the shipped DLLs. -->
+    <PackageReference Condition="'$(IsWindowsTarget)' == 'true'" Include="LightStudio.Ffmpeg" ExcludeAssets="runtime;native" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,4 +1,4 @@
-using FFmpeg.AutoGen.Abstractions;
+using LightStudio.NativeBindings.Types;
 using WSnip.Core.Imaging;
 
 using WSnip.Core.Strings;

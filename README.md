@@ -225,10 +225,11 @@ Shared with Light Player (`..\LightPlayer`, source unchanged):
 
 - `LightStudio.Logging`
 - `LightStudio.FfmpegShim`
+- `tools/NativeBindings`, which generates the shim's native interop from FFmpeg headers
 - The photo viewer's blur backdrop, HDR-aware foreground brushes and zoom animation
 - `build\Ffmpeg.targets`, which downloads and bundles the LGPL FFmpeg shared build
 - `packaging/flatpak/nuget-sources.py`, which pins the NuGet packages of the offline Flatpak build
-- The Avalonia fork packages (`12.1.4-lightplayer.*`), including the `ExtendedLinear` color mode of
+- The Avalonia 12.1.4 packages and fork (`12.1.5-lightplayer.0`), matching Light Player 2.0, including the `ExtendedLinear` color mode of
   the Win32 and Wayland backends that provides the FP16 scRGB surface
 
 ## Building
@@ -237,11 +238,22 @@ Requirements:
 
 - Windows 10 2004 (build 19041) or later. HDR capture and display need an HDR-enabled display.
 - Or Linux with PipeWire and xdg-desktop-portal with the desktop's backend, such as
-  xdg-desktop-portal-kde. HEIC, AVIF and JPEG XL use the system's FFmpeg 9 libraries.
+  xdg-desktop-portal-kde. HEIC, AVIF and JPEG XL use the system's FFmpeg 9 libraries. Building needs
+  their development headers and pkg-config modules (`libavcodec`, `libavformat`, `libavutil`,
+  `libavfilter`, `libswresample` and `libswscale`).
 - .NET SDK 10.0.301 or later 10.0 feature band, as pinned in `global.json`.
-- A Light Player checkout next to this repository (`..\LightPlayer`). To use another location, set
-  `-p:LightPlayerRoot=...\`.
+- A [Light Player 2.0](https://github.com/hjc4869/LightPlayer/tree/v2.0.0) checkout next to this
+  repository (`..\LightPlayer`). To use another location, set `-p:LightPlayerRoot=...\`.
 - The Avalonia fork packages, available through the feeds in `nuget.config`.
+- libclang for the build host: for example `libclang-dev` on Debian/Ubuntu or LLVM on Windows
+  (`winget install --id LLVM.LLVM --exact`). Windows NativeAOT builds also need Visual Studio's
+  C++ build tools for each target architecture.
+
+FFmpeg calls use the shim's generated NativeBindings API, with no managed binding-loader
+initialization. Linux bindings are generated from the installed development headers; Flatpak builds
+use the SDK's FFmpeg 8.1 headers. Windows uses the `LightStudio.Ffmpeg` 9.0.2.6 binding profile but
+excludes that package's runtime assets, retaining the bundled BtbN LGPL libraries with the
+Kvazaar, libaom and libjxl software encoders.
 
 ```powershell
 # Debug build
@@ -254,7 +266,7 @@ dotnet publish src\WSnip.Desktop -c Release -r win-x64 -p:Platform=x64
 For ARM64, use `-p:Platform=ARM64 -r win-arm64`.
 
 On Linux, the `Makefile` wraps the same commands. It passes `LIGHTPLAYER_ROOT` (by default
-`../LightStudio.LightPlayer`) as `LightPlayerRoot`:
+`../LightPlayer`) as `LightPlayerRoot`:
 
 ```sh
 make                        # Release build
@@ -295,7 +307,7 @@ libraries.
   `artifacts/flatpak-x86_64/im.hjc.WSnip-x86_64.flatpak`; `make flatpak-install` also installs it
   for the current user. FFmpeg 8.1 and PipeWire come from the `org.freedesktop.Platform` runtime.
   It needs `flatpak`, `flatpak-builder` and `python3`; the first build installs the SDK and its
-  extension from Flathub. Add a `<release>` to the metainfo for each version.
+  .NET 10 and LLVM 22 extensions from Flathub. Add a `<release>` to the metainfo for each version.
 
 `packaging\Set-Version.ps1 -Tag v1.2.3` stamps one version into `Directory.Build.props` and the MSIX
 manifest; the release workflow runs it with the release tag.
@@ -304,8 +316,9 @@ manifest; the release workflow runs it with the release tag.
 
 `.github/workflows/release.yml` builds the MSIX bundle, the setup executables and the Flatpak
 bundles for x64 and ARM64 and publishes them in a GitHub Release when a `v*` tag is pushed, or when
-it is run from the Actions tab with a tag. It checks out Light Player next to WSnip, as local builds
-expect.
+it is run from the Actions tab with a tag. It checks out the public
+[hjc4869/LightPlayer](https://github.com/hjc4869/LightPlayer) repository next to WSnip, as local builds
+expect. No deploy key or additional repository-access secret is needed.
 
 One-time setup of the WSnip repository (**Settings > Secrets and variables > Actions**):
 
@@ -313,20 +326,16 @@ One-time setup of the WSnip repository (**Settings > Secrets and variables > Act
 | --- | --- |
 | `WINDOWS_SIGNING_CERTIFICATE_BASE64` | MSIX Signing PFX |
 | `WINDOWS_SIGNING_CERTIFICATE_PASSWORD` | Its password |
-| `LIGHTPLAYER_DEPLOY_KEY` | Private half of a read-only deploy key of `hjc4869/LightPlayer-Internal` |
 
-- GitHub never shows a secret again, so copy the certificate secrets from the vault where Light
-  Player's PFX and password are kept (its `docs/release-signing.md`); the base64 text is
-  `[Convert]::ToBase64String([IO.File]::ReadAllBytes('LightPlayer-Signing.pfx'))`. Using the same
-  certificate lets one trusted certificate cover both apps, and every WSnip release update in place.
-- Create the deploy key with `ssh-keygen -t ed25519 -C "WSnip CI" -f wsnip-ci` and an empty
-  passphrase, add `wsnip-ci.pub` to LightPlayer-Internal under **Settings > Deploy keys** with
-  write access unchecked, store the contents of `wsnip-ci` as `LIGHTPLAYER_DEPLOY_KEY`, then delete
-  both files.
+- Base64-encode the Windows signing PFX with
+  `[Convert]::ToBase64String([IO.File]::ReadAllBytes('WSnip-Signing.pfx'))` and store the result in
+  `WINDOWS_SIGNING_CERTIFICATE_BASE64`; store its password in `WINDOWS_SIGNING_CERTIFICATE_PASSWORD`.
+  Keep the PFX and password in a secure location, since GitHub never shows a secret again. Use the
+  same signing certificate for subsequent releases so installed copies can update in place.
 - The workflow asks for `contents: write` itself to create the release; nothing else needs
   changing unless the repository owner restricts workflow permissions.
 - Optionally set the repository variable `LIGHTPLAYER_REF` to pin the Light Player branch, tag or
-  commit built against; it defaults to `main`, and a manual run can override it.
+  commit built against. Tag-triggered releases default to `main`; a manual run can override the ref.
 
 The Windows jobs use the `windows-2025-vs2026` image, as Light Player does: the .NET 10 SDK needs
 MSBuild 18, and the `.wapproj` builds only with Visual Studio's MSBuild. The Flatpak jobs run

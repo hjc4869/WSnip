@@ -43,10 +43,6 @@ Adobe Gain Map
 
 Image encoding (FFmpeg)
 -----------------------
-FFmpeg.AutoGen  (managed FFmpeg bindings)
-  License: MIT
-  https://github.com/Ruslan-B/FFmpeg.AutoGen/blob/main/LICENSE.txt
-
 FFmpeg
   (LGPL shared libraries from BtbN/FFmpeg-Builds, installed next to WSnip.exe; used for the HEIC,
    AVIF and JPEG XL encoders)

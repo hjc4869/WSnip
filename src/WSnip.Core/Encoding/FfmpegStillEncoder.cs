@@ -1,8 +1,8 @@
-using FFmpeg.AutoGen.Abstractions;
 using LightStudio.FfmpegShim.Interop;
+using LightStudio.NativeBindings.Types;
 using WSnip.Core.Imaging;
-
 using WSnip.Core.Strings;
+using static LightStudio.FfmpegShim.Ffmpeg;
 
 namespace WSnip.Core.Encoding;
 
@@ -44,7 +44,7 @@ internal static unsafe class FfmpegStillEncoder
     {
         try
         {
-            return ffmpeg.avcodec_find_encoder_by_name(encoderName) != null;
+            return avcodec_find_encoder_by_name(encoderName) != null;
         }
         catch (Exception exception) when (exception is DllNotFoundException or EntryPointNotFoundException or NotSupportedException)
         {
@@ -58,11 +58,11 @@ internal static unsafe class FfmpegStillEncoder
     /// <summary>Encodes the picture, consuming its plane leases, and returns the packet payloads.</summary>
     public static byte[] Encode(string encoderName, PicturePlanes picture, IReadOnlyDictionary<string, string> options)
     {
-        AVCodec* codec = ffmpeg.avcodec_find_encoder_by_name(encoderName);
+        AVCodec* codec = avcodec_find_encoder_by_name(encoderName);
         if (codec == null)
             throw new NotSupportedException(string.Format(AppStrings.EncoderUnavailable, encoderName));
 
-        AVCodecContext* context = ffmpeg.avcodec_alloc_context3(codec);
+        AVCodecContext* context = avcodec_alloc_context3(codec);
         AVFrame* frame = null;
         AVPacket* packet = null;
         AVDictionary* dictionary = null;
@@ -84,10 +84,10 @@ internal static unsafe class FfmpegStillEncoder
             context->chroma_sample_location = picture.ChromaLocation;
 
             foreach ((string key, string value) in options)
-                ffmpeg.av_dict_set(&dictionary, key, value, 0);
-            FfmpegError.ThrowIfError(ffmpeg.avcodec_open2(context, codec, &dictionary), $"Opening {encoderName}");
+                av_dict_set(&dictionary, key, value, 0);
+            FfmpegError.ThrowIfError(avcodec_open2(context, codec, &dictionary), $"Opening {encoderName}");
 
-            frame = ffmpeg.av_frame_alloc();
+            frame = av_frame_alloc();
             frame->format = (int)picture.Format;
             frame->width = picture.Width;
             frame->height = picture.Height;
@@ -97,8 +97,8 @@ internal static unsafe class FfmpegStillEncoder
             frame->color_range = picture.Range;
             frame->chroma_location = picture.ChromaLocation;
             frame->pts = 0;
-            FfmpegError.ThrowIfError(ffmpeg.av_frame_get_buffer(frame, 64), "av_frame_get_buffer");
-            FfmpegError.ThrowIfError(ffmpeg.av_frame_make_writable(frame), "av_frame_make_writable");
+            FfmpegError.ThrowIfError(av_frame_get_buffer(frame, 64), "av_frame_get_buffer");
+            FfmpegError.ThrowIfError(av_frame_make_writable(frame), "av_frame_make_writable");
             for (uint plane = 0; plane < (uint)picture.Planes.Length; plane++)
             {
                 PixelBuffer<byte> source = picture.Planes[plane];
@@ -117,18 +117,18 @@ internal static unsafe class FfmpegStillEncoder
             // allocates its working surfaces, rather than retaining both through encoding.
             picture.Dispose();
 
-            packet = ffmpeg.av_packet_alloc();
+            packet = av_packet_alloc();
             using var output = new MemoryStream();
-            FfmpegError.ThrowIfError(ffmpeg.avcodec_send_frame(context, frame), $"Encoding with {encoderName}");
-            FfmpegError.ThrowIfError(ffmpeg.avcodec_send_frame(context, null), $"Flushing {encoderName}");
+            FfmpegError.ThrowIfError(avcodec_send_frame(context, frame), $"Encoding with {encoderName}");
+            FfmpegError.ThrowIfError(avcodec_send_frame(context, null), $"Flushing {encoderName}");
             while (true)
             {
-                int received = ffmpeg.avcodec_receive_packet(context, packet);
+                int received = avcodec_receive_packet(context, packet);
                 if (FfmpegError.IsEndOfFile(received) || FfmpegError.IsTryAgain(received))
                     break;
                 FfmpegError.ThrowIfError(received, $"Receiving from {encoderName}");
                 output.Write(new ReadOnlySpan<byte>(packet->data, packet->size));
-                ffmpeg.av_packet_unref(packet);
+                av_packet_unref(packet);
             }
 
             if (output.Length == 0)
@@ -137,10 +137,10 @@ internal static unsafe class FfmpegStillEncoder
         }
         finally
         {
-            ffmpeg.av_dict_free(&dictionary);
-            ffmpeg.av_packet_free(&packet);
-            ffmpeg.av_frame_free(&frame);
-            ffmpeg.avcodec_free_context(&context);
+            av_dict_free(&dictionary);
+            av_packet_free(&packet);
+            av_frame_free(&frame);
+            avcodec_free_context(&context);
         }
     }
 }

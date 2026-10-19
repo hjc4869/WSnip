@@ -2,12 +2,10 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <!-- Keep these in sync with Light Player, whose renderer and FFmpeg interop are shared. -->
-    <AvaloniaVersion>12.1.3</AvaloniaVersion>
-    <AvaloniaForkVersion>12.1.4-lightplayer.13</AvaloniaForkVersion>
-    <!-- The Flatpak build binds to the FFmpeg 8.1 of org.freedesktop.Platform 26.08. -->
+    <AvaloniaVersion>12.1.4</AvaloniaVersion>
+    <AvaloniaForkVersion>12.1.5-lightplayer.0</AvaloniaForkVersion>
     <Flatpak Condition="'$(Flatpak)' == ''">false</Flatpak>
-    <FFmpegAutoGenVersion Condition="'$(FFmpegAutoGenVersion)' == '' And '$(Flatpak)' == 'true'">8.1.0</FFmpegAutoGenVersion>
-    <FFmpegAutoGenVersion Condition="'$(FFmpegAutoGenVersion)' == ''">9.0.1.1</FFmpegAutoGenVersion>
+    <LightStudioFfmpegVersion Condition="'$(LightStudioFfmpegVersion)' == ''">9.0.2.6</LightStudioFfmpegVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -34,8 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageVersion Include="FFmpeg.AutoGen.Abstractions" Version="$(FFmpegAutoGenVersion)" />
-    <PackageVersion Include="FFmpeg.AutoGen.Bindings.DynamicallyLoaded" Version="$(FFmpegAutoGenVersion)" />
+    <PackageVersion Include="LightStudio.Ffmpeg" Version="$(LightStudioFfmpegVersion)" />
   </ItemGroup>
 
   <!-- Linux platform services (session bus, desktop portals and KWin's Wayland protocols). -->

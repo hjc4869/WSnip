@@ -17,7 +17,10 @@
     <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts</ArtifactsPath>
     <!-- Shared Light Player sources and build scripts. -->
     <LightPlayerRoot Condition="'$(LightPlayerRoot)' == ''">$(MSBuildThisFileDirectory)..\LightPlayer\</LightPlayerRoot>
+    <NativeBindingsPolicy>$(LightPlayerRoot)build/NativeBindings.Configuration.targets</NativeBindingsPolicy>
   </PropertyGroup>
+
+  <Import Project="$(LightPlayerRoot)tools/NativeBindings/NativeBindings.props" />
 
   <PropertyGroup Condition="'$(PublishAot)' == 'true'">
     <DebuggerSupport>false</DebuggerSupport>
