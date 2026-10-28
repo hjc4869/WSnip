@@ -668,7 +668,7 @@ public partial class EditorWindow : Window
                 UpdateDocumentState();
             }
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException or NotSupportedException or InvalidOperationException)
+        catch (Exception exception) when (exception is not OutOfMemoryException)
         {
             AppLog.Error("Editor", $"Saving {path} failed.", exception);
             MessageDialog.Show(IsVisible ? this : null, "WSnip", string.Format(AppStrings.SaveFailed, exception.Message));
