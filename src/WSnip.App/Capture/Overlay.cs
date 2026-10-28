@@ -329,10 +329,29 @@ internal sealed class OverlayWindow : Window
             return;
         }
 
-        // The window takes the scale of the display it opened on; fit it to the display exactly.
-        Width = Monitor.Bounds.Width / RenderScaling;
-        Height = Monitor.Bounds.Height / RenderScaling;
+        // A window placed while hidden can keep the DPI of another display; Windows applies the DPI
+        // of the display under it when it moves while visible, then resizes it for the new scale.
+        ScalingChanged += (_, _) => Dispatcher.UIThread.Post(FitToMonitor);
+        Position = new PixelPoint(Monitor.Bounds.X + 1, Monitor.Bounds.Y + 1);
+        FitToMonitor();
+    }
+
+    /// <summary>Covers the display exactly at the window's current scale.</summary>
+    private void FitToMonitor()
+    {
         Position = new PixelPoint(Monitor.Bounds.X, Monitor.Bounds.Y);
+        double width = Monitor.Bounds.Width / RenderScaling;
+        double height = Monitor.Bounds.Height / RenderScaling;
+        // A scale change that keeps the window's pixel size leaves its client size stale; resizing refreshes it.
+        if (Math.Abs(ClientSize.Width - width) > 1 || Math.Abs(ClientSize.Height - height) > 1)
+        {
+            Width = width - 2;
+            Height = height - 2;
+            UpdateLayout();
+        }
+
+        Width = width;
+        Height = height;
     }
 
     /// <summary>
