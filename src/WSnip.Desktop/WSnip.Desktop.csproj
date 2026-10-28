@@ -2,8 +2,8 @@
   <!--
     Desktop application head: the WSnip executable for Windows and Linux, NativeAOT publishing and
     the platform services of the target operating system. Windows builds get the manifest, the icon
-    and the LGPL FFmpeg libraries used by the HEIC, AVIF and JPEG XL encoders, shared with Light
-    Player through its build/Ffmpeg.targets. Linux builds load FFmpeg and PipeWire from the system,
+    and the FFmpeg libraries used by the HEIC, AVIF and JPEG XL encoders from LightStudio.Ffmpeg.
+    Linux builds load FFmpeg and PipeWire from the system,
     or from the runtime of the Flatpak.
   -->
   <PropertyGroup>
@@ -43,7 +43,6 @@
     <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>..\WSnip.App\Assets\wsnip.ico</ApplicationIcon>
-    <BundleFfmpeg>true</BundleFfmpeg>
   </PropertyGroup>
   <PropertyGroup Condition="'$(IsLinuxTarget)' == 'true'">
     <DefineConstants>$(DefineConstants);LINUX</DefineConstants>
@@ -56,8 +55,7 @@
     <PackageReference Include="Avalonia.FreeDesktop" />
     <PackageReference Include="Avalonia.HarfBuzz" />
     <PackageReference Condition="'$(IsLinuxTarget)' == 'true'" Include="Avalonia.Wayland" />
-    <!-- Use the package's binding profile, but keep BtbN's software encoders in the shipped DLLs. -->
-    <PackageReference Condition="'$(IsWindowsTarget)' == 'true'" Include="LightStudio.Ffmpeg" ExcludeAssets="runtime;native" />
+    <PackageReference Condition="'$(IsWindowsTarget)' == 'true'" Include="LightStudio.Ffmpeg" />
   </ItemGroup>
 
   <ItemGroup>
@@ -65,6 +63,4 @@
     <ProjectReference Condition="'$(IsWindowsTarget)' == 'true'" Include="..\WSnip.Windows\WSnip.Windows.csproj" />
     <ProjectReference Condition="'$(IsLinuxTarget)' == 'true'" Include="..\WSnip.Linux\WSnip.Linux.csproj" />
   </ItemGroup>
-
-  <Import Project="$(LightPlayerRoot)build\Ffmpeg.targets" />
 </Project>

@@ -76,13 +76,16 @@ by default).
 | --- | --- | --- |
 | PNG | 8-bit sRGB, with transparency | SDR rendition only |
 | JPEG | Baseline sRGB | UltraHDR: SDR base + gain map (MPF, ISO 21496-1 and `hdrgm` XMP) |
-| HEIC | HEVC through Kvazaar | SDR base + `tmap` gain map item |
-| AVIF | AV1 through libaom, 4:4:4 | SDR base + `tmap` gain map item |
+| HEIC | HEVC through an available software or hardware encoder | SDR base + `tmap` gain map item |
+| AVIF | AV1, 4:4:4 when supported by the encoder | SDR base + `tmap` gain map item |
 | JPEG XL | 8-bit sRGB through libjxl | 16-bit BT.2100 PQ (no gain map) |
 | PNG (HDR) | — | 16-bit BT.2100 PQ with `cICP` and `cLLI` |
 
-HEIC, AVIF and JPEG XL use the LGPL FFmpeg build that Light Player bundles. A format whose encoder
-is missing is hidden, and automatic saves fall back to PNG or UltraHDR JPEG.
+HEIC, AVIF and JPEG XL use FFmpeg from `LightStudio.Ffmpeg` on Windows and from the system or
+Flatpak runtime on Linux. HEIC and AVIF prefer software encoders and fall back to hardware encoders
+that successfully open on the local device, using Light Player's shared still-image encoder probe.
+A format without an applicable encoder is hidden, and automatic saves fall back to PNG or UltraHDR
+JPEG. Large images are tiled when they exceed the encoder's picture-size limit.
 
 ## HDR pipeline
 
@@ -224,12 +227,13 @@ of `WSnip.Desktop`.
 Shared with Light Player (`..\LightPlayer`, source unchanged):
 
 - `LightStudio.Logging`
-- `LightStudio.FfmpegShim`
+- `LightStudio.FfmpegShim`, including still-image encoder discovery and software/hardware encoding
 - `tools/NativeBindings`, which generates the shim's native interop from FFmpeg headers
 - The photo viewer's blur backdrop, HDR-aware foreground brushes and zoom animation
-- `build\Ffmpeg.targets`, which downloads and bundles the LGPL FFmpeg shared build
+- `build/GitHubNuGet.targets`, which downloads and verifies GitHub release packages
 - `packaging/flatpak/nuget-sources.py`, which pins the NuGet packages of the offline Flatpak build
-- The Avalonia 12.1.4 packages and fork (`12.1.5-lightplayer.0`), matching Light Player 2.0, including the `ExtendedLinear` color mode of
+- `Directory.Packages.props`, which keeps shared package versions and GitHub release hashes aligned
+- The Avalonia 12.1.4 packages and fork (`12.1.5-custom.20`), including the `ExtendedLinear` color mode of
   the Win32 and Wayland backends that provides the FP16 scRGB surface
 
 ## Building
@@ -242,18 +246,20 @@ Requirements:
   their development headers and pkg-config modules (`libavcodec`, `libavformat`, `libavutil`,
   `libavfilter`, `libswresample` and `libswscale`).
 - .NET SDK 10.0.301 or later 10.0 feature band, as pinned in `global.json`.
-- A [Light Player 2.0](https://github.com/hjc4869/LightPlayer/tree/v2.0.0) checkout next to this
+- A [Light Player main](https://github.com/hjc4869/LightPlayer/tree/main) checkout next to this
   repository (`..\LightPlayer`). To use another location, set `-p:LightPlayerRoot=...\`.
-- The Avalonia fork packages, available through the feeds in `nuget.config`.
+- NuGet restore downloads the Avalonia fork and Light Studio packages from GitHub Releases,
+  verifies their SHA-256 hashes, and prepares a local feed in Light Player's
+  `artifacts/github-nuget/packages`. Other packages come from nuget.org.
 - libclang for the build host: for example `libclang-dev` on Debian/Ubuntu or LLVM on Windows
   (`winget install --id LLVM.LLVM --exact`). Windows NativeAOT builds also need Visual Studio's
   C++ build tools for each target architecture.
 
 FFmpeg calls use the shim's generated NativeBindings API, with no managed binding-loader
 initialization. Linux bindings are generated from the installed development headers; Flatpak builds
-use the SDK's FFmpeg 8.1 headers. Windows uses the `LightStudio.Ffmpeg` 9.0.2.6 binding profile but
-excludes that package's runtime assets, retaining the bundled BtbN LGPL libraries with the
-Kvazaar, libaom and libjxl software encoders.
+use the SDK's FFmpeg 8.1 headers. Windows uses the `LightStudio.Ffmpeg` 9.0.2 binding profile and
+native runtime assets. Available HEIC/AVIF encoders depend on those libraries and the local GPU
+and driver; no separate FFmpeg build is downloaded for software image encoders.
 
 ```powershell
 # Debug build

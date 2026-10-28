@@ -4,7 +4,7 @@ name: Release
 # setup executables, then publishes them in one GitHub Release. Triggered by pushing a version tag
 # (e.g. v0.2.0) or run manually from the Actions tab.
 #
-# WSnip builds against a Light Player checkout (shared sources, build/Ffmpeg.targets)
+# WSnip builds against a Light Player checkout (shared sources and package configuration)
 # Windows packages are signed with the same Light Studio certificate as Light Player. See README.md
 # ("Releases") for the secrets and repository settings this workflow needs.
 on:
@@ -20,7 +20,7 @@ on:
       lightplayer_ref:
         description: 'Light Player branch, tag or commit to build against.'
         required: false
-        default: 'v2.0.1'
+        default: 'v2.1.0'
         type: string
 
 # Required so the release step can create the release and upload the packages.

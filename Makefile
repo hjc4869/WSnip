@@ -71,7 +71,8 @@ FLATPAK_GENERATOR     := $(LIGHTPLAYER_ROOT)/packaging/flatpak/nuget-sources.py
 NUGET_INPUTS          := $(shell find src -name '*.csproj') Directory.Build.props Directory.Build.targets Directory.Packages.props nuget.config \
                          $(foreach project,$(LIGHTPLAYER_PROJECTS),$(LIGHTPLAYER_ROOT)/src/$(project)/$(project).csproj) \
                          $(LIGHTPLAYER_ROOT)/Directory.Build.props $(LIGHTPLAYER_ROOT)/Directory.Build.targets \
-                         $(LIGHTPLAYER_ROOT)/Directory.Packages.props $(LIGHTPLAYER_ROOT)/build/NativeBindings.Configuration.targets \
+						 $(LIGHTPLAYER_ROOT)/Directory.Packages.props $(LIGHTPLAYER_ROOT)/nuget.config \
+						 $(LIGHTPLAYER_ROOT)/build/GitHubNuGet.targets $(LIGHTPLAYER_ROOT)/build/NativeBindings.Configuration.targets \
                          $(wildcard $(LIGHTPLAYER_ROOT)/tools/NativeBindings/*.props $(LIGHTPLAYER_ROOT)/tools/NativeBindings/*.targets \
                                     $(LIGHTPLAYER_ROOT)/tools/NativeBindings/*/*.csproj)
 

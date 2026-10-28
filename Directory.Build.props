@@ -17,6 +17,7 @@
     <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts</ArtifactsPath>
     <!-- Shared Light Player sources and build scripts. -->
     <LightPlayerRoot Condition="'$(LightPlayerRoot)' == ''">$(MSBuildThisFileDirectory)..\LightPlayer\</LightPlayerRoot>
+    <UseAvaloniaFork Condition="'$(UseAvaloniaFork)' == ''">true</UseAvaloniaFork>
     <NativeBindingsPolicy>$(LightPlayerRoot)build/NativeBindings.Configuration.targets</NativeBindingsPolicy>
   </PropertyGroup>
 

@@ -1,6 +1,6 @@
+using LightStudio.FfmpegShim.ImageEncoding;
 using LightStudio.NativeBindings.Types;
 using WSnip.Core.Imaging;
-
 using WSnip.Core.Strings;
 
 namespace WSnip.Core.Encoding;
@@ -21,44 +21,34 @@ public enum HeifCodec
 /// </summary>
 public static class HeifEncoder
 {
-    private const ushort BaseId = 1;
-    private const ushort ToneMapId = 2;
-    private const ushort GainMapId = 3;
-
-    private static readonly string[] HevcEncoders = ["libkvazaar", "libx265"];
-    private static readonly string[] Av1Encoders = ["libaom-av1", "librav1e", "libsvtav1"];
-
     public static bool IsAvailable(HeifCodec codec) => FindEncoder(codec) is not null;
 
     /// <summary>Encodes a rendition built with flattened alpha.</summary>
     /// <param name="quality">1 to 100, where 100 is near-lossless.</param>
     public static void Write(Stream output, Rendition rendition, HeifCodec codec, int quality, int gainMapQuality)
     {
-        string encoder = FindEncoder(codec)
+        StillImageEncoderInfo encoder = FindEncoder(codec)
             ?? throw new NotSupportedException(string.Format(AppStrings.EncoderUnavailable, codec == HeifCodec.Hevc ? "HEVC" : "AV1"));
         var coder = new ItemCoder(codec, encoder);
         int primariesCode = ColorMath.CicpPrimaries(rendition.Primaries);
 
-        var items = new List<HeifItem>();
-        HeifItem baseItem = coder.EncodeColor(BaseId, rendition, quality, primariesCode);
-        items.Add(baseItem);
-        var references = new List<(string, ushort, ushort[])>();
+        ushort baseId = coder.EncodeColor(rendition, quality, primariesCode);
         ushort[]? alternatives = null;
 
         if (rendition.GainMap is { } gainMap)
         {
-            HeifItem gainItem = coder.EncodeGainMap(GainMapId, gainMap, gainMapQuality);
+            ushort gainId = coder.EncodeGainMap(gainMap, gainMapQuality);
+            ushort toneMapId = coder.NextId();
             byte[] metadata = [0, .. gainMap.Metadata.ToIsoBinary()];
-            var toneMap = new HeifItem { Id = ToneMapId, Type = "tmap", Name = "TMap", Data = metadata };
+            var toneMap = new HeifItem { Id = toneMapId, Type = "tmap", Name = "TMap", Data = metadata };
             toneMap.Properties.Add(new HeifProperty(HeifWriter.Ispe(rendition.Width, rendition.Height), false));
             toneMap.Properties.Add(new HeifProperty(HeifWriter.Pixi(3, 10), false));
             toneMap.Properties.Add(new HeifProperty(HeifWriter.Nclx(primariesCode, ColorMath.CicpTransferPq, ColorMath.CicpMatrixIdentity, true), false));
             int maxCll = (int)Math.Ceiling(rendition.Peak * ColorMath.ReferenceWhiteNits);
             toneMap.Properties.Add(new HeifProperty(HeifWriter.ContentLightLevel(maxCll, 0), false));
-            items.Add(toneMap);
-            items.Add(gainItem);
-            references.Add(("dimg", ToneMapId, [BaseId, GainMapId]));
-            alternatives = [ToneMapId, BaseId];
+            coder.Items.Add(toneMap);
+            coder.References.Add(("dimg", toneMapId, [baseId, gainId]));
+            alternatives = [toneMapId, baseId];
         }
 
         var brands = new List<string>();
@@ -76,28 +66,37 @@ public static class HeifEncoder
 
         if (rendition.GainMap is not null)
             brands.Add("tmap");
-        HeifWriter.Write(output, codec == HeifCodec.Hevc ? "heic" : "avif", brands, items, BaseId, references, alternatives);
+        HeifWriter.Write(output, codec == HeifCodec.Hevc ? "heic" : "avif", brands, coder.Items, baseId, coder.References, alternatives);
     }
 
-    private static string? FindEncoder(HeifCodec codec) =>
-        FfmpegStillEncoder.FirstAvailable(codec == HeifCodec.Hevc ? HevcEncoders : Av1Encoders);
+    private static StillImageEncoderInfo? FindEncoder(HeifCodec codec) =>
+        StillImageEncoders.ProbeAsync().GetAwaiter().GetResult().FirstOrDefault(encoder =>
+            encoder.Codec == (codec == HeifCodec.Hevc ? StillImageCodec.Hevc : StillImageCodec.Av1) &&
+            (encoder.Supports(AVPixelFormat.AV_PIX_FMT_YUV420P) ||
+                (codec == HeifCodec.Av1 && encoder.Supports(AVPixelFormat.AV_PIX_FMT_YUV444P)) ||
+                encoder.Supports(AVPixelFormat.AV_PIX_FMT_NV12) || encoder.Supports(AVPixelFormat.AV_PIX_FMT_P010LE)));
 
-    private sealed class ItemCoder(HeifCodec codec, string encoder)
+    private sealed class ItemCoder(HeifCodec codec, StillImageEncoderInfo encoder)
     {
         private readonly List<Av1Bitstream.SequenceInfo> av1Sequences = [];
+        private ushort lastId;
 
-        private bool FullChroma => codec == HeifCodec.Av1 && encoder == "libaom-av1";
+        public List<HeifItem> Items { get; } = [];
 
-        public HeifItem EncodeColor(ushort id, Rendition rendition, int quality, int primariesCode)
+        public List<(string, ushort, ushort[])> References { get; } = [];
+
+        public ushort NextId() => checked(++lastId);
+
+        private bool FullChroma => codec == HeifCodec.Av1 && encoder.Supports(AVPixelFormat.AV_PIX_FMT_YUV444P);
+
+        public ushort EncodeColor(Rendition rendition, int quality, int primariesCode)
         {
-            (int codedWidth, int codedHeight) = CodedSize(rendition.Width, rendition.Height);
-            using PixelBuffer<byte> rgba = Pad(rendition.Sdr, rendition.Width, rendition.Height, 4, codedWidth, codedHeight);
             bool subsample = !FullChroma;
-            (PixelBuffer<byte>[] planes, int[] strides) = YuvConverter.FromRgba(rgba, codedWidth, codedHeight, subsample, YuvMatrix.Bt709);
+            (PixelBuffer<byte>[] planes, int[] strides) = YuvConverter.FromRgba(rendition.Sdr, rendition.Width, rendition.Height, subsample, YuvMatrix.Bt709);
             using var picture = new PicturePlanes
             {
-                Width = codedWidth,
-                Height = codedHeight,
+                Width = rendition.Width,
+                Height = rendition.Height,
                 Format = subsample ? AVPixelFormat.AV_PIX_FMT_YUV420P : AVPixelFormat.AV_PIX_FMT_YUV444P,
                 Planes = planes,
                 Strides = strides,
@@ -106,72 +105,57 @@ public static class HeifEncoder
                 Matrix = AVColorSpace.AVCOL_SPC_BT709,
                 Range = AVColorRange.AVCOL_RANGE_JPEG,
             };
-            rgba.Dispose();
-
-            HeifItem item = Encode(id, picture, quality, "Color", hidden: false);
-            item.Properties.Add(new HeifProperty(HeifWriter.Pixi(3, 8), false));
-            item.Properties.Add(new HeifProperty(HeifWriter.Nclx(primariesCode, ColorMath.CicpTransferSrgb, ColorMath.CicpMatrixBt709, true), false));
-            AddCrop(item, rendition.Width, rendition.Height, codedWidth, codedHeight);
-            return item;
+            return AddImage(picture, quality, "Color", hidden: false, 3);
         }
 
-        public HeifItem EncodeGainMap(ushort id, GainMapImage gainMap, int quality)
+        public ushort EncodeGainMap(GainMapImage gainMap, int quality)
         {
-            (int codedWidth, int codedHeight) = CodedSize(gainMap.Width, gainMap.Height);
-            using PixelBuffer<byte> samples = Pad(gainMap.Pixels, gainMap.Width, gainMap.Height, gainMap.Channels, codedWidth, codedHeight);
+            int width = gainMap.Width, height = gainMap.Height;
+            PixelBuffer<byte> samples = gainMap.Pixels;
             PicturePlanes picture;
-            int matrix;
-            if (gainMap.Channels == 3 && FullChroma)
+            if (gainMap.Channels == 3 && FullChroma && encoder.Supports(AVPixelFormat.AV_PIX_FMT_GBRP))
             {
-                (PixelBuffer<byte>[] planes, int[] strides) = YuvConverter.GbrFromRgb(samples, codedWidth, codedHeight);
+                (PixelBuffer<byte>[] planes, int[] strides) = YuvConverter.GbrFromRgb(samples, width, height);
                 picture = new PicturePlanes
                 {
-                    Width = codedWidth,
-                    Height = codedHeight,
+                    Width = width,
+                    Height = height,
                     Format = AVPixelFormat.AV_PIX_FMT_GBRP,
                     Planes = planes,
                     Strides = strides,
                     Matrix = AVColorSpace.AVCOL_SPC_RGB,
                 };
-                matrix = ColorMath.CicpMatrixIdentity;
             }
-            else if (gainMap.Channels == 1 && FullChroma)
+            else if (gainMap.Channels == 1 && FullChroma && encoder.Supports(AVPixelFormat.AV_PIX_FMT_GRAY8))
             {
                 picture = new PicturePlanes
                 {
-                    Width = codedWidth,
-                    Height = codedHeight,
+                    Width = width,
+                    Height = height,
                     Format = AVPixelFormat.AV_PIX_FMT_GRAY8,
                     Planes = [samples.Share()],
-                    Strides = [codedWidth],
+                    Strides = [width],
                     Matrix = AVColorSpace.AVCOL_SPC_BT470BG,
                 };
-                matrix = ColorMath.CicpMatrixBt601;
             }
             else
             {
-                using PixelBuffer<byte> rgba = YuvConverter.ToRgba(samples, codedWidth, codedHeight, gainMap.Channels);
-                (PixelBuffer<byte>[] planes, int[] strides) = YuvConverter.FromRgba(rgba, codedWidth, codedHeight, true, YuvMatrix.Bt601);
+                using PixelBuffer<byte> rgba = YuvConverter.ToRgba(samples, width, height, gainMap.Channels);
+                (PixelBuffer<byte>[] planes, int[] strides) = YuvConverter.FromRgba(rgba, width, height, !FullChroma, YuvMatrix.Bt601);
                 picture = new PicturePlanes
                 {
-                    Width = codedWidth,
-                    Height = codedHeight,
-                    Format = AVPixelFormat.AV_PIX_FMT_YUV420P,
+                    Width = width,
+                    Height = height,
+                    Format = FullChroma ? AVPixelFormat.AV_PIX_FMT_YUV444P : AVPixelFormat.AV_PIX_FMT_YUV420P,
                     Planes = planes,
                     Strides = strides,
                     Matrix = AVColorSpace.AVCOL_SPC_BT470BG,
                 };
-                matrix = ColorMath.CicpMatrixBt601;
             }
 
             using PicturePlanes ownedPicture = picture;
-            samples.Dispose();
-            HeifItem item = Encode(id, picture, quality, "GMap", hidden: true);
             int channels = picture.Format == AVPixelFormat.AV_PIX_FMT_GRAY8 ? 1 : 3;
-            item.Properties.Add(new HeifProperty(HeifWriter.Pixi(channels, 8), false));
-            item.Properties.Add(new HeifProperty(HeifWriter.Nclx(2, 2, matrix, true), false));
-            AddCrop(item, gainMap.Width, gainMap.Height, codedWidth, codedHeight);
-            return item;
+            return AddImage(picture, quality, "GMap", hidden: true, channels);
         }
 
         /// <summary>The AVIF profile brand every AV1 item of the file satisfies, if any.</summary>
@@ -186,11 +170,68 @@ public static class HeifEncoder
             return null;
         }
 
-        private HeifItem Encode(ushort id, PicturePlanes picture, int quality, string name, bool hidden)
+        private ushort AddImage(PicturePlanes planes, int quality, string name, bool hidden, int channels)
         {
-            byte[] packet = FfmpegStillEncoder.Encode(encoder, picture, EncoderOptions(quality));
+            using StillPicture picture = CreatePicture(planes, encoder);
+            planes.Dispose();
+            int bitDepth = picture.Format == AVPixelFormat.AV_PIX_FMT_P010LE ? 10 : 8;
+            HeifProperty[] description =
+            [
+                new(HeifWriter.Pixi(channels, bitDepth), false),
+                new(HeifWriter.Nclx((int)picture.Primaries, (int)picture.Transfer, (int)picture.Matrix, true), false),
+            ];
+            int maximum = encoder.MaximumDimension;
+            if (picture.Width <= maximum && picture.Height <= maximum)
+            {
+                (int width, int height) = CodedSize(picture.Width, picture.Height);
+                using StillPicture? padded = width == picture.Width && height == picture.Height
+                    ? null : picture.Crop(0, 0, width, height);
+                HeifItem item = Encode(padded ?? picture, quality, name, hidden, (picture.Width, picture.Height));
+                item.Properties.AddRange(description);
+                Items.Add(item);
+                return item.Id;
+            }
+
+            int tileSize = maximum / 2;
+            int columns = (picture.Width + tileSize - 1) / tileSize;
+            int rows = (picture.Height + tileSize - 1) / tileSize;
+            if (columns > 256 || rows > 256)
+                throw new InvalidDataException("The image is too large for a HEIF grid.");
+            var tiles = new ushort[checked(rows * columns)];
+            for (int row = 0; row < rows; row++)
+            {
+                for (int column = 0; column < columns; column++)
+                {
+                    using StillPicture tile = picture.Crop(column * tileSize, row * tileSize, tileSize, tileSize);
+                    HeifItem item = Encode(tile, quality, "Tile", hidden: true);
+                    item.Properties.AddRange(description);
+                    Items.Add(item);
+                    tiles[row * columns + column] = item.Id;
+                }
+            }
+
+            var grid = new HeifItem
+            {
+                Id = NextId(),
+                Type = "grid",
+                Name = name,
+                Hidden = hidden,
+                Data = new BoxWriter().U8(0).U8(1).U8((byte)(rows - 1)).U8((byte)(columns - 1))
+                    .U32((uint)picture.Width).U32((uint)picture.Height).ToArray(),
+            };
+            grid.Properties.Add(new HeifProperty(HeifWriter.Ispe(picture.Width, picture.Height), false));
+            grid.Properties.AddRange(description);
+            Items.Add(grid);
+            References.Add(("dimg", grid.Id, tiles));
+            return grid.Id;
+        }
+
+        private HeifItem Encode(StillPicture picture, int quality, string name, bool hidden, (int Width, int Height)? visibleSize = null)
+        {
+            byte[] packet = StillImageEncoder.Encode(encoder, picture, new StillEncodeSettings(quality, StillEncodeSpeed.Balanced));
             byte[] data;
             byte[] configuration;
+            int width, height;
             if (codec == HeifCodec.Hevc)
             {
                 List<byte[]> units = HevcBitstream.SplitAnnexB(packet);
@@ -200,8 +241,7 @@ public static class HeifEncoder
                 if (sps.Count == 0)
                     throw new InvalidDataException("The HEVC encoder produced no sequence parameter set.");
                 HevcBitstream.SequenceInfo info = HevcBitstream.ParseSps(sps[0]);
-                if (info.Width != picture.Width || info.Height != picture.Height)
-                    throw new InvalidDataException($"The HEVC stream is {info.Width}x{info.Height}, expected {picture.Width}x{picture.Height}.");
+                (width, height) = (info.Width, info.Height);
                 configuration = HeifWriter.Configuration("hvcC", HevcBitstream.ConfigurationRecord(info, vps, sps, pps));
                 data = HevcBitstream.LengthPrefixed(units.Where(u => HevcBitstream.NalType(u) is not
                     (HevcBitstream.VpsType or HevcBitstream.SpsType or HevcBitstream.PpsType or HevcBitstream.AudType)));
@@ -210,58 +250,34 @@ public static class HeifEncoder
             {
                 (data, byte[] sequenceHeader) = Av1Bitstream.Prepare(packet);
                 Av1Bitstream.SequenceInfo info = Av1Bitstream.ParseSequenceHeader(sequenceHeader);
-                if (info.Width != picture.Width || info.Height != picture.Height)
-                    throw new InvalidDataException($"The AV1 stream is {info.Width}x{info.Height}, expected {picture.Width}x{picture.Height}.");
+                (width, height) = (info.Width, info.Height);
                 av1Sequences.Add(info);
                 configuration = HeifWriter.Configuration("av1C", Av1Bitstream.ConfigurationRecord(info));
             }
 
+            if (width < picture.Width || height < picture.Height)
+                throw new InvalidDataException($"The {encoder.Name} stream is {width}x{height}, expected {picture.Width}x{picture.Height}.");
             var item = new HeifItem
             {
-                Id = id,
+                Id = NextId(),
                 Type = codec == HeifCodec.Hevc ? "hvc1" : "av01",
                 Name = name,
                 Hidden = hidden,
                 Data = data,
             };
             item.Properties.Add(new HeifProperty(configuration, true));
-            item.Properties.Add(new HeifProperty(HeifWriter.Ispe(picture.Width, picture.Height), false));
+            item.Properties.Add(new HeifProperty(HeifWriter.Ispe(width, height), false));
+            AddCrop(item, visibleSize?.Width ?? picture.Width, visibleSize?.Height ?? picture.Height, width, height);
             return item;
         }
 
-        private Dictionary<string, string> EncoderOptions(int quality)
+        private (int Width, int Height) CodedSize(int width, int height)
         {
-            int q = Math.Clamp(quality, 1, 100);
-            return encoder switch
-            {
-                "libkvazaar" => new() { ["kvazaar-params"] = $"qp={HevcQp(q)},preset=medium" },
-                "libx265" => new() { ["x265-params"] = $"qp={HevcQp(q)}:keyint=1:info=0", ["preset"] = "medium" },
-                "libaom-av1" => new()
-                {
-                    ["crf"] = Av1Quantizer(q).ToString(System.Globalization.CultureInfo.InvariantCulture),
-                    ["usage"] = "allintra",
-                    ["cpu-used"] = "6",
-                    ["row-mt"] = "1",
-                    ["still-picture"] = "1",
-                },
-                "librav1e" => new()
-                {
-                    ["qp"] = (Av1Quantizer(q) * 4).ToString(System.Globalization.CultureInfo.InvariantCulture),
-                    ["speed"] = "8",
-                },
-                _ => new()
-                {
-                    ["crf"] = Av1Quantizer(q).ToString(System.Globalization.CultureInfo.InvariantCulture),
-                    ["preset"] = "8",
-                },
-            };
+            (int alignment, int minimum) = encoder.IsHardware ? (64, 256)
+                : codec == HeifCodec.Hevc || encoder.Name == "libsvtav1" ? (8, 64) : (2, 16);
+            return (Math.Max(minimum, (width + alignment - 1) / alignment * alignment),
+                Math.Max(minimum, (height + alignment - 1) / alignment * alignment));
         }
-
-        // Kvazaar only accepts multiples of 8; the padding is cropped away again by a 'clap' property.
-        private (int Width, int Height) CodedSize(int width, int height) =>
-            codec == HeifCodec.Hevc
-                ? (Math.Max(16, (width + 7) & ~7), Math.Max(16, (height + 7) & ~7))
-                : (width, height);
 
         private static void AddCrop(HeifItem item, int width, int height, int codedWidth, int codedHeight)
         {
@@ -275,25 +291,64 @@ public static class HeifEncoder
             item.Properties.Add(new HeifProperty(clap, true));
         }
 
-        private static int HevcQp(int quality) => (int)Math.Round(4 + (100 - quality) * 0.42);
-
-        private static int Av1Quantizer(int quality) => ((100 - quality) * 63 + 50) / 100;
     }
 
-    private static PixelBuffer<byte> Pad(PixelBuffer<byte> samples, int width, int height, int channels, int codedWidth, int codedHeight)
+    private static unsafe StillPicture CreatePicture(PicturePlanes source, StillImageEncoderInfo encoder)
     {
-        if (width == codedWidth && height == codedHeight)
-            return samples.Share();
-        using var padded = new PixelBuffer<byte>(checked(codedWidth * codedHeight * channels));
-        for (int y = 0; y < codedHeight; y++)
+        AVPixelFormat format = encoder.Supports(source.Format) ? source.Format
+            : encoder.Supports(AVPixelFormat.AV_PIX_FMT_NV12) ? AVPixelFormat.AV_PIX_FMT_NV12 : AVPixelFormat.AV_PIX_FMT_P010LE;
+        var picture = new StillPicture(source.Width, source.Height, format)
         {
-            int sourceRow = Math.Min(y, height - 1) * width * channels;
-            int targetRow = y * codedWidth * channels;
-            samples.AsSpan(sourceRow, width * channels).CopyTo(padded.AsSpan(targetRow, width * channels));
-            for (int x = width; x < codedWidth; x++)
-                samples.AsSpan(sourceRow + (width - 1) * channels, channels).CopyTo(padded.AsSpan(targetRow + x * channels, channels));
-        }
+            Primaries = source.Primaries,
+            Transfer = source.Transfer,
+            Matrix = source.Matrix,
+            Range = source.Range,
+        };
+        try
+        {
+            for (int plane = 0; plane < picture.PlaneCount; plane++)
+            {
+                int width = picture.GetPlaneWidth(plane), height = picture.GetPlaneHeight(plane);
+                byte* destination = (byte*)picture.GetPlane(plane);
+                int stride = picture.GetStride(plane);
+                for (int row = 0; row < height; row++)
+                {
+                    Span<byte> target = new(destination + (long)row * stride, stride);
+                    ReadOnlySpan<byte> samples = source.Planes[plane].AsSpan(row * source.Strides[plane], source.Strides[plane]);
+                    if (format == source.Format)
+                    {
+                        samples.CopyTo(target);
+                        continue;
+                    }
 
-        return padded.Share();
+                    bool wide = format == AVPixelFormat.AV_PIX_FMT_P010LE;
+                    ReadOnlySpan<byte> cr = plane == 0 ? [] : source.Planes[2].AsSpan(row * source.Strides[2], source.Strides[2]);
+                    for (int column = 0; column < width; column++)
+                    {
+                        int index = plane == 0 ? column : column * 2;
+                        if (wide)
+                        {
+                            Span<ushort> words = System.Runtime.InteropServices.MemoryMarshal.Cast<byte, ushort>(target);
+                            words[index] = (ushort)(samples[column] << 8);
+                            if (plane != 0)
+                                words[index + 1] = (ushort)(cr[column] << 8);
+                        }
+                        else
+                        {
+                            target[index] = samples[column];
+                            if (plane != 0)
+                                target[index + 1] = cr[column];
+                        }
+                    }
+                }
+            }
+
+            return picture;
+        }
+        catch
+        {
+            picture.Dispose();
+            throw;
+        }
     }
 }

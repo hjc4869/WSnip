@@ -8,7 +8,7 @@ param(
 
     [string] $Version,
 
-    # Light Player checkout that provides the shared sources and build/Ffmpeg.targets; defaults to ..\LightPlayer.
+    # Light Player checkout that provides shared sources and package configuration; defaults to ..\LightPlayer.
     [string] $LightPlayerRoot
 )
 

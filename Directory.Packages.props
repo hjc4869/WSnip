@@ -1,12 +1,5 @@
 <Project>
-  <PropertyGroup>
-    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <!-- Keep these in sync with Light Player, whose renderer and FFmpeg interop are shared. -->
-    <AvaloniaVersion>12.1.4</AvaloniaVersion>
-    <AvaloniaForkVersion>12.1.5-lightplayer.0</AvaloniaForkVersion>
-    <Flatpak Condition="'$(Flatpak)' == ''">false</Flatpak>
-    <LightStudioFfmpegVersion Condition="'$(LightStudioFfmpegVersion)' == ''">9.0.2.6</LightStudioFfmpegVersion>
-  </PropertyGroup>
+  <Import Project="$(LightPlayerRoot)Directory.Packages.props" />
 
   <ItemGroup>
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
@@ -14,38 +7,10 @@
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageVersion Include="Avalonia" Version="$(AvaloniaForkVersion)" />
-    <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
-    <PackageVersion Include="Avalonia.FreeDesktop" Version="$(AvaloniaForkVersion)" />
-    <PackageVersion Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
-    <PackageVersion Include="Avalonia.HarfBuzz" Version="$(AvaloniaForkVersion)" />
-    <PackageVersion Include="Avalonia.Skia" Version="$(AvaloniaForkVersion)" />
-    <PackageVersion Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
-    <PackageVersion Include="Avalonia.Wayland" Version="$(AvaloniaForkVersion)" />
-    <PackageVersion Include="Avalonia.Win32" Version="$(AvaloniaForkVersion)" />
-    <!-- Must match the SkiaSharp/HarfBuzzSharp that Avalonia.Skia binds to. -->
-    <PackageVersion Include="SkiaSharp" Version="4.153.1" />
-    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="4.153.1" />
-    <PackageVersion Include="HarfBuzzSharp" Version="14.2.1.301" />
-    <PackageVersion Include="HarfBuzzSharp.NativeAssets.Linux" Version="14.2.1.301" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageVersion Include="LightStudio.Ffmpeg" Version="$(LightStudioFfmpegVersion)" />
-  </ItemGroup>
-
   <!-- Linux platform services (session bus, desktop portals and KWin's Wayland protocols). -->
   <ItemGroup>
-    <PackageVersion Include="Tmds.DBus.Protocol" Version="0.94.1" />
     <!-- Must match the NWayland that Avalonia.Wayland binds to. -->
     <PackageVersion Include="NWayland" Version="0.12.5" />
     <PackageVersion Include="NWayland.Protocols.Plasma" Version="0.12.5" />
-  </ItemGroup>
-
-  <!-- Packaging (packaging/WSnipMSIX and packaging/WSnipSetup), matching Light Player. -->
-  <ItemGroup>
-    <PackageVersion Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
-    <PackageVersion Include="WixToolset.BootstrapperApplications.wixext" Version="5.0.2" />
   </ItemGroup>
 </Project>

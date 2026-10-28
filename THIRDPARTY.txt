@@ -44,13 +44,13 @@ Adobe Gain Map
 Image encoding (FFmpeg)
 -----------------------
 FFmpeg
-  (LGPL shared libraries from BtbN/FFmpeg-Builds, installed next to WSnip.exe; used for the HEIC,
+  (shared libraries from LightStudio.Ffmpeg, installed next to WSnip.exe; used for the HEIC,
    AVIF and JPEG XL encoders)
   License: GNU LGPL v2.1-or-later
   https://www.ffmpeg.org/legal.html
-  Build sources: https://github.com/BtbN/FFmpeg-Builds
+  Build sources: https://github.com/hjc4869/LightPlayer-Packages
 
-  Libraries in that build that WSnip's encoders use:
+  Optional software encoder libraries, when provided by the loaded FFmpeg build:
   Kvazaar (HEVC)   License: BSD 3-Clause   https://github.com/ultravideo/kvazaar/blob/master/LICENSE
   libaom (AV1)     License: BSD 2-Clause and the Alliance for Open Media Patent License 1.0
                    https://aomedia.googlesource.com/aom/+/refs/heads/main/LICENSE

@@ -60,6 +60,7 @@ modules:
         esac
         export NUGET_PACKAGES="$PWD/.nuget-packages"
         export DOTNET_CLI_HOME="$PWD/.dotnet-home"
+        mv artifacts lightplayer/
         dotnet publish wsnip/src/WSnip.Desktop/WSnip.Desktop.csproj \
           -c Release -r "$DOTNET_RID" --self-contained true \
           -p:Flatpak=true -p:Platform="$DOTNET_PLATFORM" \

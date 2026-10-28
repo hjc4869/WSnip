@@ -1,3 +1,4 @@
 <Project>
+  <Import Project="$(LightPlayerRoot)build/GitHubNuGet.targets" />
   <Import Project="$(LightPlayerRoot)tools/NativeBindings/NativeBindings.targets" />
 </Project>

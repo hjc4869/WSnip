@@ -65,9 +65,8 @@
   </ItemGroup>
   <Import Project="$(WapProjPath)\Microsoft.DesktopBridge.targets" />
   <!--
-    The LGPL FFmpeg DLLs are acquired by the desktop head itself (Light Player's build/Ffmpeg.targets
-    and <BundleFfmpeg> in WSnip.Desktop.csproj), so they arrive in this package as part of the entry
-    point project's regular packaging outputs.
+    The FFmpeg DLLs come from the desktop head's LightStudio.Ffmpeg package reference, so they
+    arrive in this package as part of the entry point project's regular packaging outputs.
   -->
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" PrivateAssets="all" />
