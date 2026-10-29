@@ -3,6 +3,8 @@ using LightStudio.FfmpegShim;
 using LightStudio.Logging;
 using WSnip.Core.Platform;
 #if WINDOWS
+using LightStudio.LightPlayer.Desktop.Windows;
+using LightStudio.LightPlayer.Services;
 using WSnip.Windows;
 #elif LINUX
 using WSnip.Linux;
@@ -73,7 +75,12 @@ internal static class Program
             .WithInterFont()
             .LogToTrace();
 #if WINDOWS
-        builder.With(new Win32PlatformOptions { ColorMode = Win32ColorMode.ExtendedLinear });
+        var windowsOptions = new Win32PlatformOptions { ColorMode = Win32ColorMode.ExtendedLinear };
+        builder.With(windowsOptions)
+            .AfterSetup(_ => MenuBackdrop.Install(
+                MenuBackdropMode.WinUI,
+                (windowHandle, cornerRadius) => WindowsMenuFrame.Apply(windowsOptions, windowHandle, cornerRadius),
+                linearBlending: true));
 #elif LINUX
         if (IsWaylandSession)
         {

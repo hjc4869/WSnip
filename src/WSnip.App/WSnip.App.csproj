@@ -27,5 +27,8 @@
 
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
+    <Compile Include="$(LightPlayerRoot)src\LightStudio.LightPlayer\Services\MenuBackdrop.cs" Link="Services\MenuBackdrop.cs" />
+    <AvaloniaResource Include="$(LightPlayerRoot)src\LightStudio.LightPlayer\Themes\MenuBackdrops.axaml" Link="Themes\MenuBackdrops.axaml" />
+    <AvaloniaResource Include="$(LightPlayerRoot)src\LightStudio.LightPlayer\Themes\WinUIMenus.axaml" Link="Themes\WinUIMenus.axaml" />
   </ItemGroup>
 </Project>

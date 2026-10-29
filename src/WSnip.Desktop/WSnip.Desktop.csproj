@@ -62,5 +62,6 @@
     <ProjectReference Include="..\WSnip.App\WSnip.App.csproj" />
     <ProjectReference Condition="'$(IsWindowsTarget)' == 'true'" Include="..\WSnip.Windows\WSnip.Windows.csproj" />
     <ProjectReference Condition="'$(IsLinuxTarget)' == 'true'" Include="..\WSnip.Linux\WSnip.Linux.csproj" />
+    <Compile Condition="'$(IsWindowsTarget)' == 'true'" Include="$(LightPlayerRoot)src\LightStudio.LightPlayer.Desktop\Windows\WindowsMenuFrame.cs" Link="Windows\WindowsMenuFrame.cs" />
   </ItemGroup>
 </Project>
