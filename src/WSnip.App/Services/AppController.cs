@@ -148,61 +148,69 @@ public sealed class AppController : IDisposable
         {
             SnipMode initialMode = mode ?? Settings.Mode;
             int delay = delaySeconds ?? Settings.DelaySeconds;
-            if (initialMode == SnipMode.WholeWindow)
+            while (true)
             {
-                await SnipWholeWindowAsync(delay);
-                return;
-            }
-
-            // The app's own windows stay open but are left out of the capture, which shows what is
-            // behind them instead. Where the system cannot leave them out, they step aside meanwhile.
-            if (platform.Windows.CanExcludeFromCapture)
-            {
-                foreach (Window window in lifetime.Windows)
+                if (initialMode == SnipMode.WholeWindow)
                 {
-                    if (window.IsVisible && window.TryGetPlatformHandle() is { } handle)
+                    SnipMode? nextMode = await SnipWholeWindowAsync(delay);
+                    if (nextMode is null)
+                        return;
+                    initialMode = nextMode.Value;
+                    delay = 0;
+                }
+
+                // The app's own windows stay open but are left out of the capture, which shows what is
+                // behind them instead. Where the system cannot leave them out, they step aside meanwhile.
+                if (platform.Windows.CanExcludeFromCapture)
+                {
+                    foreach (Window window in lifetime.Windows)
                     {
-                        platform.Windows.SetExcludedFromCapture(handle.Handle, true);
-                        excluded.Add(handle.Handle);
+                        if (window.IsVisible && window.TryGetPlatformHandle() is { } handle && !excluded.Contains(handle.Handle))
+                        {
+                            platform.Windows.SetExcludedFromCapture(handle.Handle, true);
+                            excluded.Add(handle.Handle);
+                        }
                     }
                 }
-            }
-            else
-            {
-                hidden = HideWindows();
-            }
+                else
+                {
+                    hidden ??= HideWindows();
+                }
 
-            if (delay > 0)
-                await Task.Delay(TimeSpan.FromSeconds(delay));
-            else if (excluded.Count > 0)
-                await Task.Delay(60);
-            else if (hidden is { Count: > 0 })
-                await Task.Delay(HiddenWindowsSettle);
+                if (delay > 0)
+                    await Task.Delay(TimeSpan.FromSeconds(delay));
+                else if (excluded.Count > 0)
+                    await Task.Delay(60);
+                else if (hidden is { Count: > 0 })
+                    await Task.Delay(HiddenWindowsSettle);
 
-            using ScreenSnapshot snapshot = await platform.Capture.CaptureAsync(new CaptureOptions { IncludeCursor = Settings.IncludeCursor });
-            platform.Windows.TryGetCursorPosition(out int x, out int y);
-            using var session = new OverlaySession(snapshot, initialMode, placeWindows: platform.Windows.CanPlaceWindows);
-            SnipSelection? selection = await session.ShowAsync(new PixelPoint(x, y));
+                using ScreenSnapshot snapshot = await platform.Capture.CaptureAsync(new CaptureOptions { IncludeCursor = Settings.IncludeCursor });
+                platform.Windows.TryGetCursorPosition(out int x, out int y);
+                using var session = new OverlaySession(snapshot, initialMode, placeWindows: platform.Windows.CanPlaceWindows);
+                SnipSelection? selection = await session.ShowAsync(new PixelPoint(x, y));
 
-            // A mode picked on the overlay's own bar becomes the default for the next snip.
-            if (session.Mode != initialMode)
-                UpdateSettings(Settings.With(s => s.Mode = session.Mode));
-            if (selection is null)
-            {
+                // A mode picked on the overlay's own bar becomes the default for the next snip.
+                if (session.Mode != initialMode)
+                    UpdateSettings(Settings.With(s => s.Mode = session.Mode));
+                if (selection is null)
+                {
+                    snapshot.Dispose();
+                    if (session.Mode != SnipMode.WholeWindow)
+                        return;
+                    initialMode = SnipMode.WholeWindow;
+                    delay = 0;
+                    continue;
+                }
+
+                // A confirmed selection replaces the old document before composition and encoding.
+                // Cancellation still preserves it, but its pixels never overlap a new delivery.
+                editor?.Clear();
+                using Snip snip = await Task.Run(() => SnipComposer.Compose(snapshot, selection.Region, selection.Outline));
                 snapshot.Dispose();
-                // Choosing a whole window on the bar leaves the frozen screen for the live picker.
-                if (session.Mode == SnipMode.WholeWindow)
-                    await SnipWholeWindowAsync(delaySeconds: 0);
+                AppLog.Information("Snip", $"{selection.Mode} snip {snip.Width}x{snip.Height}: {snip.Statistics}");
+                await DeliverAsync(snip, restoreEditor: hidden?.Any(entry => ReferenceEquals(entry.Window, editor)) == true);
                 return;
             }
-
-            // A confirmed selection replaces the old document before composition and encoding.
-            // Cancellation still preserves it, but its pixels never overlap a new delivery.
-            editor?.Clear();
-            using Snip snip = await Task.Run(() => SnipComposer.Compose(snapshot, selection.Region, selection.Outline));
-            snapshot.Dispose();
-            AppLog.Information("Snip", $"{selection.Mode} snip {snip.Width}x{snip.Height}: {snip.Statistics}");
-            await DeliverAsync(snip, restoreEditor: hidden?.Any(entry => ReferenceEquals(entry.Window, editor)) == true);
         }
         catch (OperationCanceledException exception)
         {
@@ -455,25 +463,44 @@ public sealed class AppController : IDisposable
     /// The app's own windows are hidden meanwhile, so they neither cover the windows to pick from
     /// nor stay active in front of them; they come back before the snip is delivered.
     /// </remarks>
-    private async Task SnipWholeWindowAsync(int delaySeconds)
+    private async Task<SnipMode?> SnipWholeWindowAsync(int delaySeconds)
     {
         if (!platform.WindowPicker.IsSupported)
             throw new NotSupportedException(AppStrings.WindowPickingUnsupported);
 
         List<(Window Window, Window? Owner)> hidden = HideWindows();
+        using var cancellation = new CancellationTokenSource();
+        WholeWindowToolbar? toolbar = null;
         CapturedWindow? window;
         WindowCapture capture;
         try
         {
             if (delaySeconds > 0)
                 await Task.Delay(TimeSpan.FromSeconds(delaySeconds));
-            window = await platform.WindowPicker.PickAsync();
+            platform.Windows.TryGetCursorPosition(out int x, out int y);
+            toolbar = new WholeWindowToolbar(new PixelPoint(x, y), platform.Windows.CanPlaceWindows, cancellation.Cancel);
+            toolbar.Show();
+            try
+            {
+                window = await platform.WindowPicker.PickAsync(cancellation.Token);
+            }
+            catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+            {
+                window = null;
+            }
+            if (toolbar.RequestedMode is { } nextMode)
+            {
+                UpdateSettings(Settings.With(settings => settings.Mode = nextMode));
+                return nextMode;
+            }
+            toolbar.Close();
             if (window is null)
-                return;
+                return null;
             capture = await platform.Capture.CaptureWindowAsync(window, new CaptureOptions { IncludeCursor = Settings.IncludeCursor });
         }
         finally
         {
+            toolbar?.Close();
             RestoreWindows(hidden);
         }
 
@@ -485,6 +512,7 @@ public sealed class AppController : IDisposable
         capture.Dispose();
         AppLog.Information("Snip", $"Whole window snip of '{window.Title}' {snip.Width}x{snip.Height}: {snip.Statistics}");
         await DeliverAsync(snip);
+        return null;
     }
 
     /// <summary>Hides the app's visible windows, returning them in opening order with their owners.</summary>

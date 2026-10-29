@@ -67,6 +67,7 @@ public sealed unsafe class WindowsWindowPicker : IWindowPickerService
     {
         nint mouse = 0, keyboard = 0;
         CapturedWindow? picked = null;
+        Exception? failure = null;
         try
         {
             Msg message;
@@ -93,11 +94,10 @@ public sealed unsafe class WindowsWindowPicker : IWindowPickerService
                 AppLog.Information("Picker", $"No window to capture at {x},{y}; still picking.");
             }
 
-            session.Result.TrySetResult(picked);
         }
         catch (Exception exception)
         {
-            session.Result.TrySetException(exception);
+            failure = exception;
         }
         finally
         {
@@ -107,7 +107,10 @@ public sealed unsafe class WindowsWindowPicker : IWindowPickerService
                 Native.UnhookWindowsHookEx(keyboard);
             RestoreCursors();
             Interlocked.CompareExchange(ref current, null, session);
-            session.Result.TrySetResult(null);
+            if (failure is not null)
+                session.Result.TrySetException(failure);
+            else
+                session.Result.TrySetResult(picked);
         }
     }
 
@@ -120,11 +123,16 @@ public sealed unsafe class WindowsWindowPicker : IWindowPickerService
             switch ((uint)message)
             {
                 case LeftButtonDown:
+                    uint processId;
+                    Native.GetWindowThreadProcessId(Native.WindowFromPoint(info->Point), &processId);
+                    if (processId == (uint)Environment.ProcessId)
+                        break;
                     session.PressedAt = (info->Point.X, info->Point.Y);
                     return 1;
                 case LeftButtonUp:
-                    if (session.PressedAt is { } pressed)
-                        session.Post(Picked, (nuint)(uint)pressed.X, pressed.Y);
+                    if (session.PressedAt is not { } pressed)
+                        break;
+                    session.Post(Picked, (nuint)(uint)pressed.X, pressed.Y);
                     session.PressedAt = null;
                     return 1;
                 case RightButtonDown:

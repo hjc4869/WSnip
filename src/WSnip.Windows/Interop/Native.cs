@@ -273,6 +273,9 @@ internal static unsafe partial class Native
     [LibraryImport("user32.dll")]
     public static partial uint GetWindowThreadProcessId(nint window, uint* processId);
 
+    [LibraryImport("user32.dll")]
+    public static partial nint WindowFromPoint(Point point);
+
     [LibraryImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
     public static partial nint GetWindowLongPtr(nint window, int index);
 

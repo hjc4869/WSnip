@@ -240,7 +240,6 @@ internal sealed class OverlayWindow : Window
 {
     private readonly OverlaySession session;
     private readonly HdrImageView frozen;
-    private readonly List<ToggleButton> modeButtons = [];
     private readonly bool fullScreen;
     private OverlayView? view;
     private DispatcherTimer? follow;
@@ -277,7 +276,12 @@ internal sealed class OverlayWindow : Window
         root.Children.Add(frozen);
         root.Children.Add(canvas);
         if (showBar)
-            root.Children.Add(CreateBar());
+            root.Children.Add(new SnipModeBar(session.Mode, session.SetMode, session.Cancel)
+            {
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = new Thickness(0, 24, 0, 0),
+            });
         Content = root;
 
         session.Changed += OnSessionChanged;
@@ -390,8 +394,20 @@ internal sealed class OverlayWindow : Window
         shared.Release();
     }
 
-    private Control CreateBar()
+    private void OnSessionChanged(object? sender, EventArgs e)
     {
+        foreach (Control child in ((Grid)Content!).Children)
+            child.InvalidateVisual();
+    }
+}
+
+internal sealed class SnipModeBar : Border
+{
+    protected override Type StyleKeyOverride => typeof(Border);
+
+    public SnipModeBar(SnipMode selectedMode, Action<SnipMode> selectMode, Action cancel)
+    {
+        var modeButtons = new List<ToggleButton>();
         var panel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2 };
         foreach (SnipModeOption option in SnipModeOption.All)
         {
@@ -400,14 +416,14 @@ internal sealed class OverlayWindow : Window
             {
                 Classes = { "tool" },
                 Content = CreateIcon(option.IconKey),
-                IsChecked = session.Mode == mode,
+                IsChecked = selectedMode == mode,
                 Cursor = new Cursor(StandardCursorType.Arrow),
             };
             ToolTip.SetTip(button, string.Format(AppStrings.ModeDescription, option.Label, option.Description));
             AutomationProperties.SetName(button, option.Label);
             button.Click += (_, _) =>
             {
-                session.SetMode(mode);
+                selectMode(mode);
                 foreach (ToggleButton other in modeButtons)
                     other.IsChecked = other == button;
             };
@@ -418,27 +434,62 @@ internal sealed class OverlayWindow : Window
         panel.Children.Add(new Border { Classes = { "divider" } });
         var close = new Button { Classes = { "icon" }, Content = CreateIcon("IconClose"), Cursor = new Cursor(StandardCursorType.Arrow) };
         ToolTip.SetTip(close, AppStrings.CancelTip);
-        close.Click += (_, _) => session.Cancel();
+        close.Click += (_, _) => cancel();
         panel.Children.Add(close);
 
-        return new Border
-        {
-            Classes = { "overlayBar" },
-            Child = panel,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Top,
-            Margin = new Thickness(0, 24, 0, 0),
-        };
+        Classes.Add("overlayBar");
+        Child = panel;
     }
 
     private static Control CreateIcon(string key) =>
         new Viewbox { Width = 18, Height = 18, Child = new ShapePath { Data = Application.Current?.FindResource(key) as Geometry } };
+}
 
-    private void OnSessionChanged(object? sender, EventArgs e)
+internal sealed class WholeWindowToolbar : Window
+{
+    public WholeWindowToolbar(PixelPoint pointer, bool placeWindow, Action cancel)
     {
-        foreach (Control child in ((Grid)Content!).Children)
-            child.InvalidateVisual();
+        WindowDecorations = WindowDecorations.None;
+        ShowInTaskbar = false;
+        Topmost = true;
+        CanResize = false;
+        SizeToContent = SizeToContent.WidthAndHeight;
+        Background = Brushes.Transparent;
+        TransparencyLevelHint = [WindowTransparencyLevel.Transparent];
+        WindowStartupLocation = placeWindow ? WindowStartupLocation.Manual : WindowStartupLocation.CenterScreen;
+        Title = AppStrings.OverlayTitle;
+        Content = new SnipModeBar(SnipMode.WholeWindow, mode =>
+        {
+            if (mode == SnipMode.WholeWindow)
+                return;
+            RequestedMode = mode;
+            cancel();
+        }, cancel);
+        Closed += (_, _) => cancel();
+        KeyDown += (_, args) =>
+        {
+            if (args.Key == Key.Escape)
+                cancel();
+        };
+
+        if (placeWindow)
+        {
+            Position = pointer;
+            Opened += (_, _) => PlaceBar();
+            ScalingChanged += (_, _) => PlaceBar();
+            SizeChanged += (_, _) => PlaceBar();
+        }
+
+        void PlaceBar()
+        {
+            if (Screens.ScreenFromPoint(pointer) is not { } screen)
+                return;
+            Position = new PixelPoint(screen.Bounds.X + (screen.Bounds.Width - (int)Math.Round(ClientSize.Width * RenderScaling)) / 2,
+                screen.Bounds.Y + (int)Math.Round(24 * RenderScaling));
+        }
     }
+
+    public SnipMode? RequestedMode { get; private set; }
 }
 
 /// <summary>Dims everything but the selection and turns pointer input into selection updates.</summary>
