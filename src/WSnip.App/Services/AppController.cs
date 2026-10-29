@@ -34,6 +34,7 @@ public sealed class AppController : IDisposable
     private readonly PlatformServices platform;
     private readonly SettingsStore store;
     private readonly IClassicDesktopStyleApplicationLifetime lifetime;
+    private readonly SemaphoreSlim startupSync = new(1, 1);
 
     /// <summary>The shortcuts of the settings, with why any of them is not in effect.</summary>
     private readonly List<(SnipMode? Mode, HotkeyGesture Gesture, string? Error)> hotkeys = [];
@@ -48,6 +49,7 @@ public sealed class AppController : IDisposable
     private bool exiting;
     private bool hotkeysPaused;
     private int editorOperations;
+    private int startupOperations;
     private bool disposed;
 
     public AppController(Application app, PlatformServices platform, SettingsStore store, IClassicDesktopStyleApplicationLifetime lifetime)
@@ -57,6 +59,11 @@ public sealed class AppController : IDisposable
         this.store = store;
         this.lifetime = lifetime;
         Settings = store.Load();
+        if (!CanRunInBackground && Settings.LaunchAtStartup)
+        {
+            Settings = Settings.With(settings => settings.LaunchAtStartup = false);
+            store.Save(Settings);
+        }
         Theme = new ThemeService(platform.Windows);
     }
 
@@ -65,6 +72,11 @@ public sealed class AppController : IDisposable
     public ThemeService Theme { get; }
 
     public PlatformServices Platform => platform;
+
+    public bool CanRunInBackground => CanRunInBackgroundWith(Settings);
+
+    private static bool CanRunInBackgroundWith(AppSettings settings) => OperatingSystem.IsWindows() &&
+        (!string.IsNullOrWhiteSpace(settings.Hotkey) || settings.ModeHotkeys.Values.Any(value => !string.IsNullOrWhiteSpace(value)));
 
     /// <summary>Why the capture hotkey could not be registered, if it could not.</summary>
     public string? HotkeyError => HotkeyErrorFor(null);
@@ -88,12 +100,11 @@ public sealed class AppController : IDisposable
         RegisterHotkeys();
         platform.SingleInstance.ArgumentsReceived += (_, forwarded) => Dispatcher.UIThread.Post(() => HandleArguments(forwarded, firstLaunch: false));
         platform.SingleInstance.StartListening();
-        if (OperatingSystem.IsWindows())
-            CreateTray();
-        else
-            windowClosedSubscription = Window.WindowClosedEvent.AddClassHandler<Window>((_, _) => Dispatcher.UIThread.Post(ExitIfIdle));
+        windowClosedSubscription = Window.WindowClosedEvent.AddClassHandler<Window>((_, _) => Dispatcher.UIThread.Post(ExitIfIdle));
+        UpdateTray();
         _ = SyncLaunchAtStartupAsync();
         HandleArguments(arguments, firstLaunch: true);
+        ExitIfIdle();
     }
 
     /// <summary>
@@ -247,6 +258,10 @@ public sealed class AppController : IDisposable
 
     public void UpdateSettings(AppSettings updated)
     {
+        bool wasBackgroundEnabled = CanRunInBackground;
+        bool backgroundEnabled = CanRunInBackgroundWith(updated);
+        if (!backgroundEnabled || !wasBackgroundEnabled)
+            updated = updated.With(settings => settings.LaunchAtStartup = backgroundEnabled);
         bool themeChanged = updated.Theme != Settings.Theme || updated.UseMica != Settings.UseMica;
         bool hotkeysChanged = updated.Hotkey != Settings.Hotkey || !ReferenceEquals(updated.ModeHotkeys, Settings.ModeHotkeys);
         bool startupChanged = updated.LaunchAtStartup != Settings.LaunchAtStartup;
@@ -256,9 +271,12 @@ public sealed class AppController : IDisposable
             Theme.Configure(updated.Theme, updated.UseMica);
         if (hotkeysChanged)
             RegisterHotkeys();
-        if (startupChanged)
+        if (wasBackgroundEnabled != backgroundEnabled)
+            UpdateTray();
+        if (startupChanged || wasBackgroundEnabled != backgroundEnabled)
             _ = SyncLaunchAtStartupAsync();
         editor?.OnSettingsChanged();
+        Dispatcher.UIThread.Post(ExitIfIdle);
     }
 
     /// <summary>
@@ -402,7 +420,7 @@ public sealed class AppController : IDisposable
             (platform.Capture as IDisposable)?.Dispose();
     }
 
-    /// <summary>Keeps Linux alive until an accepted copy/save finishes, even after its window closes.</summary>
+    /// <summary>Keeps the app alive until an accepted copy/save finishes, even after its window closes.</summary>
     internal IDisposable BeginEditorOperation()
     {
         editorOperations++;
@@ -424,7 +442,8 @@ public sealed class AppController : IDisposable
 
     private void ExitIfIdle()
     {
-        if (!OperatingSystem.IsWindows() && !exiting && !capturing && editorOperations == 0 && !lifetime.Windows.Any(window => window.IsVisible))
+        if (!CanRunInBackground && !exiting && !capturing && editorOperations == 0 && startupOperations == 0 &&
+            !lifetime.Windows.Any(window => window.IsVisible))
             Exit();
     }
 
@@ -651,16 +670,40 @@ public sealed class AppController : IDisposable
     {
         if (!OperatingSystem.IsWindows())
             return;
+        startupOperations++;
+        await startupSync.WaitAsync();
         try
         {
-            bool wanted = Settings.LaunchAtStartup;
-            if (Environment.ProcessPath is not { } executable || await platform.Shell.IsLaunchAtStartupEnabledAsync() == wanted)
+            bool enabled = await platform.Shell.IsLaunchAtStartupEnabledAsync();
+            bool wanted = CanRunInBackground && Settings.LaunchAtStartup;
+            if (Environment.ProcessPath is not { } executable || enabled == wanted)
                 return;
             await platform.Shell.SetLaunchAtStartupAsync(wanted, executable, "--background");
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
             AppLog.Warning("Startup", "Launch at startup could not be changed.", exception);
+        }
+        finally
+        {
+            startupSync.Release();
+            startupOperations--;
+            Dispatcher.UIThread.Post(ExitIfIdle);
+        }
+    }
+
+    private void UpdateTray()
+    {
+        if (CanRunInBackground)
+        {
+            if (tray is null)
+                CreateTray();
+        }
+        else if (tray is not null)
+        {
+            TrayIcon.SetIcons(app, []);
+            tray.Dispose();
+            tray = null;
         }
     }
 

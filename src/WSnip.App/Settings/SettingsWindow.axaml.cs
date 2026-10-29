@@ -82,8 +82,6 @@ public partial class SettingsWindow : Window
             ModeHotkeySection.IsVisible = false;
         }
 
-        StartupSectionTitle.IsVisible = OperatingSystem.IsWindows();
-        StartupRow.IsVisible = OperatingSystem.IsWindows();
         ScreenClippingRow.IsVisible = OperatingSystem.IsWindows();
         ScreenClippingButton.Click += (_, _) => controller.Platform.Shell.OpenScreenClippingSettings();
 
@@ -148,6 +146,8 @@ public partial class SettingsWindow : Window
         ToneCurveRow.IsEnabled = settings.ToneMapping != SdrToneMapping.Clip;
         Select(ThemeBox, settings.Theme);
         MicaSwitch.IsChecked = settings.UseMica;
+        StartupSectionTitle.IsVisible = controller.CanRunInBackground;
+        StartupRow.IsVisible = controller.CanRunInBackground;
         StartupSwitch.IsChecked = settings.LaunchAtStartup;
 
         string version = typeof(SettingsWindow).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "";

@@ -12,6 +12,17 @@
         <StackPanel Margin="24,12,24,24">
             <TextBlock Text="{x:Static strings:AppStrings.Settings}" FontSize="24" FontWeight="SemiBold" Margin="0,4,0,4" Foreground="{DynamicResource AppPrimaryTextBrush}" />
 
+            <TextBlock x:Name="StartupSectionTitle" Classes="sectionTitle" Text="{x:Static strings:AppStrings.Startup}" IsVisible="False" />
+            <Border x:Name="StartupRow" Classes="settingRow" IsVisible="False">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{x:Static strings:AppStrings.StartWindows}" />
+                        <TextBlock Classes="caption" Text="{x:Static strings:AppStrings.StartupCaption}" />
+                    </StackPanel>
+                    <ToggleSwitch x:Name="StartupSwitch" Grid.Column="1" OnContent="" OffContent="" />
+                </Grid>
+            </Border>
+
             <TextBlock Classes="sectionTitle" Text="{x:Static strings:AppStrings.TakingSnips}" />
             <Border x:Name="ScreenClippingRow" Classes="settingRow" IsVisible="False">
                 <Grid ColumnDefinitions="*,Auto">
@@ -148,17 +159,6 @@
                         <TextBlock Classes="caption" Text="{x:Static strings:AppStrings.MicaCaption}" />
                     </StackPanel>
                     <ToggleSwitch x:Name="MicaSwitch" Grid.Column="1" OnContent="" OffContent="" />
-                </Grid>
-            </Border>
-
-            <TextBlock x:Name="StartupSectionTitle" Classes="sectionTitle" Text="{x:Static strings:AppStrings.Startup}" />
-            <Border x:Name="StartupRow" Classes="settingRow">
-                <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="{x:Static strings:AppStrings.StartWindows}" />
-                        <TextBlock Classes="caption" Text="{x:Static strings:AppStrings.StartupCaption}" />
-                    </StackPanel>
-                    <ToggleSwitch x:Name="StartupSwitch" Grid.Column="1" OnContent="" OffContent="" />
                 </Grid>
             </Border>
 
