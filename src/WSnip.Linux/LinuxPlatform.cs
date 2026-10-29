@@ -33,7 +33,6 @@ public static class LinuxPlatform
             Windows = new LinuxWindowIntegrationService(canPlaceWindows: !compositorPlacesWindows, capture),
             Shell = new LinuxShellService(bus, DataDirectory),
             SingleInstance = new DBusSingleInstanceService(bus, AppId),
-            DefaultHotkey = new HotkeyGesture("PrintScreen"),
         };
     }
 }

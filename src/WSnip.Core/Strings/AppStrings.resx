@@ -8,6 +8,8 @@
   <data name="Settings" xml:space="preserve"><value>Settings</value></data>
   <data name="TakingSnips" xml:space="preserve"><value>Taking snips</value></data>
   <data name="Shortcut" xml:space="preserve"><value>Shortcut</value></data>
+  <data name="WindowsScreenshotShortcut" xml:space="preserve"><value>Windows screenshot shortcut</value></data>
+  <data name="ChooseDefaultApp" xml:space="preserve"><value>Choose default app</value></data>
   <data name="DefaultShortcutCaption" xml:space="preserve"><value>Snips in the default mode, set below. Click the box and press a key combination.</value></data>
   <data name="SnippingMode" xml:space="preserve"><value>Snipping mode</value></data>
   <data name="Delay" xml:space="preserve"><value>Delay</value></data>

@@ -84,6 +84,8 @@ public partial class SettingsWindow : Window
 
         StartupSectionTitle.IsVisible = OperatingSystem.IsWindows();
         StartupRow.IsVisible = OperatingSystem.IsWindows();
+        ScreenClippingRow.IsVisible = OperatingSystem.IsWindows();
+        ScreenClippingButton.Click += (_, _) => controller.Platform.Shell.OpenScreenClippingSettings();
 
         Load();
 

@@ -58,10 +58,22 @@
       <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\App Paths\WSnip.exe" Name="Path" Value="[INSTALLFOLDER]" />
     </Component>
 
+    <Component Id="ScreenClippingRegistration" Directory="INSTALLFOLDER" Guid="*">
+      <RegistryValue Root="HKLM" Key="Software\RegisteredApplications" Name="WSnip" Value="Software\WSnip\Capabilities" KeyPath="yes" />
+      <RegistryValue Root="HKLM" Key="Software\WSnip\Capabilities" Name="ApplicationName" Value="WSnip" />
+      <RegistryValue Root="HKLM" Key="Software\WSnip\Capabilities" Name="ApplicationDescription" Value="Screenshots that keep HDR and wide color" />
+      <RegistryValue Root="HKLM" Key="Software\WSnip\Capabilities\URLAssociations" Name="ms-screenclip" Value="WSnip.ScreenClip" />
+      <RegistryValue Root="HKLM" Key="Software\Classes\WSnip.ScreenClip" Value="WSnip screen capture" />
+      <RegistryValue Root="HKLM" Key="Software\Classes\WSnip.ScreenClip" Name="URL Protocol" Value="" />
+      <RegistryValue Root="HKLM" Key="Software\Classes\WSnip.ScreenClip\DefaultIcon" Value="&quot;[INSTALLFOLDER]WSnip.exe&quot;,0" />
+      <RegistryValue Root="HKLM" Key="Software\Classes\WSnip.ScreenClip\shell\open\command" Value="&quot;[INSTALLFOLDER]WSnip.exe&quot; --snip" />
+    </Component>
+
     <Feature Id="MainFeature" Title="WSnip">
       <ComponentGroupRef Id="PublishedFiles" />
       <ComponentRef Id="ApplicationExecutable" />
       <ComponentRef Id="ApplicationPathRegistration" />
+      <ComponentRef Id="ScreenClippingRegistration" />
     </Feature>
   </Package>
 </Wix>

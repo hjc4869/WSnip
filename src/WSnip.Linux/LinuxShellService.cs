@@ -46,6 +46,8 @@ internal sealed class LinuxShellService : IShellService
         }
     }
 
+    public void OpenScreenClippingSettings() { }
+
     public Task<bool> IsLaunchAtStartupEnabledAsync() => Task.FromResult(false);
 
     public Task SetLaunchAtStartupAsync(bool enabled, string executablePath, string arguments) => Task.CompletedTask;

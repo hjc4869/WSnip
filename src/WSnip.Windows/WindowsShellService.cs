@@ -54,6 +54,24 @@ public sealed class WindowsShellService : IShellService
         Process.Start(new ProcessStartInfo(path) { UseShellExecute = true })?.Dispose();
     }
 
+    public void OpenScreenClippingSettings()
+    {
+        string query = WindowsPackage.IsPackaged
+            ? "registeredAUMID=" + Uri.EscapeDataString(Package.Current.Id.FamilyName + "!App")
+            : "registeredAppMachine=WSnip";
+        try
+        {
+            Process.Start(new ProcessStartInfo("ms-settings:defaultapps?" + query)
+            {
+                UseShellExecute = true,
+            })?.Dispose();
+        }
+        catch (System.ComponentModel.Win32Exception exception)
+        {
+            AppLog.Warning("Shell", "Windows default app settings could not be opened.", exception);
+        }
+    }
+
     public async Task<bool> IsLaunchAtStartupEnabledAsync()
     {
         if (WindowsPackage.IsPackaged)

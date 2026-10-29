@@ -147,6 +147,8 @@ public interface IShellService
 
     void OpenFolder(string path);
 
+    void OpenScreenClippingSettings();
+
     Task<bool> IsLaunchAtStartupEnabledAsync();
 
     /// <summary>Starts the app in the background when the user signs in.</summary>
@@ -249,7 +251,4 @@ public sealed class PlatformServices
     public IClipboardService? Clipboard { get; init; }
 
     public required ISingleInstanceService SingleInstance { get; init; }
-
-    /// <summary>Gesture suggested for the capture hotkey on this platform.</summary>
-    public required HotkeyGesture DefaultHotkey { get; init; }
 }

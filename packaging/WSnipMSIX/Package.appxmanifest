@@ -39,6 +39,11 @@
         <uap:SplashScreen Image="Images\SplashScreen.png" />
       </uap:VisualElements>
       <Extensions>
+        <uap:Extension Category="windows.protocol" Executable="WSnip.Desktop\WSnip.exe" EntryPoint="Windows.FullTrustApplication">
+          <uap:Protocol Name="ms-screenclip">
+            <uap:DisplayName>WSnip</uap:DisplayName>
+          </uap:Protocol>
+        </uap:Extension>
         <!--
           Package registry writes are private to the package, so "Start with Windows" uses this task
           instead of the Run key (WindowsShellService.StartupTaskId); such launches start in the tray.

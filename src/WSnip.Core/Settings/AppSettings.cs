@@ -15,7 +15,7 @@ public enum ThemePreference
 
 public sealed class AppSettings
 {
-    /// <summary>The capture hotkey, such as "Win+Shift+A"; empty disables it.</summary>
+    /// <summary>The user-assigned capture hotkey, such as "Win+Shift+A"; null or empty disables it.</summary>
     public string? Hotkey { get; set; }
 
     /// <summary>Hotkeys that snip in a given mode rather than in <see cref="Mode"/>; a mode without one has none.</summary>

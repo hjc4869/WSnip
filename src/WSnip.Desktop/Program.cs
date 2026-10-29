@@ -23,6 +23,8 @@ internal static class Program
         // The MSIX startup task cannot pass arguments; a sign-in launch goes to the tray like the Run key's.
         if (WindowsPackage.IsStartupActivation())
             args = [.. args, "--background"];
+        if (WindowsPackage.ProtocolActivationUri() is { } protocolUri)
+            args = [.. args, protocolUri];
 #endif
 
         if (!platform.SingleInstance.TryClaim())

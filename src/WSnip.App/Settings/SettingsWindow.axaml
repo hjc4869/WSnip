@@ -13,6 +13,12 @@
             <TextBlock Text="{x:Static strings:AppStrings.Settings}" FontSize="24" FontWeight="SemiBold" Margin="0,4,0,4" Foreground="{DynamicResource AppPrimaryTextBrush}" />
 
             <TextBlock Classes="sectionTitle" Text="{x:Static strings:AppStrings.TakingSnips}" />
+            <Border x:Name="ScreenClippingRow" Classes="settingRow" IsVisible="False">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="{x:Static strings:AppStrings.WindowsScreenshotShortcut}" TextWrapping="Wrap" Margin="0,0,12,0" VerticalAlignment="Center" />
+                    <Button x:Name="ScreenClippingButton" Grid.Column="1" Classes="flat" Content="{x:Static strings:AppStrings.ChooseDefaultApp}" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
             <settings:HotkeyRow x:Name="DefaultHotkeyRow" Title="{x:Static strings:AppStrings.Shortcut}"
                                 Caption="{x:Static strings:AppStrings.DefaultShortcutCaption}" />
             <Border Classes="settingRow">

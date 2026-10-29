@@ -8,6 +8,8 @@
   <data name="Settings" xml:space="preserve"><value>設定</value></data>
   <data name="TakingSnips" xml:space="preserve"><value>キャプチャ</value></data>
   <data name="Shortcut" xml:space="preserve"><value>ショートカット</value></data>
+  <data name="WindowsScreenshotShortcut" xml:space="preserve"><value>Windows のスクリーンショット ショートカット</value></data>
+  <data name="ChooseDefaultApp" xml:space="preserve"><value>既定のアプリを選択</value></data>
   <data name="DefaultShortcutCaption" xml:space="preserve"><value>下で設定した既定のモードでキャプチャします。入力欄をクリックしてキーの組み合わせを押してください。</value></data>
   <data name="SnippingMode" xml:space="preserve"><value>キャプチャモード</value></data>
   <data name="Delay" xml:space="preserve"><value>遅延</value></data>

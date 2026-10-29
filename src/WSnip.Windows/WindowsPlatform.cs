@@ -19,6 +19,5 @@ public static class WindowsPlatform
         Shell = new WindowsShellService(),
         Clipboard = new WindowsClipboardService(),
         SingleInstance = new WindowsSingleInstanceService(AppId),
-        DefaultHotkey = new HotkeyGesture("H", Shift: true, Windows: true),
     };
 }

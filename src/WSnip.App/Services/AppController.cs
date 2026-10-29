@@ -74,7 +74,7 @@ public sealed class AppController : IDisposable
     /// <summary>The shortcut that snips in a mode, or in the snipping mode setting when <paramref name="mode"/> is null.</summary>
     public HotkeyGesture? HotkeyFor(SnipMode? mode) => mode is { } snipMode
         ? HotkeyGesture.Parse(Settings.ModeHotkeys.GetValueOrDefault(snipMode))
-        : Settings.Hotkey is null ? platform.DefaultHotkey : HotkeyGesture.Parse(Settings.Hotkey);
+        : HotkeyGesture.Parse(Settings.Hotkey);
 
     /// <summary>Why the shortcut of <see cref="HotkeyFor"/> is not in effect, if it is not.</summary>
     public string? HotkeyErrorFor(SnipMode? mode) => hotkeys.Find(h => h.Mode == mode).Error;
@@ -102,6 +102,14 @@ public sealed class AppController : IDisposable
     /// </summary>
     public void HandleArguments(IReadOnlyList<string> arguments, bool firstLaunch)
     {
+        if (OperatingSystem.IsWindows() && arguments.Any(argument =>
+            Uri.TryCreate(argument, UriKind.Absolute, out Uri? uri) &&
+            uri.Scheme.Equals("ms-screenclip", StringComparison.OrdinalIgnoreCase)))
+        {
+            _ = StartSnipAsync();
+            return;
+        }
+
         int snip = arguments.ToList().FindIndex(a => a.Equals("--snip", StringComparison.OrdinalIgnoreCase));
         if (snip >= 0)
         {

@@ -8,6 +8,8 @@
   <data name="Settings" xml:space="preserve"><value>Einstellungen</value></data>
   <data name="TakingSnips" xml:space="preserve"><value>Aufnahme</value></data>
   <data name="Shortcut" xml:space="preserve"><value>Tastenkombination</value></data>
+  <data name="WindowsScreenshotShortcut" xml:space="preserve"><value>Windows-Bildschirmfoto-Tastenkombination</value></data>
+  <data name="ChooseDefaultApp" xml:space="preserve"><value>Standard-App auswählen</value></data>
   <data name="DefaultShortcutCaption" xml:space="preserve"><value>Aufnahme im unten festgelegten Standardmodus. Klicken Sie auf das Feld und drücken Sie eine Tastenkombination.</value></data>
   <data name="SnippingMode" xml:space="preserve"><value>Aufnahmemodus</value></data>
   <data name="Delay" xml:space="preserve"><value>Verzögerung</value></data>

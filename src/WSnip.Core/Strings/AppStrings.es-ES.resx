@@ -8,6 +8,8 @@
   <data name="Settings" xml:space="preserve"><value>Configuración</value></data>
   <data name="TakingSnips" xml:space="preserve"><value>Capturas</value></data>
   <data name="Shortcut" xml:space="preserve"><value>Atajo de teclado</value></data>
+  <data name="WindowsScreenshotShortcut" xml:space="preserve"><value>Atajo de captura de Windows</value></data>
+  <data name="ChooseDefaultApp" xml:space="preserve"><value>Elegir aplicación predeterminada</value></data>
   <data name="DefaultShortcutCaption" xml:space="preserve"><value>Captura en el modo predeterminado que se indica abajo. Haz clic en el cuadro y pulsa una combinación de teclas.</value></data>
   <data name="SnippingMode" xml:space="preserve"><value>Modo de captura</value></data>
   <data name="Delay" xml:space="preserve"><value>Retardo</value></data>

@@ -40,6 +40,22 @@ public static unsafe class WindowsPackage
         }
     }
 
+    public static string? ProtocolActivationUri()
+    {
+        if (!IsPackaged)
+            return null;
+        try
+        {
+            return AppInstance.GetActivatedEventArgs() is IProtocolActivatedEventArgs activation
+                ? activation.Uri.AbsoluteUri
+                : null;
+        }
+        catch (Exception exception) when (exception is COMException or InvalidCastException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
     private static bool DetectPackage()
     {
         uint length = 0;

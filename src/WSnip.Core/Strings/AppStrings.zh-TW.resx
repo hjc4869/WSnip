@@ -8,6 +8,8 @@
   <data name="Settings" xml:space="preserve"><value>設定</value></data>
   <data name="TakingSnips" xml:space="preserve"><value>擷取畫面</value></data>
   <data name="Shortcut" xml:space="preserve"><value>快速鍵</value></data>
+  <data name="WindowsScreenshotShortcut" xml:space="preserve"><value>Windows 螢幕擷取快速鍵</value></data>
+  <data name="ChooseDefaultApp" xml:space="preserve"><value>選擇預設應用程式</value></data>
   <data name="DefaultShortcutCaption" xml:space="preserve"><value>使用下方設定的預設模式擷取畫面。按一下輸入欄位，然後按下按鍵組合。</value></data>
   <data name="SnippingMode" xml:space="preserve"><value>擷取模式</value></data>
   <data name="Delay" xml:space="preserve"><value>延遲</value></data>

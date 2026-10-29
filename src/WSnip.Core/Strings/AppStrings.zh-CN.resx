@@ -8,6 +8,8 @@
   <data name="Settings" xml:space="preserve"><value>设置</value></data>
   <data name="TakingSnips" xml:space="preserve"><value>截图</value></data>
   <data name="Shortcut" xml:space="preserve"><value>快捷键</value></data>
+  <data name="WindowsScreenshotShortcut" xml:space="preserve"><value>Windows 截图快捷键</value></data>
+  <data name="ChooseDefaultApp" xml:space="preserve"><value>选择默认应用</value></data>
   <data name="DefaultShortcutCaption" xml:space="preserve"><value>使用下方设置的默认模式截图。点击输入框，然后按下组合键。</value></data>
   <data name="SnippingMode" xml:space="preserve"><value>截图模式</value></data>
   <data name="Delay" xml:space="preserve"><value>延迟</value></data>
