@@ -25,6 +25,7 @@
   <data name="SdrFormatCaption" xml:space="preserve"><value>PNG 可逐像素精確保留螢幕內容。</value></data>
   <data name="HdrFormat" xml:space="preserve"><value>HDR 擷取的格式</value></data>
   <data name="HdrFormatCaption" xml:space="preserve"><value>增益圖格式在一般環境顯示 SDR 影像，在支援的環境顯示 HDR 影像。</value></data>
+  <data name="SystemCodecWarning" xml:space="preserve"><value>HEIC 和 AVIF 依賴系統中可用的編解碼器。相容性問題可能導致螢幕擷取畫面無法儲存。</value></data>
   <data name="Quality" xml:space="preserve"><value>品質</value></data>
   <data name="QualityCaption" xml:space="preserve"><value>適用於 JPEG、HEIC、AVIF 和 JPEG XL。JPEG XL 在 100 時為無損壓縮。</value></data>
   <data name="SdrVersion" xml:space="preserve"><value>HDR 擷取的 SDR 版本</value></data>

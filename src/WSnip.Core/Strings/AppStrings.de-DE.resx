@@ -25,6 +25,7 @@
   <data name="SdrFormatCaption" xml:space="preserve"><value>PNG bewahrt den Bildschirminhalt pixelgenau.</value></data>
   <data name="HdrFormat" xml:space="preserve"><value>Format für HDR-Aufnahmen</value></data>
   <data name="HdrFormatCaption" xml:space="preserve"><value>Gain-Map-Formate zeigen überall ein SDR-Bild und bei entsprechender Unterstützung das HDR-Bild.</value></data>
+  <data name="SystemCodecWarning" xml:space="preserve"><value>HEIC und AVIF sind auf die auf Ihrem System verfügbaren Codecs angewiesen. Kompatibilitätsprobleme können das Speichern von Screenshots verhindern.</value></data>
   <data name="Quality" xml:space="preserve"><value>Qualität</value></data>
   <data name="QualityCaption" xml:space="preserve"><value>Für JPEG, HEIC, AVIF und JPEG XL. 100 ist bei JPEG XL verlustfrei.</value></data>
   <data name="SdrVersion" xml:space="preserve"><value>SDR-Version von HDR-Aufnahmen</value></data>

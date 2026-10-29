@@ -135,6 +135,8 @@ public partial class SettingsWindow : Window
         FolderText.Text = controller.SaveFolder;
         Select(SdrFormatBox, settings.SdrFormat);
         Select(HdrFormatBox, settings.HdrFormat);
+        CodecWarning.IsVisible = settings.SdrFormat is SnipFormat.Heic or SnipFormat.Avif ||
+            settings.HdrFormat is SnipFormat.Heic or SnipFormat.Avif;
         QualitySlider.Value = settings.Quality;
         QualityText.Text = settings.Quality.ToString(System.Globalization.CultureInfo.CurrentCulture);
         Select(ToneMappingBox, settings.ToneMapping);

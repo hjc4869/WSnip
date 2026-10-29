@@ -25,6 +25,7 @@
   <data name="SdrFormatCaption" xml:space="preserve"><value>PNG は画面の内容をピクセル単位で正確に保持します。</value></data>
   <data name="HdrFormat" xml:space="preserve"><value>HDR キャプチャの形式</value></data>
   <data name="HdrFormatCaption" xml:space="preserve"><value>ゲインマップ形式は通常 SDR 画像を表示し、対応環境では HDR 画像を表示します。</value></data>
+  <data name="SystemCodecWarning" xml:space="preserve"><value>HEIC と AVIF は、システムで利用可能なコーデックに依存します。互換性の問題により、スクリーンショットを保存できない場合があります。</value></data>
   <data name="Quality" xml:space="preserve"><value>品質</value></data>
   <data name="QualityCaption" xml:space="preserve"><value>JPEG、HEIC、AVIF、JPEG XL に適用します。JPEG XL は 100 で可逆圧縮になります。</value></data>
   <data name="SdrVersion" xml:space="preserve"><value>HDR キャプチャの SDR 表示</value></data>

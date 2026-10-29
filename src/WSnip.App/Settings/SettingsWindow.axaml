@@ -94,6 +94,9 @@
                     <ComboBox x:Name="HdrFormatBox" Grid.Column="1" Width="150" VerticalAlignment="Center" />
                 </Grid>
             </Border>
+            <TextBlock x:Name="CodecWarning" Classes="caption warning" Margin="14,2,14,10"
+                       TextWrapping="Wrap" IsVisible="False"
+                       Text="{x:Static strings:AppStrings.SystemCodecWarning}" />
             <Border Classes="settingRow">
                 <Grid ColumnDefinitions="*,Auto">
                     <StackPanel VerticalAlignment="Center">
