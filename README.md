@@ -256,17 +256,23 @@ Requirements:
   (`winget install --id LLVM.LLVM --exact`). Windows NativeAOT builds also need Visual Studio's
   C++ build tools for each target architecture.
 
+NativeAOT builds statically link the SkiaSharp, HarfBuzzSharp and ANGLE graphics dependencies
+through `LightStudio.AvaloniaStatic`, as Light Player does. Non-AOT builds use shared libraries.
+Linux NativeAOT linking also needs Clang/LLD and the development libraries for fontconfig,
+OpenGL, X11 and Xext.
+
 FFmpeg calls use the shim's generated NativeBindings API, with no managed binding-loader
 initialization. Linux bindings are generated from the installed development headers; Flatpak builds
 use the SDK's FFmpeg 8.1 headers. Windows uses the `LightStudio.Ffmpeg` 9.0.2 binding profile and
-native runtime assets. Available HEIC/AVIF encoders depend on those libraries and the local GPU
-and driver; no separate FFmpeg build is downloaded for software image encoders.
+links FFmpeg statically when NativeAOT is enabled; non-AOT builds use the package's shared libraries.
+Available HEIC/AVIF encoders depend on those libraries and the local GPU and driver; no separate
+FFmpeg build is downloaded for software image encoders.
 
 ```powershell
 # Debug build
 dotnet build src\WSnip.Desktop -p:Platform=x64
 
-# NativeAOT build: artifacts\publish\WSnip.Desktop\release_win-x64\WSnip.exe
+# NativeAOT build: artifacts\publish\WSnip.Desktop\release_win-x64_static\WSnip.exe
 dotnet publish src\WSnip.Desktop -c Release -r win-x64 -p:Platform=x64
 ```
 
@@ -284,7 +290,7 @@ make publish RID=linux-arm64
 
 ## Packaging
 
-Windows packages include the self-contained NativeAOT build with the LGPL FFmpeg
+Windows packages include the self-contained NativeAOT build with statically linked LGPL FFmpeg
 libraries.
 
 - **MSIX bundle** (`packaging\WSnipMSIX`): x64 and ARM64 in one sideload bundle, signed with the

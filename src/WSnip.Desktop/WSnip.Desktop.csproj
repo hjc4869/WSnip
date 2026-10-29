@@ -47,6 +47,10 @@
   <PropertyGroup Condition="'$(IsLinuxTarget)' == 'true'">
     <DefineConstants>$(DefineConstants);LINUX</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(IsWindowsTarget)' == 'true' and '$(PublishAot)' == 'true'">
+    <DefineConstants>$(DefineConstants);FFMPEG_STATIC</DefineConstants>
+    <EnableStaticFfmpeg>true</EnableStaticFfmpeg>
+  </PropertyGroup>
 
   <!-- The forked backends are referenced directly so they replace the ones Avalonia.Desktop brings. -->
   <ItemGroup>
@@ -56,6 +60,7 @@
     <PackageReference Include="Avalonia.HarfBuzz" />
     <PackageReference Condition="'$(IsLinuxTarget)' == 'true'" Include="Avalonia.Wayland" />
     <PackageReference Condition="'$(IsWindowsTarget)' == 'true'" Include="LightStudio.Ffmpeg" />
+    <PackageReference Include="LightStudio.AvaloniaStatic" />
   </ItemGroup>
 
   <ItemGroup>
