@@ -39,9 +39,9 @@ public sealed class AppSettings
     public SnipFormat SdrFormat { get; set; } = SnipFormat.Png;
 
     /// <summary>Format for snips with HDR content.</summary>
-    public SnipFormat HdrFormat { get; set; } = SnipFormat.Avif;
+    public SnipFormat HdrFormat { get; set; } = SnipFormat.JpegXl;
 
-    public int Quality { get; set; } = 90;
+    public int Quality { get; set; } = 100;
 
     public SdrToneMapping ToneMapping { get; set; } = SdrToneMapping.Adaptive;
 

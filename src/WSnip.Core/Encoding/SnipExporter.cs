@@ -28,9 +28,9 @@ public enum SnipFormat
 
 public sealed record ExportOptions
 {
-    public int Quality { get; init; } = 90;
+    public int Quality { get; init; } = 100;
 
-    public int GainMapQuality { get; init; } = 90;
+    public int GainMapQuality { get; init; } = 100;
 
     /// <summary>Tone mapping for snips that were not tuned themselves.</summary>
     public ToneMapSettings ToneMap { get; init; } = ToneMapSettings.Default;
@@ -39,7 +39,7 @@ public sealed record ExportOptions
     public bool PreserveHdr { get; init; } = true;
 
     /// <summary>JPEG XL encoder effort, 1 (fastest) to 9.</summary>
-    public int JpegXlEffort { get; init; } = 7;
+    public int JpegXlEffort { get; init; } = 1;
 }
 
 /// <summary>Encodes snips into the supported file formats.</summary>

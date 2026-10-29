@@ -69,8 +69,9 @@ standard localized entries in the desktop file.
 
 ## Output formats
 
-The settings pick one format for SDR snips (PNG by default) and one for snips with HDR content (AVIF
-by default).
+The settings pick one format for SDR snips (PNG by default) and one for snips with HDR content (JPEG XL
+by default). Quality defaults to 100 (lossless for JPEG XL), and JPEG XL uses the fastest encoding
+effort (1), matching Light Player's video screenshots.
 
 | Format | SDR snip | HDR snip |
 | --- | --- | --- |
