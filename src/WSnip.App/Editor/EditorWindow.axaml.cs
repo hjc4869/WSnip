@@ -211,7 +211,7 @@ public partial class EditorWindow : Window
         switch (e.Key)
         {
             case Key.N when control:
-                _ = controller.StartSnipAsync(SelectedMode(), SelectedDelay());
+                _ = controller.StartSnipAsync(SelectedMode());
                 break;
             case Key.Z when control && !shift:
                 document?.Undo();

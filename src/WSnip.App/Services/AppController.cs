@@ -142,45 +142,26 @@ public sealed class AppController : IDisposable
         if (capturing || exiting)
             return;
         capturing = true;
-        var excluded = new List<nint>();
         List<(Window Window, Window? Owner)>? hidden = null;
         try
         {
             SnipMode initialMode = mode ?? Settings.Mode;
-            int delay = delaySeconds ?? Settings.DelaySeconds;
+            int delay = delaySeconds ?? 0;
             while (true)
             {
+                hidden ??= HideWindows();
                 if (initialMode == SnipMode.WholeWindow)
                 {
-                    SnipMode? nextMode = await SnipWholeWindowAsync(delay);
+                    SnipMode? nextMode = await SnipWholeWindowAsync(delay,
+                        restoreEditor: hidden.Any(entry => ReferenceEquals(entry.Window, editor)));
                     if (nextMode is null)
                         return;
                     initialMode = nextMode.Value;
                     delay = 0;
                 }
 
-                // The app's own windows stay open but are left out of the capture, which shows what is
-                // behind them instead. Where the system cannot leave them out, they step aside meanwhile.
-                if (platform.Windows.CanExcludeFromCapture)
-                {
-                    foreach (Window window in lifetime.Windows)
-                    {
-                        if (window.IsVisible && window.TryGetPlatformHandle() is { } handle && !excluded.Contains(handle.Handle))
-                        {
-                            platform.Windows.SetExcludedFromCapture(handle.Handle, true);
-                            excluded.Add(handle.Handle);
-                        }
-                    }
-                }
-                else
-                {
-                    hidden ??= HideWindows();
-                }
-
                 if (delay > 0)
                     await Task.Delay(TimeSpan.FromSeconds(delay));
-                else if (excluded.Count > 0)
-                    await Task.Delay(60);
                 else if (hidden is { Count: > 0 })
                     await Task.Delay(HiddenWindowsSettle);
 
@@ -224,8 +205,6 @@ public sealed class AppController : IDisposable
         }
         finally
         {
-            foreach (nint handle in excluded)
-                platform.Windows.SetExcludedFromCapture(handle, false);
             if (hidden is not null)
                 RestoreWindows(hidden);
             capturing = false;
@@ -461,14 +440,13 @@ public sealed class AppController : IDisposable
     /// </summary>
     /// <remarks>
     /// The app's own windows are hidden meanwhile, so they neither cover the windows to pick from
-    /// nor stay active in front of them; they come back before the snip is delivered.
+    /// nor stay active in front of them; the capture flow restores them afterward.
     /// </remarks>
-    private async Task<SnipMode?> SnipWholeWindowAsync(int delaySeconds)
+    private async Task<SnipMode?> SnipWholeWindowAsync(int delaySeconds, bool restoreEditor)
     {
         if (!platform.WindowPicker.IsSupported)
             throw new NotSupportedException(AppStrings.WindowPickingUnsupported);
 
-        List<(Window Window, Window? Owner)> hidden = HideWindows();
         using var cancellation = new CancellationTokenSource();
         WholeWindowToolbar? toolbar = null;
         CapturedWindow? window;
@@ -501,7 +479,6 @@ public sealed class AppController : IDisposable
         finally
         {
             toolbar?.Close();
-            RestoreWindows(hidden);
         }
 
         using WindowCapture ownedCapture = capture;
@@ -511,7 +488,7 @@ public sealed class AppController : IDisposable
         using Snip snip = await Task.Run(() => SnipComposer.FromWindow(capture));
         capture.Dispose();
         AppLog.Information("Snip", $"Whole window snip of '{window.Title}' {snip.Width}x{snip.Height}: {snip.Statistics}");
-        await DeliverAsync(snip);
+        await DeliverAsync(snip, restoreEditor);
         return null;
     }
 
