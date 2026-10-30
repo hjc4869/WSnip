@@ -8,6 +8,8 @@ viewers restore the original brightness.
 WSnip runs on Windows and KDE; see [Linux](#linux) for what differs there. HDR / WCG is currently
 only supported on Windows.
 
+[![Get it from Microsoft](https://get.microsoft.com/images/en-us%20dark.svg)](https://apps.microsoft.com/detail/9PDM1H21NLB9)
+
 ## Features
 
 - **Snip modes:** rectangle, window, full screen and freeform, with an optional 3, 5 or 10 second
