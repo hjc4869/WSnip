@@ -13,10 +13,13 @@ command: wsnip
 # libwayland-client (screen capture through KWin's screencast protocol or the ScreenCast portal)
 # come from org.freedesktop.Platform 26.08.
 #
+# Light Player is fetched from its v2.1.0 release tag, not from a local checkout, so the build
+# does not depend on whatever state a sibling LightPlayer directory happens to be in.
+#
 # NuGet restore runs offline: flatpak-builder downloads every package pinned in
 # nuget-sources.json into ./nuget-sources during its fetch phase. `make flatpak` generates that
-# list with Light Player's packaging/flatpak/nuget-sources.py and stages the WSnip sources next
-# to the Light Player sources they share.
+# list with the packaging/flatpak/nuget-sources.py of the same Light Player release and stages the
+# WSnip sources next to it.
 build-options:
   prepend-path: /usr/lib/sdk/dotnet10/bin:/usr/lib/sdk/llvm22/bin
   append-ld-library-path: /usr/lib/sdk/dotnet10/lib
@@ -61,6 +64,9 @@ modules:
         export NUGET_PACKAGES="$PWD/.nuget-packages"
         export DOTNET_CLI_HOME="$PWD/.dotnet-home"
         mv artifacts lightplayer/
+        # The release's online nuget.config maps packages to feeds that do not exist offline;
+        # the offline one it ships for its own Flatpak build drops that mapping.
+        cp lightplayer/packaging/flatpak/nuget.config lightplayer/nuget.config
         dotnet publish wsnip/src/WSnip.Desktop/WSnip.Desktop.csproj \
           -c Release -r "$DOTNET_RID" --self-contained true \
           -p:Flatpak=true -p:Platform="$DOTNET_PLATFORM" \
@@ -85,13 +91,14 @@ modules:
       - install -Dm644 LICENSE /app/share/licenses/im.hjc.WSnip/LICENSE
       - install -Dm644 THIRDPARTY.txt /app/share/licenses/im.hjc.WSnip/THIRDPARTY.txt
     sources:
-      # WSnip and the Light Player sources it builds against (staged by `make flatpak` without
-      # bin/, obj/ or artifacts/).
+      # WSnip (staged by `make flatpak` without bin/ or obj/).
       - type: dir
         path: wsnip
         dest: wsnip
-      - type: dir
-        path: lightplayer
+      - type: archive
+        url: https://github.com/hjc4869/LightPlayer/archive/refs/tags/v2.1.0.tar.gz
+        sha256: a6462cb73eefe8c9e7be223849f5b0d1a587ae26fa880007a0b2ee3426a64b53
+        strip-components: 1
         dest: lightplayer
       # Pinned offline NuGet feed generated on the host by nuget-sources.py.
       - nuget-sources.json

@@ -281,7 +281,7 @@ dotnet publish src\WSnip.Desktop -c Release -r win-x64 -p:Platform=x64
 For ARM64, use `-p:Platform=ARM64 -r win-arm64`.
 
 On Linux, the `Makefile` wraps the same commands. It passes `LIGHTPLAYER_ROOT` (by default
-`../LightPlayer`) as `LightPlayerRoot`:
+`../LightPlayer`) as `LightPlayerRoot`. `make flatpak` ignores it and uses the pinned release instead:
 
 ```sh
 make                        # Release build
@@ -321,8 +321,12 @@ libraries.
   offline from pinned NuGet packages, and writes
   `artifacts/flatpak-x86_64/im.hjc.WSnip-x86_64.flatpak`; `make flatpak-install` also installs it
   for the current user. FFmpeg 8.1 and PipeWire come from the `org.freedesktop.Platform` runtime.
-  It needs `flatpak`, `flatpak-builder` and `python3`; the first build installs the SDK and its
-  .NET 10 and LLVM 22 extensions from Flathub. Add a `<release>` to the metainfo for each version.
+  It needs `flatpak`, `flatpak-builder`, `python3` and `curl`; the first build installs the SDK and
+  its .NET 10 and LLVM 22 extensions from Flathub. The Flatpak builds against the Light Player release
+  tag pinned (URL and SHA-256) in the manifest, not against `../LightPlayer`: `make flatpak` downloads
+  it into `artifacts/lightplayer` to pin the NuGet packages, and flatpak-builder fetches the same
+  archive for the build. To move to another Light Player release, change the manifest's archive
+  `url` and `sha256`. Add a `<release>` to the metainfo for each version.
 
 `packaging\Set-Version.ps1 -Tag v1.2.3` stamps one version into `Directory.Build.props` and the MSIX
 manifest; the release workflow runs it with the release tag.
@@ -331,9 +335,10 @@ manifest; the release workflow runs it with the release tag.
 
 `.github/workflows/release.yml` builds the MSIX bundle, the setup executables and the Flatpak
 bundles for x64 and ARM64 and publishes them in a GitHub Release when a `v*` tag is pushed, or when
-it is run from the Actions tab with a tag. It checks out the public
+it is run from the Actions tab with a tag. The Windows jobs check out the public
 [hjc4869/LightPlayer](https://github.com/hjc4869/LightPlayer) repository next to WSnip, as local builds
-expect. No deploy key or additional repository-access secret is needed.
+expect; the Flatpak jobs download the release tag pinned in the Flatpak manifest instead. No deploy
+key or additional repository-access secret is needed.
 
 One-time setup of the WSnip repository (**Settings > Secrets and variables > Actions**):
 

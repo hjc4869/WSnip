@@ -220,18 +220,12 @@ jobs:
             runner: ubuntu-26.04-arm
     runs-on: ${{ matrix.runner }}
     steps:
+      # The Flatpak builds against the Light Player release tag pinned in its manifest, which
+      # `make flatpak` downloads and verifies itself, so no Light Player checkout is needed.
       - name: Checkout WSnip
         uses: actions/checkout@v4
         with:
           path: WSnip
-
-      - name: Checkout Light Player
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ env.LIGHTPLAYER_REPOSITORY }}
-          ref: ${{ env.LIGHTPLAYER_REF }}
-          path: LightPlayer
-          persist-credentials: false
 
       - name: Install flatpak and flatpak-builder
         run: |
@@ -247,7 +241,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: WSnip/artifacts/flatpak-${{ matrix.arch }}/.flatpak-builder
-          key: flatpak-builder-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('WSnip/packaging/flatpak/im.hjc.WSnip.yml', 'WSnip/src/**/*.csproj', 'WSnip/Directory.Packages.props', 'WSnip/Makefile', 'LightPlayer/Directory.Packages.props') }}
+          key: flatpak-builder-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('WSnip/packaging/flatpak/im.hjc.WSnip.yml', 'WSnip/src/**/*.csproj', 'WSnip/Directory.Packages.props', 'WSnip/Makefile') }}
           restore-keys: |
             flatpak-builder-${{ runner.os }}-${{ runner.arch }}-
 
@@ -258,7 +252,7 @@ jobs:
           Write-Host "Packaging WSnip $version"
 
       # Installs the SDK and its .NET/LLVM extensions from Flathub, pins the NuGet packages and publishes
-      # the app inside the sandbox, against the Light Player checkout at ../LightPlayer.
+      # the app inside the sandbox, against the Light Player release pinned in the manifest.
       - name: Build Flatpak bundle
         working-directory: WSnip
         run: make flatpak RID=${{ matrix.rid }}
